@@ -3347,10 +3347,7 @@ function mostrarFormularioPago() {
     
     // Establecer fecha actual por defecto
     const hoy = new Date();
-    const año = hoy.getFullYear();
-const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
-const dia = hoy.getDate().toString().padStart(2, '0');
-const fechaFormato = `${año}-${mes}-${dia}`;
+    const fechaFormato = hoy.toISOString().split('T')[0];
     document.getElementById('fecha-pago-manual').value = fechaFormato;
 }
 
@@ -3422,7 +3419,7 @@ const fechaFormato = `${año}-${mes}-${dia}`;
                         <strong>💰 Información Financiera</strong><br>
                         Colegiatura: $${estudiante.colegiatura}<br>
                         Beca: ${estudiante.porcentajeBeca}%<br>
-                        Último pago: ${ultimoPago ? new Date(ultimoPago.fecha).formatearFechaMexicana() : 'Sin registros'}<br>
+                        Último pago: ${ultimoPago ? new Date(ultimoPago.fecha).toLocaleDateString() : 'Sin registros'}<br>
                         Días sin pagar: ${diasSinPagar} días
                     </div>
                 </div>
@@ -4462,7 +4459,7 @@ if ((pago.concepto === 'colegiatura' || pago.concepto === 'ajuste-colegiatura') 
 
         return `
             <tr>
-                <td>${formatearFechaMexicana(pago.fecha)}</td>
+                <td>${new Date(pago.fecha).toLocaleDateString()}</td>
                 <td>
                     <strong>${estudiante ? estudiante.nombre : 'Estudiante no encontrado'}</strong><br>
                     <small style="color: #666;">${estudiante ? estudiante.tutor : ''}</small>
@@ -4631,9 +4628,9 @@ function generarHTMLRecibo(pago, estudiante) {
                         <span class="info-value">#${pago.id}</span>
                     </div>
                     <div class="info-row">
-    <span class="info-label">Fecha del Pago:</span>
-    <span class="info-value">${formatearFechaMexicana(pago.fecha)}</span>
-</div>
+                        <span class="info-label">Fecha del Pago:</span>
+                        <span class="info-value">${new Date(pago.fecha).toLocaleDateString('es-MX')}</span>
+                    </div>
                     <div class="info-row">
                         <span class="info-label">Método de Pago:</span>
                         <span class="info-value">${pago.metodoPago.toUpperCase()}</span>
@@ -6626,7 +6623,7 @@ mostrarNotificacion('Pago eliminado correctamente', 'success');
                             <small style="color: #666;">Tutor: ${item.estudiante.tutor}</small><br>
                             <small style="color: #666;">Tel: ${item.estudiante.telefono}</small>
                         </td>
-                        <td>${item.ultimoPago ? new Date(item.ultimoPago.fecha).formatearFechaMexicana() : 'Sin registros'}</td>
+                        <td>${item.ultimoPago ? new Date(item.ultimoPago.fecha).toLocaleDateString() : 'Sin registros'}</td>
                         <td>
                             <span class="status ${item.diasSinPagar > 15 ? 'status-inactive' : item.diasSinPagar > 10 ? 'status-warning' : 'status-warning'}">
                                 ${item.diasSinPagar} días
@@ -7538,7 +7535,7 @@ function cerrarModalEnvioMasivo() {
             <tr>
                 <td>
                     <strong>${entrenador.nombre}</strong><br>
-                    <small style="color: #666;">Desde: ${new Date(entrenador.fechaContratacion).formatearFechaMexicana()}</small>
+                    <small style="color: #666;">Desde: ${new Date(entrenador.fechaContratacion).toLocaleDateString()}</small>
                 </td>
                 <td>${disciplinasText}</td>
                 <td>${experienciaText}</td>
@@ -8220,7 +8217,7 @@ function actualizarTablaClasesMuestra() {
                 </td>
                 <td>${clase.disciplina.charAt(0).toUpperCase() + clase.disciplina.slice(1)}</td>
                 <td>
-                    <strong>${new Date(clase.fecha).formatearFechaMexicana()}</strong><br>
+                    <strong>${new Date(clase.fecha).toLocaleDateString()}</strong><br>
                     <small>${clase.horario}</small>
                 </td>
                 <td>
@@ -8368,7 +8365,7 @@ function generarReporteGeneral(fechas) {
         <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
             <h3 style="color: #9c27b0; margin-bottom: 20px; text-align: center;">📊 Reporte General de Asistencias</h3>
             <p style="text-align: center; color: #666; margin-bottom: 30px;">
-                Período: ${fechas.inicio.formatearFechaMexicana()} - ${fechas.fin.formatearFechaMexicana()}
+                Período: ${fechas.inicio.toLocaleDateString()} - ${fechas.fin.toLocaleDateString()}
             </p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
@@ -8426,7 +8423,7 @@ function generarReportePorEstudiante(fechas) {
         <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
             <h3 style="color: #9c27b0; margin-bottom: 20px; text-align: center;">👥 Reporte por Estudiante</h3>
             <p style="text-align: center; color: #666; margin-bottom: 30px;">
-                Período: ${fechas.inicio.formatearFechaMexicana()} - ${fechas.fin.formatearFechaMexicana()}
+                Período: ${fechas.inicio.toLocaleDateString()} - ${fechas.fin.toLocaleDateString()}
             </p>
             <div class="table-container">
                 <table class="table">
@@ -8507,7 +8504,7 @@ function generarReportePorGrupo(fechas) {
         <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
             <h3 style="color: #9c27b0; margin-bottom: 20px; text-align: center;">🎯 Reporte por Grupo</h3>
             <p style="text-align: center; color: #666; margin-bottom: 30px;">
-                Período: ${fechas.inicio.formatearFechaMexicana()} - ${fechas.fin.formatearFechaMexicana()}
+                Período: ${fechas.inicio.toLocaleDateString()} - ${fechas.fin.toLocaleDateString()}
             </p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
     `;
@@ -10665,7 +10662,7 @@ function aplicarPeriodoPersonalizado() {
     generarReportePersonalizado(fechaInicio, fechaFin);
     
     const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-    mostrarNotificacion(`Reporte generado para ${dias} días (${inicio.formatearFechaMexicana()} - ${fin.formatearFechaMexicana()})`, 'success');
+    mostrarNotificacion(`Reporte generado para ${dias} días (${inicio.toLocaleDateString()} - ${fin.toLocaleDateString()})`, 'success');
 }
 
 function generarReportePersonalizado(fechaInicio, fechaFin) {
@@ -12075,38 +12072,6 @@ function verificarPagosAtrasados() {
     
     console.log(`Estudiantes sin pago del mes actual (${mesActual}/${añoActual}):`, estudiantesAtrasados.length);
     return estudiantesAtrasados;
-}
-// Función para formatear fechas siempre en formato dd/mm/aaaa (México)
-function formatearFechaMexicana(fecha) {
-    const fechaObj = new Date(fecha);
-    
-    // Verificar que sea una fecha válida
-    if (isNaN(fechaObj.getTime())) {
-        return 'Fecha inválida';
-    }
-    
-    const dia = fechaObj.getDate().toString().padStart(2, '0');
-    const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-    const año = fechaObj.getFullYear();
-    
-    return `${dia}/${mes}/${año}`;
-}
-
-// Función para formatear fecha y hora en formato mexicano
-function formatearFechaHoraMexicana(fecha) {
-    const fechaObj = new Date(fecha);
-    
-    if (isNaN(fechaObj.getTime())) {
-        return 'Fecha inválida';
-    }
-    
-    const dia = fechaObj.getDate().toString().padStart(2, '0');
-    const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-    const año = fechaObj.getFullYear();
-    const horas = fechaObj.getHours().toString().padStart(2, '0');
-    const minutos = fechaObj.getMinutes().toString().padStart(2, '0');
-    
-    return `${dia}/${mes}/${año} ${horas}:${minutos}`;
 }
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
 console.log('=== FUNCIONES DE MES DE COLEGIATURA CARGADAS ===');
