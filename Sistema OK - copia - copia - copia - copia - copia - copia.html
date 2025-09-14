@@ -764,10 +764,10 @@
                 <p>Resumen general y estadísticas clave</p>
             </div>
             <div class="nav-card" onclick="cambiarSeccion('estudiantes', this)">
-                <span class="nav-card-icon">👥</span>
-                <h3>Estudiantes</h3>
-                <p>Registro y gestión completa de alumnos</p>
-            </div>
+    <span class="nav-card-icon">👥</span>
+    <h3>Alumnos</h3>
+    <p>Registro y gestión completa de alumnos</p>
+</div>
             <div class="nav-card" onclick="cambiarSeccion('entrenadores', this)">
                 <span class="nav-card-icon">🏋️‍♂️</span>
                 <h3>Entrenadores</h3>
@@ -802,7 +802,7 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-number" id="total-estudiantes">0</div>
-                        <div class="stat-label">Estudiantes Activos</div>
+                        <div class="stat-label">Alumnos Activos</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="total-entrenadores">4</div>
@@ -817,6 +817,16 @@
                         <div class="stat-label">Pagos Pendientes</div>
                     </div>
                 </div>
+                <!-- AGREGAR AQUÍ -->
+<div style="margin: 30px 0; text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+    <h3 style="color: white; margin-bottom: 20px;">📊 Exportar Reportes</h3>
+    <button class="btn btn-success" onclick="exportarListaEstudiantes()" style="margin-right: 10px; margin-bottom: 10px;">
+        📊 Exportar Lista de Estudiantes
+    </button>
+    <button class="btn btn-primary" onclick="exportarReporteFinanciero()" style="margin-right: 10px; margin-bottom: 10px;">
+        💰 Exportar Reporte Financiero
+    </button>
+</div>
                 <div style="margin-bottom: 30px;">
                     <h3>🚨 Alertas Importantes</h3>
                     <div id="alertas-container">
@@ -827,10 +837,10 @@
             <!-- Estudiantes -->
            <section id="estudiantes" class="section">
    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-    <h2>👥 Gestión de Estudiantes</h2>
+    <h2>👥 Gestión de Alumnos</h2>
     <div style="display: flex; gap: 10px; align-items: center;">
         <button class="btn btn-primary" onclick="mostrarFormularioEstudiante()">
-            ➕ Nuevo Estudiante
+            ➕ Nuevo Alumno
         </button>
         <button class="btn btn-success" onclick="mostrarCargaMasiva()">
             📁 Carga Masiva Excel
@@ -842,7 +852,7 @@
         <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda</h4>
         <div class="form-row">
             <div class="form-group">
-                <label>Buscar por nombre (estudiante o tutor)</label>
+                <label>Buscar por nombre (alumno o tutor)</label>
                 <input type="text" id="filtro-nombre-estudiante" 
                        placeholder="Escribe nombre del estudiante o tutor..." 
                        onkeyup="filtrarEstudiantes()" 
@@ -878,7 +888,7 @@
     </div>
                 <!-- Formulario -->
                 <div id="formulario-estudiante" class="form-section">
-                    <h3>📝 Registro de Nuevo Estudiante</h3>
+                    <h3>📝 Registro de Nuevo Alumno</h3>
                     <form id="form-estudiante" onsubmit="guardarEstudiante(event)">                      
                         <h4 style="color: #9c27b0; margin: 25px 0 15px 0;">Información Personal</h4>
                         <div class="form-row">
@@ -1001,7 +1011,7 @@
                                 Cancelar
                             </button>
                             <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
-                                💾 Guardar Estudiante
+                                💾 Guardar Alumno
                             </button>
                         </div>
                     </form>
@@ -1376,7 +1386,7 @@
                                 <form id="form-pago" onsubmit="procesarPago(event)">                                   
                                     <div class="form-row">
                         <div class="form-group">
-                            <label>Seleccionar Estudiante *</label>
+                            <label>Seleccionar Alumno *</label>
                             <select id="pago-estudiante" onchange="cargarDatosEstudiante()" required>
                                 <option value="">Seleccionar estudiante...</option>
                             </select>
@@ -1653,7 +1663,7 @@
                             <div class="stats-grid">
                                 <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
                                     <div class="stat-number" id="total-morosos">0</div>
-                                    <div class="stat-label">Estudiantes Morosos</div>
+                                    <div class="stat-label">Alumnos Morosos</div>
                                 </div>
                                 <div class="stat-card" style="background: linear-gradient(135deg, #f44336, #d32f2f);">
                                     <div class="stat-number" id="total-adeudo">$0</div>
@@ -1950,9 +1960,9 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h2>📈 Reportes y Estadísticas Avanzadas</h2>
         <div>
-            <button class="btn btn-success" onclick="exportarReportesCompletos()" style="margin-right: 10px;">
-                📄 Exportar Reporte Completo
-            </button>
+            <button class="btn btn-secondary" onclick="exportarReportesCompletos()" style="margin-bottom: 10px;">
+    📄 Exportar Reporte Completo
+</button>
             <button class="btn btn-primary" onclick="actualizarTodosLosReportes()">
                 🔄 Actualizar Datos
             </button>
@@ -1972,11 +1982,11 @@
                 <div class="stats-grid" style="margin-bottom: 30px;">
                     <div class="stat-card" style="background: linear-gradient(135deg, #4caf50, #2e7d32);">
                         <div class="stat-number" id="reporte-total-estudiantes">0</div>
-                        <div class="stat-label">Estudiantes Totales</div>
+                        <div class="stat-label">Alumnos Totales</div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
                         <div class="stat-number" id="reporte-estudiantes-activos">0</div>
-                        <div class="stat-label">Estudiantes Activos</div>
+                        <div class="stat-label">Alumnos Activos</div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
                         <div class="stat-number" id="reporte-ocupacion">0%</div>
@@ -2049,7 +2059,7 @@
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #f44336, #d32f2f);">
                         <div class="stat-number" id="estudiantes-riesgo">0</div>
-                        <div class="stat-label">Estudiantes en Riesgo</div>
+                        <div class="stat-label">Alumnos en Riesgo</div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
                         <div class="stat-number" id="nuevos-mes">0</div>
@@ -2115,7 +2125,7 @@
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
                         <div class="stat-number" id="proyeccion-estudiantes">0</div>
-                        <div class="stat-label">Estudiantes Proyectados</div>
+                        <div class="stat-label">Alumnos Proyectados</div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
                         <div class="stat-number" id="proyeccion-ocupacion">0%</div>
@@ -2951,11 +2961,28 @@ function mostrarFormularioEstudianteSinReiniciar() {
         // FUNCIÓN DE EDITAR ESTUDIANTE - CORREGIDA
         // FUNCIÓN CORREGIDA - editarEstudiante
 function editarEstudiante(id) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === id);
+    console.log("🔍 Buscando estudiante con ID:", id, "Tipo:", typeof id);
+    
+    // Buscar de forma más robusta
+    let estudiante = sistemaADAMS.estudiantes.find(e => e.id === id);
+    
+    // Si no encuentra, intentar convertir tipos
     if (!estudiante) {
-        mostrarNotificacion('Estudiante no encontrado', 'error');
+        estudiante = sistemaADAMS.estudiantes.find(e => e.id.toString() === id.toString());
+    }
+    
+    // Si aún no encuentra, buscar por índice
+    if (!estudiante && typeof id === 'number') {
+        estudiante = sistemaADAMS.estudiantes[id];
+    }
+    
+    if (!estudiante) {
+        console.log("❌ No encontrado. IDs disponibles:", sistemaADAMS.estudiantes.map(e => `ID: ${e.id} (${typeof e.id})`));
+        mostrarNotificacion('Estudiante no encontrado. Revisa la consola para detalles.', 'error');
         return;
     }
+    
+    console.log("✅ Estudiante encontrado:", estudiante.nombre);
 
     // Marcar que estamos editando
     document.getElementById('form-estudiante').dataset.editando = id;
@@ -2982,7 +3009,7 @@ function editarEstudiante(id) {
 
     // Cambiar título y botón
     document.querySelector('#formulario-estudiante h3').textContent = '✏️ Editar Estudiante';
-    document.querySelector('#form-estudiante button[type="submit"]').innerHTML = '💾 Actualizar Estudiante';
+    document.querySelector('#form-estudiante button[type="submit"]').innerHTML = '💾 Actualizar Alumno';
 
     // CAMBIO IMPORTANTE: Usar la nueva función que NO reinicia horarios
     mostrarFormularioEstudianteSinReiniciar(); // ← ESTA ES LA LÍNEA CAMBIADA
@@ -3173,156 +3200,177 @@ function debugFormularioEstudiante() {
     });
     console.log('=== FIN DEBUG ===');
 }
-        function guardarEstudiante(event) {
-            event.preventDefault();
-            
-            // Verificar si estamos editando o creando
-            const esEdicion = document.getElementById('form-estudiante').dataset.editando;
-            const estudianteId = esEdicion ? parseInt(esEdicion) : null;
-            
-            // Validar disciplinas - SOLO si no es estudiante pendiente
-            const disciplinasSeleccionadas = [];
-            document.querySelectorAll('#formulario-estudiante input[type="checkbox"]:checked').forEach(cb => {
-                disciplinasSeleccionadas.push(cb.value);
-            });
-            
-            const estatusActual = document.getElementById('estatus-estudiante').value;
-            
-            if (disciplinasSeleccionadas.length === 0 && estatusActual !== 'pendiente') {
-                mostrarNotificacion('Selecciona al menos una disciplina (o marca como PENDIENTE)', 'error');
-                return;
-                sistemaADAMS.estudiantes[indiceEstudiante] = {
-    ...estudianteExistente, // Mantener ID y fecha de registro original
-    nombre: formatearNombrePropio(nombre),
-    edad: edad,
-    fechaNacimiento: fechaNacimiento,
-    curp: curp,
-    tutor: tutor,
-    telefono: telefono,
-    email: email,
-    disciplinas: disciplinasSeleccionadas,
-    colegiatura: parseFloat(document.getElementById('colegiatura').value),
-    horarios: horarios,
-    esHermano: document.getElementById('es-hermano').value === 'si',
-    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
-    estatus: estatusFinal, // Usar el estatus calculado automáticamente
-};
-            }
-            
-
-            // Validar horarios
-            const horarios = [];
-            const horariosItems = document.querySelectorAll('#horarios-container-estudiante .horario-card');
-            
-            for (let item of horariosItems) {
-    const dia = item.querySelector('.dia-select').value;
-    const disciplinaHorario = item.querySelector('.disciplina-horario-select').value;
-    const horaInicio = item.querySelector('.hora-inicio').value;
-    const horaFin = item.querySelector('.hora-fin').value;
-    const grupo = item.querySelector('.grupo-select').value;
-    const entrenadorId = item.querySelector('.entrenador-select').value;
+       function guardarEstudiante(event) {
+    event.preventDefault();
     
-    if (!dia || !disciplinaHorario || !horaInicio || !horaFin || !grupo) {
-        mostrarNotificacion('Completa todos los campos del horario: día, disciplina, horarios y grupo', 'error');
+    // Verificar si estamos editando o creando
+    const esEdicion = document.getElementById('form-estudiante').dataset.editando;
+    const estudianteId = esEdicion ? parseFloat(esEdicion) : null;
+    console.log("ID del estudiante a actualizar:", estudianteId, "Tipo:", typeof estudianteId);
+    
+    // RECOPILAR DATOS DEL FORMULARIO AL INICIO
+    const nombre = document.getElementById('nombre').value?.trim() || '';
+    const fechaNacimiento = document.getElementById('fecha-nacimiento').value || '';
+    const curp = document.getElementById('curp').value?.trim() || '';
+    const tutor = document.getElementById('tutor').value?.trim() || '';
+    const telefono = document.getElementById('telefono').value?.trim() || '';
+    const email = document.getElementById('email').value?.trim() || '';
+    
+    console.log("Datos recopilados - Nombre:", nombre, "Tutor:", tutor);
+    
+    // Validar disciplinas
+    const disciplinasSeleccionadas = [];
+    document.querySelectorAll('#formulario-estudiante input[type="checkbox"]:checked').forEach(cb => {
+        disciplinasSeleccionadas.push(cb.value);
+    });
+    
+    const estatusActual = document.getElementById('estatus-estudiante').value;
+    
+    if (disciplinasSeleccionadas.length === 0 && estatusActual !== 'pendiente') {
+        mostrarNotificacion('Selecciona al menos una disciplina (o marca como PENDIENTE)', 'error');
         return;
     }
+
+    // Validar horarios
+    const horarios = [];
+    const horariosItems = document.querySelectorAll('#horarios-container-estudiante .horario-card');
     
-    if (horaInicio >= horaFin) {
-        mostrarNotificacion('La hora de inicio debe ser menor que la de fin', 'error');
-        return;
+    for (let item of horariosItems) {
+        const dia = item.querySelector('.dia-select').value;
+        const disciplinaHorario = item.querySelector('.disciplina-horario-select').value;
+        const horaInicio = item.querySelector('.hora-inicio').value;
+        const horaFin = item.querySelector('.hora-fin').value;
+        const grupo = item.querySelector('.grupo-select').value;
+        const entrenadorId = item.querySelector('.entrenador-select').value;
+        
+        if (!dia || !disciplinaHorario || !horaInicio || !horaFin || !grupo) {
+            mostrarNotificacion('Completa todos los campos del horario: día, disciplina, horarios y grupo', 'error');
+            return;
+        }
+        
+        if (horaInicio >= horaFin) {
+            mostrarNotificacion('La hora de inicio debe ser menor que la de fin', 'error');
+            return;
+        }
+        
+        // Verificar duplicados
+        const existe = horarios.find(h => h.dia === dia && h.horaInicio === horaInicio);
+        if (existe) {
+            mostrarNotificacion(`Ya existe un horario para ${dia} a las ${horaInicio}`, 'error');
+            return;
+        }
+        
+        horarios.push({ 
+            dia, 
+            disciplina: disciplinaHorario,
+            horaInicio, 
+            horaFin, 
+            grupo,
+            entrenadorId: entrenadorId || null
+        });
+    }
+
+    // Calcular edad
+    const fechaNac = new Date(fechaNacimiento);
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    if (hoy.getMonth() < fechaNac.getMonth() || 
+        (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() < fechaNac.getDate())) {
+        edad--;
     }
     
-    // Verificar duplicados
-    const existe = horarios.find(h => h.dia === dia && h.horaInicio === horaInicio);
-    if (existe) {
-        mostrarNotificacion(`Ya existe un horario para ${dia} a las ${horaInicio}`, 'error');
-        return;
-    }
-    
-    horarios.push({ 
-    dia, 
-    disciplina: disciplinaHorario,
-    horaInicio, 
-    horaFin, 
-    grupo,
-    entrenadorId: entrenadorId || null
-});
-}
+    // Calcular estatus final
+    const estatusFinal = (disciplinasSeleccionadas.length > 0 && horarios.length > 0) ? 'activo' : 'pendiente';
 
-            // Calcular edad
-            const fechaNacimiento = new Date(document.getElementById('fecha-nacimiento').value);
-            const hoy = new Date();
-            let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-            if (hoy.getMonth() < fechaNacimiento.getMonth() || 
-                (hoy.getMonth() === fechaNacimiento.getMonth() && hoy.getDate() < fechaNacimiento.getDate())) {
-                edad--;
-            }
+    if (esEdicion) {
+        // EDITAR ESTUDIANTE EXISTENTE
+        console.log("Buscando índice para ID:", estudianteId);
+        console.log("Todos los IDs disponibles:", sistemaADAMS.estudiantes.slice(0,5).map(e => ({id: e.id, nombre: e.nombre})));
 
-            if (esEdicion) {
-                // EDITAR ESTUDIANTE EXISTENTE
-                const indiceEstudiante = sistemaADAMS.estudiantes.findIndex(e => e.id === estudianteId);
-                if (indiceEstudiante === -1) {
-                    mostrarNotificacion('Error: Estudiante no encontrado', 'error');
-                    return;
-                }
+        let indiceEstudiante = -1;
 
-                // Actualizar datos del estudiante existente
-               // Actualizar datos del estudiante existente
-const estudianteExistente = sistemaADAMS.estudiantes[indiceEstudiante];
-sistemaADAMS.estudiantes[indiceEstudiante] = {
-    ...estudianteExistente, // Mantener ID y fecha de registro original
-    nombre: formatearNombrePropio(nombre),
-    edad: edad,
-    fechaNacimiento: fechaNacimiento,
-    curp: curp,
-    tutor: tutor,
-    telefono: telefono,
-    email: email,
-    disciplinas: disciplinasSeleccionadas,
-    colegiatura: parseFloat(document.getElementById('colegiatura').value),
-    horarios: horarios,
-    esHermano: document.getElementById('es-hermano').value === 'si',
-    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
-    estatus: estatusFinal, // Usar el estatus calculado automáticamente
-};
+        // Método 1: Comparación exacta
+        indiceEstudiante = sistemaADAMS.estudiantes.findIndex(e => e.id === estudianteId);
+        console.log("Método 1 (exacto):", indiceEstudiante);
 
-                mostrarNotificacion('Estudiante actualizado exitosamente', 'success');
-            } else {
-                // CREAR NUEVO ESTUDIANTE
-                // CREAR NUEVO ESTUDIANTE - Auto-asignar estatus
-const estatusNuevo = (disciplinasSeleccionadas.length > 0 && horarios.length > 0) ? 'activo' : 'pendiente';
-
-const nuevoEstudiante = {
-    id: Date.now(),
-    nombre: formatearNombrePropio(nombre),
-    edad: edad,
-    fechaNacimiento: fechaNacimiento,
-    curp: curp,
-    tutor: tutor,
-    telefono: telefono,
-    email: email,
-    disciplinas: disciplinasSeleccionadas,
-    colegiatura: parseFloat(document.getElementById('colegiatura').value),
-    horarios: horarios,
-    esHermano: document.getElementById('es-hermano').value === 'si',
-    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
-    estatus: estatusNuevo, // Auto-asignado basado en completitud
-    fechaRegistro: new Date().toISOString()
-};
-
-                sistemaADAMS.estudiantes.push(nuevoEstudiante);
-                mostrarNotificacion('Estudiante registrado exitosamente', 'success');
-            }
-
-            // Guardar en el sistema
-            guardarDatos();
-            
-            // Limpiar y cerrar formulario
-            ocultarFormularioEstudiante();
-            actualizarTablaEstudiantes();
-            actualizarDashboard();
+        // Método 2: Como strings
+        if (indiceEstudiante === -1) {
+            indiceEstudiante = sistemaADAMS.estudiantes.findIndex(e => e.id.toString() === estudianteId.toString());
+            console.log("Método 2 (string):", indiceEstudiante);
         }
 
+        // Método 3: Tolerancia a decimales
+        if (indiceEstudiante === -1) {
+            indiceEstudiante = sistemaADAMS.estudiantes.findIndex(e => Math.floor(e.id) === Math.floor(estudianteId));
+            console.log("Método 3 (sin decimales):", indiceEstudiante);
+        }
+
+        // Método 4: Búsqueda aproximada
+        if (indiceEstudiante === -1) {
+            const idBase = estudianteId.toString().split('.')[0];
+            indiceEstudiante = sistemaADAMS.estudiantes.findIndex(e => e.id.toString().startsWith(idBase));
+            console.log("Método 4 (aproximado):", indiceEstudiante);
+        }
+
+        console.log("Índice encontrado:", indiceEstudiante);
+        
+        if (indiceEstudiante === -1) {
+            mostrarNotificacion('Error: Estudiante no encontrado', 'error');
+            return;
+        }
+
+        // Actualizar datos del estudiante existente
+        const estudianteExistente = sistemaADAMS.estudiantes[indiceEstudiante];
+        sistemaADAMS.estudiantes[indiceEstudiante] = {
+            ...estudianteExistente,
+            nombre: formatearNombrePropio(nombre),
+            edad: edad,
+            fechaNacimiento: fechaNacimiento,
+            curp: curp,
+            tutor: tutor,
+            telefono: telefono,
+            email: email,
+            disciplinas: disciplinasSeleccionadas,
+            colegiatura: parseFloat(document.getElementById('colegiatura').value),
+            horarios: horarios,
+            esHermano: document.getElementById('es-hermano').value === 'si',
+            porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
+            estatus: estatusFinal
+        };
+
+        mostrarNotificacion('Alumno actualizado exitosamente', 'success');
+    } else {
+        // CREAR NUEVO ESTUDIANTE
+        const nuevoEstudiante = {
+            id: Date.now(),
+            nombre: formatearNombrePropio(nombre),
+            edad: edad,
+            fechaNacimiento: fechaNacimiento,
+            curp: curp,
+            tutor: tutor,
+            telefono: telefono,
+            email: email,
+            disciplinas: disciplinasSeleccionadas,
+            colegiatura: parseFloat(document.getElementById('colegiatura').value),
+            horarios: horarios,
+            esHermano: document.getElementById('es-hermano').value === 'si',
+            porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
+            estatus: estatusFinal,
+            fechaRegistro: new Date().toISOString()
+        };
+
+        sistemaADAMS.estudiantes.push(nuevoEstudiante);
+        mostrarNotificacion('Alumno registrado exitosamente', 'success');
+    }
+
+    // Guardar en el sistema
+    guardarDatos();
+    
+    // Limpiar y cerrar formulario
+    ocultarFormularioEstudiante();
+    actualizarTablaEstudiantes();
+    actualizarDashboard();
+}
         function actualizarTablaEstudiantes() {
     const tbody = document.getElementById('tabla-estudiantes');
     
@@ -3384,7 +3432,7 @@ const nuevoEstudiante = {
                     ${estudiante.porcentajeBeca > 0 ? `<br><small style="color: #28a745;">Beca: ${estudiante.porcentajeBeca}%</small>` : ''}
                 </td>
                 <td>
-                    <button class="btn btn-secondary btn-small" onclick="editarEstudiante(${estudiante.id})" style="margin-right: 5px; margin-bottom: 5px;">
+                    <button class="btn btn-secondary btn-small" onclick="editarEstudiante('${estudiante.id}')" style="margin-right: 5px; margin-bottom: 5px;">
                         Editar
                     </button>
                     <button class="btn btn-primary btn-small" onclick="cambiarEstatusRapido(${estudiante.id})" style="margin-right: 5px; margin-bottom: 5px;">
@@ -7927,7 +7975,35 @@ function cargarAsistenciasDia() {
     `;
 });
         
+        // Verificar si este horario ya tiene asistencias guardadas
+        const yaGuardado = verificarAsistenciasGuardadas(fecha, horario);
+        const estadoGuardado = yaGuardado ? 'guardado' : 'pendiente';
+        const colorEstado = yaGuardado ? '#28a745' : '#ffc107';
+        const textoEstado = yaGuardado ? '✅ GUARDADO' : '⏳ PENDIENTE';
+        const iconoBoton = yaGuardado ? '🔄' : '💾';
+        const textoBoton = yaGuardado ? 'Actualizar' : 'Guardar';
+
         htmlAsistencias += `
+                </div>
+                <div class="horario-footer" data-horario="${horario}" style="text-align: center; margin: 20px 0; padding: 15px; border-top: 2px solid #e3f2fd; background: linear-gradient(90deg, rgba(${yaGuardado ? '40,167,69' : '255,193,7'}, 0.1) 0%, rgba(255,255,255,0.1) 100%);">
+                    
+                    <div class="estado-guardado" style="margin-bottom: 15px;">
+                        <span style="background: ${colorEstado}; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                            ${textoEstado}
+                        </span>
+                        ${yaGuardado ? `<small style="display: block; color: #666; margin-top: 5px;">Última actualización: ${obtenerHoraGuardado(fecha, horario)}</small>` : ''}
+                    </div>
+                    
+                    <button class="btn btn-guardar-horario ${yaGuardado ? 'btn-warning' : 'btn-success'}" 
+                            onclick="guardarAsistenciasHorario('${horario}', '${diaSemana}', '${fecha}')" 
+                            data-horario="${horario}"
+                            style="margin-right: 10px;">
+                        ${iconoBoton} ${textoBoton} Asistencias de ${horario}
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="marcarTodosPresentes('${horario}')" style="font-size: 12px;">
+                        ✅ Marcar Todos Presentes
+                    </button>
                 </div>
             </div>
         `;
@@ -7990,6 +8066,154 @@ function cargarAsistenciasDia() {
     }
 
     document.getElementById('asistencias-container').innerHTML = htmlAsistencias;
+}
+
+function verificarAsistenciasGuardadas(fecha, horario) {
+    try {
+        const asistenciasGuardadas = JSON.parse(localStorage.getItem('asistenciasPorHorario') || '[]');
+        return asistenciasGuardadas.some(a => a.fecha === fecha && a.horario === horario);
+    } catch (error) {
+        return false;
+    }
+}
+
+function obtenerHoraGuardado(fecha, horario) {
+    try {
+        const asistenciasGuardadas = JSON.parse(localStorage.getItem('asistenciasPorHorario') || '[]');
+        const asistencia = asistenciasGuardadas.find(a => a.fecha === fecha && a.horario === horario);
+        
+        if (asistencia && asistencia.timestamp) {
+            const fechaGuardado = new Date(asistencia.timestamp);
+            return fechaGuardado.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+        return 'No disponible';
+    } catch (error) {
+        return 'Error';
+    }
+}
+
+
+function guardarAsistenciasHorario(horario, diaSemana, fecha) {
+    try {
+        console.log(`Guardando asistencias para horario: ${horario} del ${fecha}`);
+        
+        // Encontrar el botón y el contenedor
+        const botonGuardar = document.querySelector(`button[data-horario="${horario}"]`);
+        const contenedorFooter = document.querySelector(`div[data-horario="${horario}"]`);
+        
+        // Mostrar estado de carga
+        if (botonGuardar) {
+            botonGuardar.disabled = true;
+            botonGuardar.innerHTML = '⏳ Guardando...';
+            botonGuardar.style.opacity = '0.7';
+        }
+        
+        // Recopilar asistencias
+        const selectsAsistencia = document.querySelectorAll(`select[data-horario="${horario}"]`);
+        const asistenciasHorario = [];
+        
+        selectsAsistencia.forEach(select => {
+            const estudianteId = select.dataset.estudiante;
+            const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+            
+            if (estudiante) {
+                asistenciasHorario.push({
+                    estudianteId: estudianteId,
+                    nombreEstudiante: estudiante.nombre,
+                    fecha: fecha,
+                    horario: horario,
+                    diaSemana: diaSemana,
+                    estado: select.value,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+        
+        if (asistenciasHorario.length === 0) {
+            mostrarNotificacion('No hay asistencias para guardar en este horario', 'error');
+            return;
+        }
+        
+        // Guardar datos (tu lógica existente)
+        let asistenciasGuardadas = JSON.parse(localStorage.getItem('asistenciasPorHorario') || '[]');
+        asistenciasGuardadas = asistenciasGuardadas.filter(a => 
+            !(a.fecha === fecha && a.horario === horario)
+        );
+        asistenciasGuardadas.push(...asistenciasHorario);
+        localStorage.setItem('asistenciasPorHorario', JSON.stringify(asistenciasGuardadas));
+        
+        // Actualizar sistema principal
+        if (!sistemaADAMS.asistenciasEstudiantes) {
+            sistemaADAMS.asistenciasEstudiantes = [];
+        }
+        sistemaADAMS.asistenciasEstudiantes = sistemaADAMS.asistenciasEstudiantes.filter(a => 
+            !(a.fecha === fecha && a.horario === horario)
+        );
+        sistemaADAMS.asistenciasEstudiantes.push(...asistenciasHorario);
+        localStorage.setItem('sistemaADAMS', JSON.stringify(sistemaADAMS));
+        
+        // ACTUALIZAR INTERFAZ VISUAL
+        setTimeout(() => {
+            const horaActual = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            if (contenedorFooter) {
+                // Actualizar el indicador de estado
+                const estadoGuardado = contenedorFooter.querySelector('.estado-guardado');
+                if (estadoGuardado) {
+                    estadoGuardado.innerHTML = `
+                        <span style="background: #28a745; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                            ✅ GUARDADO
+                        </span>
+                        <small style="display: block; color: #666; margin-top: 5px;">Última actualización: ${horaActual}</small>
+                    `;
+                }
+                
+                // Cambiar el fondo del footer
+                contenedorFooter.style.background = 'linear-gradient(90deg, rgba(40,167,69, 0.1) 0%, rgba(255,255,255,0.1) 100%)';
+            }
+            
+            if (botonGuardar) {
+                botonGuardar.disabled = false;
+                botonGuardar.innerHTML = '🔄 Actualizar Asistencias de ' + horario;
+                botonGuardar.className = 'btn btn-guardar-horario btn-warning';
+                botonGuardar.style.opacity = '1';
+            }
+            
+            mostrarNotificacion(`Asistencias del horario ${horario} guardadas exitosamente (${asistenciasHorario.length} alumnos)`, 'success');
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error al guardar asistencias del horario:', error);
+        mostrarNotificacion('Error al guardar asistencias del horario', 'error');
+        
+        // Restaurar botón en caso de error
+        const botonGuardar = document.querySelector(`button[data-horario="${horario}"]`);
+        if (botonGuardar) {
+            botonGuardar.disabled = false;
+            botonGuardar.style.opacity = '1';
+        }
+    }
+}
+
+function marcarTodosPresentes(horario) {
+    const selectsAsistencia = document.querySelectorAll(`select[data-horario="${horario}"]`);
+    let contador = 0;
+    
+    selectsAsistencia.forEach(select => {
+        if (select.value !== 'presente') {
+            select.value = 'presente';
+            contador++;
+        }
+    });
+    
+    if (contador > 0) {
+        mostrarNotificacion(`${contador} alumnos marcados como presentes en ${horario}`, 'success');
+    } else {
+        mostrarNotificacion('Todos los alumnos ya estaban marcados como presentes', 'info');
+    }
 }
 // FUNCIONES DEL MÓDULO DE ASISTENCIAS
 
@@ -8144,6 +8368,93 @@ function guardarAsistenciasDelDia() {
     // También guardar estados de clases de muestra
     guardarEstadosClasesMuestra();
     mostrarNotificacion(`${asistenciasGuardadas} asistencias guardadas`, 'success');
+}
+function guardarAsistenciasPorHorario(contenedorHorario) {
+    try {
+        const fecha = document.getElementById('fecha-asistencia').value;
+        if (!fecha) {
+            mostrarNotificacion('Selecciona una fecha primero', 'error');
+            return;
+        }
+        
+        console.log('Guardando asistencias para horario específico...');
+        
+        // Obtener información del horario desde el contenedor
+        const tituloHorario = contenedorHorario.querySelector('h4').textContent;
+        const disciplina = tituloHorario.split(' - ')[0];
+        const horario = tituloHorario.split(' - ')[1];
+        
+        // Recopilar asistencias de este horario específico
+        const filasAsistencia = contenedorHorario.querySelectorAll('tr:not(:first-child)');
+        const asistenciasHorario = [];
+        
+        filasAsistencia.forEach(fila => {
+            const estudianteId = fila.dataset.estudianteId;
+            const nombreEstudiante = fila.querySelector('td:first-child').textContent.split('\n')[0];
+            const selectAsistencia = fila.querySelector('select[data-tipo="asistencia"]');
+            const inputObservaciones = fila.querySelector('input[data-tipo="observaciones"]');
+            
+            if (estudianteId && selectAsistencia) {
+                asistenciasHorario.push({
+                    estudianteId: estudianteId,
+                    nombreEstudiante: nombreEstudiante.trim(),
+                    asistencia: selectAsistencia.value,
+                    observaciones: inputObservaciones ? inputObservaciones.value : '',
+                    disciplina: disciplina,
+                    horario: horario,
+                    fecha: fecha,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+        
+        if (asistenciasHorario.length === 0) {
+            mostrarNotificacion('No hay asistencias para guardar en este horario', 'error');
+            return;
+        }
+        
+        // Obtener asistencias existentes
+        let asistenciasGuardadas = JSON.parse(localStorage.getItem('asistenciasDetalladas') || '[]');
+        
+        // Eliminar asistencias previas de este mismo horario y fecha
+        asistenciasGuardadas = asistenciasGuardadas.filter(a => 
+            !(a.fecha === fecha && a.disciplina === disciplina && a.horario === horario)
+        );
+        
+        // Agregar nuevas asistencias
+        asistenciasGuardadas.push(...asistenciasHorario);
+        
+        // Guardar en localStorage
+        localStorage.setItem('asistenciasDetalladas', JSON.stringify(asistenciasGuardadas));
+        
+        // También actualizar el sistema principal si existe
+        if (sistemaADAMS.asistenciasEstudiantes) {
+            sistemaADAMS.asistenciasEstudiantes.push(...asistenciasHorario);
+            localStorage.setItem('sistemaADAMS', JSON.stringify(sistemaADAMS));
+        }
+        
+        console.log(`Guardadas ${asistenciasHorario.length} asistencias para ${disciplina} - ${horario}`);
+        mostrarNotificacion(`Asistencias del horario ${disciplina} - ${horario} guardadas exitosamente`, 'success');
+        
+        // Marcar visualmente que se guardó
+        const botonGuardar = contenedorHorario.querySelector('.btn-guardar-horario');
+        if (botonGuardar) {
+            botonGuardar.textContent = '✅ Guardado';
+            botonGuardar.style.background = '#28a745';
+            botonGuardar.disabled = true;
+            
+            // Reactivar después de 3 segundos
+            setTimeout(() => {
+                botonGuardar.textContent = '💾 Guardar Horario';
+                botonGuardar.style.background = '';
+                botonGuardar.disabled = false;
+            }, 3000);
+        }
+        
+    } catch (error) {
+        console.error('Error al guardar asistencias del horario:', error);
+        mostrarNotificacion('Error al guardar asistencias del horario', 'error');
+    }
 }
 
 // Marcar todos los estudiantes como presentes
@@ -9193,35 +9504,27 @@ document.querySelectorAll('input[type="checkbox"][id^="grupo-"]').forEach(checkb
 }
 
 // Función para formatear nombres a formato propio
-function formatearNombrePropio(nombre) {
-    if (!nombre || typeof nombre !== 'string') {
-        return nombre;
+function formatearNombrePropio(texto) {
+    if (!texto || typeof texto !== 'string') {
+        console.warn('formatearNombrePropio recibió valor inválido:', texto);
+        return String(texto || '');
     }
     
-    // Limpiar espacios extra al inicio y final
-    nombre = nombre.trim();
+    const textoLimpio = texto.toString().trim();
+    if (!textoLimpio) return '';
     
-    if (nombre === '') {
-        return nombre;
+    try {
+        return textoLimpio.split(' ')
+            .filter(palabra => palabra.length > 0)
+            .map(palabra => 
+                palabra.charAt(0).toUpperCase() + 
+                palabra.slice(1).toLowerCase()
+            )
+            .join(' ');
+    } catch (error) {
+        console.error('Error en formatearNombrePropio:', error);
+        return String(texto);
     }
-    
-    // Palabras que deben permanecer en minúsculas (preposiciones, artículos)
-    const palabrasMinusculas = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u', 'da', 'das', 'do', 'dos'];
-    
-    // Dividir el nombre en palabras
-    const palabras = nombre.toLowerCase().split(/\s+/);
-    
-    // Formatear cada palabra
-    const palabrasFormateadas = palabras.map((palabra, indice) => {
-        // Si es la primera palabra o no está en la lista de minúsculas, capitalizar
-        if (indice === 0 || !palabrasMinusculas.includes(palabra)) {
-            return palabra.charAt(0).toUpperCase() + palabra.slice(1);
-        }
-        // Si está en la lista de minúsculas y no es la primera palabra, mantener en minúsculas
-        return palabra;
-    });
-    
-    return palabrasFormateadas.join(' ');
 }
 
 function getEstatusBadge(estatus) {
@@ -9239,42 +9542,368 @@ function getEstatusBadge(estatus) {
     }
 }
 
-        function actualizarDashboard() {
-            // Filtrar estudiantes activos o pendientes que tengan horarios
-const estudiantesActivos = sistemaADAMS.estudiantes.filter(e => 
-    (e.estatus === 'activo' || e.estatus === 'pendiente') && 
-    e.horarios && e.horarios.length > 0
-);
-            const entrenadoresActivos = sistemaADAMS.entrenadores.filter(e => e.estado === 'activo').length;
+       function actualizarDashboard() {
+    console.log("Actualizando Dashboard...");
+    
+    // Verificar que sistemaADAMS esté disponible
+    if (!sistemaADAMS || !sistemaADAMS.estudiantes) {
+        console.log("Sistema ADAMS no disponible");
+        return;
+    }
+    
+    // Contar estudiantes por estatus
+    const totalActivos = sistemaADAMS.estudiantes.filter(e => e.estatus === 'activo').length;
+    const totalPendientes = sistemaADAMS.estudiantes.filter(e => e.estatus === 'pendiente').length;
+    const totalInactivos = sistemaADAMS.estudiantes.filter(e => e.estatus === 'inactivo').length;
+    const totalBaja = sistemaADAMS.estudiantes.filter(e => e.estatus === 'baja').length;
+    
+    // Estudiantes con horarios (activos funcionales)
+    const estudiantesConHorarios = sistemaADAMS.estudiantes.filter(e => 
+        (e.estatus === 'activo' || e.estatus === 'pendiente') && 
+        e.horarios && e.horarios.length > 0
+    ).length;
+    
+    console.log("Estudiantes activos:", totalActivos);
+    console.log("Estudiantes pendientes:", totalPendientes);
+    console.log("Estudiantes inactivos:", totalInactivos);
+    console.log("Estudiantes con horarios:", estudiantesConHorarios);
+    
+    // Contar entrenadores activos
+    const entrenadoresActivos = sistemaADAMS.entrenadores.filter(e => e.estado === 'activo').length;
+    
+    // Calcular ingresos del mes actual
+    let ingresosMes = 0;
+    if (sistemaADAMS.pagos && sistemaADAMS.pagos.length > 0) {
+        const hoy = new Date();
+        const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const pagosMes = sistemaADAMS.pagos.filter(pago => {
+            const fechaPago = new Date(pago.fecha);
+            return fechaPago >= inicioMes && fechaPago <= hoy;
+        });
+        ingresosMes = pagosMes.reduce((total, pago) => total + (pago.montoTotal || 0), 0);
+    }
+    
+    // Obtener elementos del DOM
+    const elementoTotalEstudiantes = document.getElementById('total-estudiantes');
+    const elementoTotalEntrenadores = document.getElementById('total-entrenadores');
+    const elementoIngresosMes = document.getElementById('ingresos-mes');
+    const elementoEstudiantesPendientes = document.getElementById('estudiantes-pendientes');
+    
+    // Actualizar primera tarjeta (solo activos)
+    if (elementoTotalEstudiantes) {
+        elementoTotalEstudiantes.textContent = totalActivos;
+    }
+    
+    // Actualizar segunda tarjeta (entrenadores)
+    if (elementoTotalEntrenadores) {
+        elementoTotalEntrenadores.textContent = entrenadoresActivos;
+    }
+    
+    // Actualizar tercera tarjeta (ingresos)
+    if (elementoIngresosMes) {
+        elementoIngresosMes.textContent = `$${ingresosMes.toLocaleString()}`;
+    }
+    
+    // Actualizar cuarta tarjeta (pendientes)
+    if (elementoEstudiantesPendientes) {
+        elementoEstudiantesPendientes.textContent = totalPendientes;
+    }
+    
+    // Actualizar etiquetas
+    const labelEstudiantes = elementoTotalEstudiantes?.parentNode.querySelector('.stat-label');
+    const labelPendientes = elementoEstudiantesPendientes?.parentNode.querySelector('.stat-label');
+    
+    if (labelEstudiantes) {
+        labelEstudiantes.textContent = 'Alumnos Activos';
+    }
+    
+    if (labelPendientes) {
+        labelPendientes.textContent = 'Alumnos Pendientes';
+    }
+    
+    // Ejecutar función de alertas si existe
+    if (typeof mostrarAlertasStockBajo === 'function') {
+        mostrarAlertasStockBajo();
+    }
+    
+    console.log("Dashboard actualizado - Activos:", totalActivos, "Pendientes:", totalPendientes, "Ingresos:", ingresosMes);
+}
+
+function exportarListaEstudiantes() {
+    try {
+        const fecha = new Date().toISOString().split('T')[0];
+        
+        // Preparar datos de estudiantes
+        const datosEstudiantes = sistemaADAMS.estudiantes.map(estudiante => ({
+            Nombre: estudiante.nombre,
+            Tutor: estudiante.tutor,
+            Telefono: estudiante.telefono,
+            Email: estudiante.email || 'No registrado',
+            Edad: estudiante.edad,
+            Disciplinas: estudiante.disciplinas.join(', '),
+            Estatus: estudiante.estatus,
+            Colegiatura: estudiante.colegiatura,
+            'Porcentaje Beca': estudiante.porcentajeBeca || 0,
+            'Es Hermano': estudiante.esHermano ? 'Sí' : 'No',
+            'Fecha Registro': new Date(estudiante.fechaRegistro).toLocaleDateString()
+        }));
+        
+        const reporte = {
+            titulo: 'Lista de Estudiantes - Academia ADAMS',
+            fecha: fecha,
+            totalEstudiantes: sistemaADAMS.estudiantes.length,
+            estudiantesActivos: sistemaADAMS.estudiantes.filter(e => e.estatus === 'activo').length,
+            estudiantesPendientes: sistemaADAMS.estudiantes.filter(e => e.estatus === 'pendiente').length,
+            datos: datosEstudiantes
+        };
+        
+        descargarJSON(reporte, `Lista_Estudiantes_${fecha}.json`);
+        mostrarNotificacion('Lista de estudiantes exportada exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error al exportar lista de estudiantes:', error);
+        mostrarNotificacion('Error al exportar lista de estudiantes', 'error');
+    }
+}
+function exportarReporteFinanciero() {
+    try {
+        const fecha = new Date().toISOString().split('T')[0];
+        const mesActual = new Date().getMonth();
+        const añoActual = new Date().getFullYear();
+        
+        // Calcular ingresos por mes
+        const ingresosPorMes = {};
+        const pagosPorConcepto = {};
+        
+        sistemaADAMS.pagos.forEach(pago => {
+            const fechaPago = new Date(pago.fecha);
+            const mes = fechaPago.toISOString().substring(0, 7); // YYYY-MM
             
-            // Calcular ingresos reales del mes actual
-            let ingresosMes = 0;
-            if (sistemaADAMS.pagos) {
-                const hoy = new Date();
-                const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                const pagosMes = sistemaADAMS.pagos.filter(pago => {
-                    const fechaPago = new Date(pago.fecha);
-                    return fechaPago >= inicioMes;
-                });
-                ingresosMes = pagosMes.reduce((total, pago) => total + pago.montoTotal, 0);
+            if (!ingresosPorMes[mes]) ingresosPorMes[mes] = 0;
+            ingresosPorMes[mes] += pago.montoTotal;
+            
+            if (!pagosPorConcepto[pago.concepto]) pagosPorConcepto[pago.concepto] = 0;
+            pagosPorConcepto[pago.concepto] += pago.montoTotal;
+        });
+        
+        const reporte = {
+            titulo: 'Reporte Financiero - Academia ADAMS',
+            fecha: fecha,
+            resumen: {
+                totalPagos: sistemaADAMS.pagos.length,
+                ingresoTotal: sistemaADAMS.pagos.reduce((total, pago) => total + pago.montoTotal, 0),
+                ingresoMesActual: ingresosPorMes[`${añoActual}-${String(mesActual + 1).padStart(2, '0')}`] || 0
+            },
+            ingresosPorMes: ingresosPorMes,
+            pagosPorConcepto: pagosPorConcepto,
+            detallesPagos: sistemaADAMS.pagos.map(pago => ({
+                fecha: pago.fecha,
+                estudiante: pago.estudiante,
+                concepto: pago.concepto,
+                monto: pago.montoTotal,
+                metodo: pago.metodoPago
+            }))
+        };
+        
+        descargarJSON(reporte, `Reporte_Financiero_${fecha}.json`);
+        mostrarNotificacion('Reporte financiero exportado exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error al exportar reporte financiero:', error);
+        mostrarNotificacion('Error al exportar reporte financiero', 'error');
+    }
+}
+function descargarJSON(datos, nombreArchivo) {
+    const dataStr = JSON.stringify(datos, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = nombreArchivo;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function exportarReportesCompletos() {
+    try {
+        console.log("Generando reporte completo del sistema...");
+        
+        const fecha = new Date().toISOString().split('T')[0];
+        const timestamp = new Date().toISOString();
+        
+        // Verificar que hay datos
+        if (!sistemaADAMS) {
+            mostrarNotificacion('Sistema no disponible', 'error');
+            return;
+        }
+        
+        // Calcular estadísticas generales
+        const estudiantes = sistemaADAMS.estudiantes || [];
+        const entrenadores = sistemaADAMS.entrenadores || [];
+        const pagos = sistemaADAMS.pagos || [];
+        
+        const estadisticas = {
+            estudiantes: {
+                total: estudiantes.length,
+                activos: estudiantes.filter(e => e.estatus === 'activo').length,
+                pendientes: estudiantes.filter(e => e.estatus === 'pendiente').length,
+                inactivos: estudiantes.filter(e => e.estatus === 'inactivo').length,
+                baja: estudiantes.filter(e => e.estatus === 'baja').length
+            },
+            entrenadores: {
+                total: entrenadores.length,
+                activos: entrenadores.filter(e => e.estado === 'activo').length
+            },
+            financiero: {
+                totalPagos: pagos.length,
+                ingresoTotal: pagos.reduce((total, pago) => total + (pago.montoTotal || 0), 0),
+                ingresoMesActual: calcularIngresosMesActual(pagos)
+            },
+            disciplinas: calcularEstadisticasDisciplinas(estudiantes)
+        };
+        
+        // Preparar datos de estudiantes con más detalle
+        const estudiantesDetalle = estudiantes.map(estudiante => ({
+            id: estudiante.id,
+            nombre: estudiante.nombre,
+            tutor: estudiante.tutor,
+            telefono: estudiante.telefono,
+            email: estudiante.email || '',
+            edad: estudiante.edad,
+            fechaNacimiento: estudiante.fechaNacimiento,
+            curp: estudiante.curp || '',
+            disciplinas: estudiante.disciplinas || [],
+            estatus: estudiante.estatus,
+            colegiatura: estudiante.colegiatura,
+            porcentajeBeca: estudiante.porcentajeBeca || 0,
+            esHermano: estudiante.esHermano || false,
+            fechaRegistro: estudiante.fechaRegistro,
+            horarios: estudiante.horarios || []
+        }));
+        
+        // Preparar datos de entrenadores
+        const entrenadoresDetalle = entrenadores.map(entrenador => ({
+            id: entrenador.id,
+            nombre: entrenador.nombre,
+            telefono: entrenador.telefono,
+            email: entrenador.email,
+            disciplinas: entrenador.disciplinas || [],
+            tarifaHora: entrenador.tarifaHora,
+            experiencia: entrenador.experiencia,
+            estado: entrenador.estado,
+            fechaContratacion: entrenador.fechaContratacion,
+            horarios: entrenador.horarios || []
+        }));
+        
+        // Preparar datos de pagos
+        const pagosDetalle = pagos.map(pago => ({
+            fecha: pago.fecha,
+            estudiante: pago.estudiante,
+            concepto: pago.concepto,
+            montoTotal: pago.montoTotal,
+            metodoPago: pago.metodoPago,
+            detalles: pago.detalles || []
+        }));
+        
+        // Crear reporte completo
+        const reporteCompleto = {
+            metadata: {
+                titulo: 'REPORTE COMPLETO - Academia ADAMS',
+                fechaGeneracion: timestamp,
+                version: '1.0',
+                generadoPor: 'Sistema ADAMS'
+            },
+            resumen: {
+                fechaReporte: fecha,
+                estadisticas: estadisticas
+            },
+            datos: {
+                estudiantes: estudiantesDetalle,
+                entrenadores: entrenadoresDetalle,
+                pagos: pagosDetalle,
+                configuracion: sistemaADAMS.configuracion || {},
+                productos: sistemaADAMS.productos || []
+            },
+            analisis: {
+                tendencias: analizarTendencias(estudiantes, pagos),
+                alertas: generarAlertas(estadisticas)
             }
-            
-            // Calcular estudiantes morosos
-            let estudiantesPendientes = 0;
-            sistemaADAMS.estudiantes.forEach(estudiante => {
-                const ultimoPago = obtenerUltimoPago(estudiante.id);
-                const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
-                if (diasSinPagar > 5) {
-                    estudiantesPendientes++;
+        };
+        
+        // Descargar reporte
+        descargarJSON(reporteCompleto, `Reporte_Completo_Academia_Adams_${fecha}.json`);
+        
+        mostrarNotificacion('Reporte completo generado y descargado exitosamente', 'success');
+        console.log("Reporte completo generado con éxito");
+        
+    } catch (error) {
+        console.error('Error al generar reporte completo:', error);
+        mostrarNotificacion('Error al generar reporte completo', 'error');
+    }
+}
+
+// Funciones auxiliares para el reporte completo
+function calcularIngresosMesActual(pagos) {
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    
+    return pagos
+        .filter(pago => {
+            const fechaPago = new Date(pago.fecha);
+            return fechaPago >= inicioMes && fechaPago <= hoy;
+        })
+        .reduce((total, pago) => total + (pago.montoTotal || 0), 0);
+}
+
+function calcularEstadisticasDisciplinas(estudiantes) {
+    const disciplinas = { gimnasia: 0, parkour: 0, box: 0 };
+    
+    estudiantes.forEach(estudiante => {
+        if (estudiante.disciplinas) {
+            estudiante.disciplinas.forEach(disciplina => {
+                if (disciplinas.hasOwnProperty(disciplina)) {
+                    disciplinas[disciplina]++;
                 }
             });
-
-            document.getElementById('total-estudiantes').textContent = estudiantesActivos;
-            document.getElementById('total-entrenadores').textContent = entrenadoresActivos;
-            document.getElementById('ingresos-mes').textContent = `$${ingresosMes.toLocaleString()}`;
-            document.getElementById('estudiantes-pendientes').textContent = estudiantesPendientes;
-            mostrarAlertasStockBajo();
         }
+    });
+    
+    return disciplinas;
+}
+
+function analizarTendencias(estudiantes, pagos) {
+    return {
+        crecimientoEstudiantes: estudiantes.length > 0 ? 'En crecimiento' : 'Sin datos',
+        ingresoPromedio: pagos.length > 0 ? pagos.reduce((t, p) => t + (p.montoTotal || 0), 0) / pagos.length : 0,
+        disciplinaMasPopular: Object.keys(calcularEstadisticasDisciplinas(estudiantes)).reduce((a, b) => 
+            calcularEstadisticasDisciplinas(estudiantes)[a] > calcularEstadisticasDisciplinas(estudiantes)[b] ? a : b
+        )
+    };
+}
+
+function generarAlertas(estadisticas) {
+    const alertas = [];
+    
+    if (estadisticas.estudiantes.pendientes > 10) {
+        alertas.push('Alto número de estudiantes pendientes');
+    }
+    
+    if (estadisticas.estudiantes.activos < 5) {
+        alertas.push('Pocos estudiantes activos');
+    }
+    
+    if (estadisticas.financiero.ingresoMesActual === 0) {
+        alertas.push('Sin ingresos registrados este mes');
+    }
+    
+    return alertas.length > 0 ? alertas : ['Sin alertas'];
+}
+
 
         function mostrarNotificacion(mensaje, tipo = 'success') {
             const notification = document.getElementById('notification');
@@ -11848,13 +12477,48 @@ function generarGraficoProyeccion(historicos, proyectadoMensual, mesesProyeccion
 
 // Función para exportar reportes completos
 function exportarReportesCompletos() {
-    mostrarNotificacion('Generando reporte completo en PDF...', 'success');
-    
-    // Aquí se implementaría la exportación completa
-    // Por ahora, mostrar un mensaje
-    setTimeout(() => {
-        mostrarNotificacion('Función de exportación completa en desarrollo. Use las exportaciones individuales por ahora.', 'success');
-    }, 2000);
+    try {
+        console.log("Generando reporte completo del sistema...");
+        
+        const fecha = new Date().toISOString().split('T')[0];
+        const timestamp = new Date().toISOString();
+        
+        if (!sistemaADAMS) {
+            mostrarNotificacion('Sistema no disponible', 'error');
+            return;
+        }
+        
+        const estudiantes = sistemaADAMS.estudiantes || [];
+        const entrenadores = sistemaADAMS.entrenadores || [];
+        const pagos = sistemaADAMS.pagos || [];
+        
+        const reporteCompleto = {
+            metadata: {
+                titulo: 'REPORTE COMPLETO - Academia ADAMS',
+                fechaGeneracion: timestamp,
+                version: '1.0'
+            },
+            resumen: {
+                totalEstudiantes: estudiantes.length,
+                estudiantesActivos: estudiantes.filter(e => e.estatus === 'activo').length,
+                estudiantesPendientes: estudiantes.filter(e => e.estatus === 'pendiente').length,
+                totalEntrenadores: entrenadores.length,
+                totalPagos: pagos.length,
+                ingresoTotal: pagos.reduce((total, pago) => total + (pago.montoTotal || 0), 0)
+            },
+            estudiantes: estudiantes,
+            entrenadores: entrenadores,
+            pagos: pagos,
+            configuracion: sistemaADAMS.configuracion || {}
+        };
+        
+        descargarJSON(reporteCompleto, `Reporte_Completo_Academia_Adams_${fecha}.json`);
+        mostrarNotificación('Reporte completo descargado exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error al generar reporte completo:', error);
+        mostrarNotificación('Error al generar reporte completo', 'error');
+    }
 }
 
 // Función auxiliar para contactar estudiante
@@ -12098,7 +12762,9 @@ descargarBackup(backup) {
     }, 1000);
     
     console.log(`Backup descargado: ${backup.nombreArchivo}`);
+    
 }
+
 
 // Cerrar la clase
 
