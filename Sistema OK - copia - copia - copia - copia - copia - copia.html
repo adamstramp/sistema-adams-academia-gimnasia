@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -3073,7 +3074,7 @@ function editarEstudiante(id) {
     // Debug temporal - QUITAR DESPUÉS DE VERIFICAR
     setTimeout(() => {
         debugFormularioEstudiante();
-    }, 1000);
+    }, 2000);
 
 }
 
@@ -13970,14 +13971,11 @@ function generarEstadoCuenta(event) {
         return;
     }
     
-    // Calcular fechas del período
     const fechas = calcularFechasPeriodo(periodo);
     if (!fechas) return;
     
-    // Filtrar pagos del estudiante en el período
     const pagosEstudiante = sistemaADAMS.pagos.filter(pago => {
         if (pago.estudianteId != estudianteId) return false;
-        
         const fechaPago = new Date(pago.fecha);
         return fechaPago >= fechas.inicio && fechaPago <= fechas.fin;
     });
@@ -13987,10 +13985,133 @@ function generarEstadoCuenta(event) {
         return;
     }
     
-    // Generar el estado de cuenta
-    generarPDFEstadoCuenta(estudiante, pagosEstudiante, fechas);
+    // Generar PDF directamente
+    crearPDFEstadoCuenta(estudiante, pagosEstudiante, fechas);
     ocultarFormularioEstadoCuenta();
 }
+
+function crearPDFEstadoCuenta(estudiante, pagos, fechas) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configuración
+    let yPos = 20;
+    const leftMargin = 20;
+    const rightMargin = 190;
+    
+    // Encabezado
+    doc.setFontSize(20);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Academia de Gimnasia ADAMS', leftMargin, yPos);
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Estado de Cuenta', leftMargin, yPos);
+    yPos += 12;
+    
+    // Línea divisoria
+    doc.setDrawColor(156, 39, 176);
+    doc.setLineWidth(1);
+    doc.line(leftMargin, yPos, rightMargin, yPos);
+    yPos += 12;
+    
+    // Datos del estudiante
+    doc.setFontSize(14);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Datos del Estudiante', leftMargin, yPos);
+    yPos += 6;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Nombre: ${estudiante.nombre}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Tutor: ${estudiante.tutor || 'No especificado'}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Teléfono: ${estudiante.telefono || 'No especificado'}`, leftMargin, yPos);
+    yPos += 10;
+    
+    // Período
+    doc.setFontSize(12);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Período del Estado', leftMargin, yPos);
+    yPos += 6;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Desde: ${formatearFecha(fechas.inicio.toISOString())}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Hasta: ${formatearFecha(fechas.fin.toISOString())}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Total de Pagos: ${pagos.length}`, leftMargin, yPos);
+    yPos += 15;
+    
+    // Tabla de pagos
+    doc.setFontSize(14);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Detalle de Pagos', leftMargin, yPos);
+    yPos += 8;
+    
+    // Encabezados de tabla
+    doc.setFillColor(156, 39, 176);
+    doc.rect(leftMargin, yPos, 170, 8, 'F');
+    
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Fecha', leftMargin + 2, yPos + 6);
+    doc.text('Concepto', leftMargin + 35, yPos + 6);
+    doc.text('Método', leftMargin + 100, yPos + 6);
+    doc.text('Monto', leftMargin + 140, yPos + 6);
+    yPos += 7;
+    
+    // Datos de pagos
+    doc.setTextColor(0, 0, 0);
+    let total = 0;
+    
+    pagos.forEach(pago => {
+        const conceptoTexto = pago.conceptos && pago.conceptos.length > 0 
+            ? pago.conceptos.map(c => c.descripcion || obtenerNombreConcepto(c.tipo)).join(', ')
+            : obtenerNombreConcepto(pago.concepto);
+        
+        doc.text(formatearFecha(pago.fecha), leftMargin + 2, yPos + 6);
+        doc.text(conceptoTexto.substring(0, 25), leftMargin + 35, yPos + 6);
+        doc.text(pago.metodoPago, leftMargin + 100, yPos + 6);
+        doc.text(`$${(pago.montoTotal || 0).toFixed(2)}`, leftMargin + 140, yPos + 6);
+        
+        total += (pago.montoTotal || 0);
+        yPos += 7;
+        
+        // Línea divisoria
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        doc.line(leftMargin, yPos, rightMargin, yPos);
+    });
+    
+    yPos += 8;
+    
+    // Total
+    doc.setFontSize(16);
+    doc.setTextColor(156, 39, 176);
+    doc.text(`Total Pagado: $${total.toFixed(2)}`, leftMargin + 100, yPos);
+    
+    // Footer
+    yPos += 18;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Estado de cuenta generado el ${formatearFecha(new Date().toISOString())}`, leftMargin, yPos);
+    
+    // Descargar
+    const filename = `Estado_Cuenta_${estudiante.nombre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+    
+    mostrarNotificacion('Estado de cuenta generado exitosamente', 'success');
+}
+
+// Eliminar las otras funciones que no usamos
+function generarPDFEstadoCuenta() { /* Ya no se usa */ }
+function descargarEstadoCuentaPDF() { /* Ya no se usa */ }
+function generarHTMLEstadoCuenta() { /* Ya no se usa */ }
+
 
 function calcularFechasPeriodo(periodo) {
     const hoy = new Date();
@@ -14039,105 +14160,33 @@ function calcularFechasPeriodo(periodo) {
 function generarPDFEstadoCuenta(estudiante, pagos, fechas) {
     // Crear HTML del estado de cuenta
     const estadoCuentaHTML = generarHTMLEstadoCuenta(estudiante, pagos, fechas);
+    console.log("HTML generado:", estadoCuentaHTML);
+console.log("Longitud del HTML:", estadoCuentaHTML.length);
     
     // Crear elemento temporal para PDF
     const tempDiv = document.createElement('div');
     tempDiv.id = 'estado-cuenta-temp-pdf';
     tempDiv.innerHTML = estadoCuentaHTML;
     tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    document.body.appendChild(tempDiv);
+tempDiv.style.top = '-9999px';
+tempDiv.style.left = '0';
+tempDiv.style.width = '800px';
+tempDiv.style.background = 'white';
+tempDiv.style.padding = '20px';
+tempDiv.style.visibility = 'hidden';
+tempDiv.style.opacity = '0';
+tempDiv.style.pointerEvents = 'none';
+document.body.appendChild(tempDiv);
     
     // Generar PDF
     setTimeout(() => {
         descargarEstadoCuentaPDF('estado-cuenta-temp-pdf', estudiante.nombre, fechas);
-    }, 100);
+    }, 1000);
 }
 
-function generarHTMLEstadoCuenta(estudiante, pagos, fechas) {
-    const totalPagado = pagos.reduce((sum, pago) => sum + (pago.montoTotal || 0), 0);
-    
-    const detallesPagos = pagos.map(pago => {
-        const conceptosTexto = pago.conceptos && pago.conceptos.length > 0 
-            ? pago.conceptos.map(c => c.descripcion || obtenerNombreConcepto(c.tipo)).join(', ')
-            : obtenerNombreConcepto(pago.concepto);
-            
-        return `
-            <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatearFecha(pago.fecha)}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${conceptosTexto}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${pago.metodoPago}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(pago.montoTotal || 0).toFixed(2)}</td>
-            </tr>
-        `;
-    }).join('');
-    
-    return `
-        <div style="max-width: 800px; margin: 0 auto; padding: 30px; font-family: Arial, sans-serif;">
-            <div style="text-align: center; border-bottom: 3px solid #9c27b0; padding-bottom: 20px; margin-bottom: 30px;">
-                <h1 style="color: #9c27b0; margin: 0;">${obtenerNombreAcademia()}</h1>
-                <h2 style="color: #666; margin: 10px 0;">Estado de Cuenta</h2>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
-                <div>
-                    <h3 style="color: #9c27b0; margin-bottom: 15px;">Datos del Estudiante</h3>
-                    <p><strong>Nombre:</strong> ${estudiante.nombre}</p>
-                    <p><strong>Tutor:</strong> ${estudiante.tutor}</p>
-                    <p><strong>Teléfono:</strong> ${estudiante.telefono}</p>
-                </div>
-                <div>
-                    <h3 style="color: #9c27b0; margin-bottom: 15px;">Período del Estado</h3>
-                    <p><strong>Desde:</strong> ${formatearFecha(fechas.inicio.toISOString())}</p>
-                    <p><strong>Hasta:</strong> ${formatearFecha(fechas.fin.toISOString())}</p>
-                    <p><strong>Total de Pagos:</strong> ${pagos.length}</p>
-                </div>
-            </div>
-            
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <thead>
-                    <tr style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white;">
-                        <th style="padding: 15px; text-align: left;">Fecha</th>
-                        <th style="padding: 15px; text-align: left;">Concepto</th>
-                        <th style="padding: 15px; text-align: left;">Método</th>
-                        <th style="padding: 15px; text-align: right;">Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${detallesPagos}
-                </tbody>
-            </table>
-            
-            <div style="text-align: right; background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                <h3 style="color: #9c27b0; margin: 0;">Total Pagado: $${totalPagado.toFixed(2)}</h3>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
-                <p>Estado de cuenta generado el ${formatearFecha(new Date().toISOString())}</p>
-            </div>
-        </div>
-    `;
-}
 
-function descargarEstadoCuentaPDF(elementId, nombreEstudiante, fechas) {
-    const element = document.getElementById(elementId);
-    
-    // Configuración para html2canvas y jsPDF
-    const opt = {
-        margin: 0.5,
-        filename: `Estado_Cuenta_${nombreEstudiante.replace(/\s+/g, '_')}_${fechas.inicio.toISOString().split('T')[0]}_${fechas.fin.toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-    
-    // Generar PDF
-    html2pdf().set(opt).from(element).save().then(() => {
-        // Limpiar elemento temporal
-        document.body.removeChild(element);
-        mostrarNotificacion('Estado de cuenta generado exitosamente', 'success');
-    });
-}
+
+
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
 console.log('=== FUNCIONES DE MES DE COLEGIATURA CARGADAS ===');
 console.log('✓ obtenerPagosPorMes');
