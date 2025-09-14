@@ -1919,7 +1919,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Tipo de Reporte</label>
-                            <select id="tipo-reporte-asistencia" onchange="generarReporteAsistencia()">
+                            <select id="tipo-reporte-asistencia" onchange="manejarCambioTipoReporte()">
                                 <option value="general">Reporte General</option>
                                 <option value="por-estudiante">Por Estudiante</option>
                                 <option value="por-grupo">Por Grupo</option>
@@ -1936,6 +1936,12 @@
                                 <option value="personalizado">Período Personalizado</option>
                             </select>
                         </div>
+                        <div class="form-group" id="selector-estudiante" style="display: none;">
+    <label>Seleccionar Estudiante</label>
+    <select id="estudiante-especifico">
+        <option value="">Todos los estudiantes</option>
+    </select>
+</div>
                         <div class="form-group" id="fechas-personalizadas" style="display: none;">
                             <label>Desde - Hasta</label>
                             <div style="display: flex; gap: 10px;">
@@ -8847,13 +8853,17 @@ function generarReporteGeneral(fechas) {
 }
 // Generar reporte por estudiante
 function generarReportePorEstudiante(fechas) {
+    // Cargar datos completos del sistema
+    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
     const estudiantesConAsistencia = {};
     
-    sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
+    datosCompletos.asistenciasEstudiantes.forEach(asistencia => {
         const fechaAsistencia = new Date(asistencia.fecha);
         if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
             if (!estudiantesConAsistencia[asistencia.estudianteId]) {
-                const estudiante = sistemaADAMS.estudiantes.find(e => e.id === asistencia.estudianteId);
+                // Cargar datos completos del sistema
+const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+const estudiante = datosCompletos.estudiantes.find(e => e.id == asistencia.estudianteId);
                 estudiantesConAsistencia[asistencia.estudianteId] = {
                     estudiante: estudiante,
                     total: 0,
@@ -8925,7 +8935,9 @@ function generarReportePorGrupo(fechas) {
     sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
         const fechaAsistencia = new Date(asistencia.fecha);
         if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
-            const estudiante = sistemaADAMS.estudiantes.find(e => e.id === asistencia.estudianteId);
+            // Cargar datos completos del sistema
+const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+const estudiante = datosCompletos.estudiantes.find(e => e.id === asistencia.estudianteId);
             if (!estudiante) return;
             
             // Buscar el grupo del estudiante para este horario
@@ -8991,8 +9003,373 @@ function generarReportePorGrupo(fechas) {
 
 // Función para exportar reporte
 function exportarReporteAsistencia() {
-    mostrarNotificacion('Función de exportación en desarrollo', 'success');
-    // Aquí se implementaría la exportación a PDF
+    const tipoReporte = document.getElementById('tipo-reporte-asistencia').value;
+    const periodo = document.getElementById('periodo-reporte-asistencia').value;
+    const fechas = calcularFechasPeriodoAsistencia(periodo);
+    
+    if (!fechas) {
+        mostrarNotificacion('Error al calcular el período', 'error');
+        return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    
+    // Configuración del PDF
+    pdf.setFontSize(18);
+    pdf.text('Academia de Gimnasia ADAMS', 105, 20, { align: 'center' });
+    pdf.setFontSize(14);
+    pdf.text('Reporte de Asistencias', 105, 32, { align: 'center' });
+    pdf.setFontSize(10);
+    pdf.text(`Período: ${fechas.inicio.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })} - ${fechas.fin.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`, 105, 42, { align: 'center' });
+    
+    let yPosition = 50;
+    
+    if (tipoReporte === 'por-estudiante') {
+        const estudianteEspecifico = document.getElementById('estudiante-especifico').value;
+        
+        if (estudianteEspecifico) {
+            // Reporte de estudiante específico
+            yPosition = generarPDFEstudianteEspecifico(pdf, estudianteEspecifico, fechas, yPosition);
+        } else {
+            // Reporte de todos los estudiantes
+            yPosition = generarPDFTodosEstudiantes(pdf, fechas, yPosition);
+        }
+    } else {
+        // Otros tipos de reporte
+        pdf.text('Tipo de reporte: ' + tipoReporte, 20, yPosition);
+        yPosition += 20;
+        pdf.text('Funcionalidad en desarrollo para este tipo de reporte', 20, yPosition);
+    }
+    
+    const nombreArchivo = `reporte_asistencias_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(nombreArchivo);
+    mostrarNotificacion('Reporte exportado exitosamente', 'success');
+}
+
+// Nueva función para manejar el cambio de tipo de reporte
+function manejarCambioTipoReporte() {
+    const tipoReporte = document.getElementById('tipo-reporte-asistencia').value;
+    const selectorEstudiante = document.getElementById('selector-estudiante');
+    
+    if (tipoReporte === 'por-estudiante') {
+        selectorEstudiante.style.display = 'block';
+        cargarEstudiantesEnSelector();
+    } else {
+        selectorEstudiante.style.display = 'none';
+    }
+    
+    generarReporteAsistencia();
+}
+
+// Función para cargar estudiantes en el selector
+function cargarEstudiantesEnSelector() {
+    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [] };
+    const selector = document.getElementById('estudiante-especifico');
+    
+    selector.innerHTML = '<option value="">Todos los estudiantes</option>';
+    
+    datosCompletos.estudiantes
+        .filter(estudiante => estudiante.estatus === 'activo')
+        .sort((a, b) => a.nombre.localeCompare(b.nombre))
+        .forEach(estudiante => {
+            const option = document.createElement('option');
+            option.value = estudiante.id;
+            option.textContent = estudiante.nombre;
+            selector.appendChild(option);
+        });
+}
+
+// Función para generar PDF de estudiante específico
+function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
+    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+    const estudiante = datosCompletos.estudiantes.find(e => e.id == estudianteId);
+    
+    if (!estudiante) {
+        pdf.setTextColor(255, 0, 0);
+        pdf.text('Estudiante no encontrado', 20, yPosition);
+        return yPosition + 2;
+    }
+    
+    // Header estudiante
+    pdf.setFillColor(156, 39, 176);
+    pdf.rect(15, yPosition, 180, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.text('INFORMACIÓN DEL ESTUDIANTE', 105, yPosition + 6, { align: 'center' });
+    
+    yPosition += 16;
+    
+    // Nombre del estudiante más grande y en negritas
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Estudiante: ${estudiante.nombre}`, 20, yPosition);
+    
+    yPosition += 7;
+    
+    // Resto de información normal
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text(`Tutor: ${estudiante.tutor || 'No especificado'}`, 20, yPosition);
+    
+    yPosition += 6;
+    
+    pdf.text(`Disciplinas: ${(estudiante.disciplinas || []).join(', ')}`, 20, yPosition);
+    
+    yPosition += 4;
+    
+    // Cálculos de datos
+    const horariosEstudiante = estudiante.horarios || [];
+    if (horariosEstudiante.length === 0) {
+        pdf.setTextColor(255, 87, 34);
+        pdf.text('Este estudiante no tiene horarios asignados', 20, yPosition);
+        return yPosition + 10;
+    }
+    
+    const diasProgramados = generarDiasProgramados(fechas, horariosEstudiante);
+    const asistenciasRegistradas = datosCompletos.asistenciasEstudiantes.filter(asistencia => {
+        const fechaAsistencia = new Date(asistencia.fecha);
+        return asistencia.estudianteId == estudianteId && 
+               fechaAsistencia >= fechas.inicio && 
+               fechaAsistencia <= fechas.fin;
+    });
+    
+    let presente = 0, ausente = 0, tardanza = 0, justificado = 0;
+    diasProgramados.forEach(diaProgramado => {
+        const asistencia = asistenciasRegistradas.find(a => 
+            a.fecha === diaProgramado.fecha && a.horario === diaProgramado.horario
+        );
+        
+        if (asistencia) {
+            if (asistencia.estado === 'presente') presente++;
+            else if (asistencia.estado === 'tardanza') tardanza++;
+            else if (asistencia.estado === 'justificado') justificado++;
+            else ausente++;
+        } else {
+            ausente++;
+        }
+    });
+    
+    const total = diasProgramados.length;
+    const porcentaje = total > 0 ? ((presente + tardanza) / total * 100).toFixed(1) : 0;
+    
+    // Header resumen
+    pdf.setFillColor(46, 125, 50);
+    pdf.rect(15, yPosition, 180, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.text('RESUMEN DE ASISTENCIAS', 105, yPosition + 6, { align: 'center' });
+    
+    yPosition += 14;
+    
+    // Estadísticas con espaciado corregido
+    pdf.setFontSize(8);
+    pdf.setTextColor(0, 0, 0);
+    
+    // Primera fila con espacio suficiente
+    pdf.text(`Total: ${total} clases`, 20, yPosition);
+    pdf.setTextColor(46, 125, 50);
+    pdf.text(`Presente: ${presente}`, 80, yPosition);
+    pdf.setTextColor(255, 152, 0);
+    pdf.text(`Tardanza: ${tardanza}`, 140, yPosition);
+    
+    yPosition += 6;
+    
+    // Segunda fila
+    pdf.setTextColor(244, 67, 54);
+    pdf.text(`Ausente: ${ausente}`, 20, yPosition);
+    pdf.setTextColor(33, 150, 243);
+    pdf.text(`Justificado: ${justificado}`, 80, yPosition);
+    
+    // Porcentaje destacado
+    const colorPorcentaje = porcentaje >= 85 ? [46, 125, 50] : porcentaje >= 70 ? [255, 152, 0] : [244, 67, 54];
+    pdf.setTextColor(...colorPorcentaje);
+    pdf.setFontSize(10);
+    pdf.text(`Asistencia: ${porcentaje}%`, 140, yPosition);
+    
+    yPosition += 9;
+    
+    // Header detalle
+    pdf.setFillColor(63, 81, 181);
+    pdf.rect(15, yPosition, 180, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.text('DETALLE POR FECHA', 105, yPosition + 6, { align: 'center' });
+    
+    yPosition += 14;
+    
+    // Tabla de detalles
+    if (diasProgramados.length > 0) {
+        pdf.setFontSize(8);
+        
+        // Headers de tabla con espacio suficiente
+        pdf.setTextColor(80, 80, 80);
+        pdf.text('FECHA', 20, yPosition);
+        pdf.text('DÍA', 55, yPosition);
+        pdf.text('HORARIO', 85, yPosition);
+        pdf.text('ESTADO', 140, yPosition);
+        
+        // Línea separadora
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(20, yPosition + 2, 190, yPosition + 2);
+        
+        yPosition += 10;
+        
+        diasProgramados.forEach((diaProgramado, index) => {
+            if (yPosition > 270) {
+                pdf.addPage();
+                yPosition = 20;
+                // Repetir headers
+                pdf.setFontSize(8);
+                pdf.setTextColor(80, 80, 80);
+                pdf.text('FECHA', 20, yPosition);
+                pdf.text('DÍA', 55, yPosition);
+                pdf.text('HORARIO', 85, yPosition);
+                pdf.text('ESTADO', 140, yPosition);
+                pdf.line(20, yPosition + 2, 190, yPosition + 2);
+                yPosition += 10;
+            }
+            
+            const asistencia = asistenciasRegistradas.find(a => 
+                a.fecha === diaProgramado.fecha && a.horario === diaProgramado.horario
+            );
+            
+            // Fecha en formato 01-Sep
+            const fechaObj = new Date(diaProgramado.fecha + 'T12:00:00');
+            const dia = fechaObj.getDate().toString().padStart(2, '0');
+            const mes = fechaObj.toLocaleDateString('es-ES', { month: 'short' });
+            const fechaFormato = `${dia}-${mes}`;
+            
+            const diaCorto = fechaObj.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase();
+            const estado = asistencia ? asistencia.estado : 'ausente';
+            
+            // Fondo alternado
+            if (index % 2 === 0) {
+                pdf.setFillColor(250, 250, 250);
+                pdf.rect(15, yPosition - 3, 180, 8, 'F');
+            }
+            
+            // Datos de la fila con espaciado correcto
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(8);
+            pdf.text(fechaFormato, 20, yPosition);
+            pdf.text(diaCorto, 55, yPosition);
+            pdf.text(diaProgramado.horario, 85, yPosition);
+            
+            // Estado con color
+            switch (estado) {
+                case 'presente':
+                    pdf.setTextColor(46, 125, 50);
+                    pdf.text('PRESENTE', 140, yPosition);
+                    break;
+                case 'tardanza':
+                    pdf.setTextColor(255, 152, 0);
+                    pdf.text('TARDANZA', 140, yPosition);
+                    break;
+                case 'ausente':
+                    pdf.setTextColor(244, 67, 54);
+                    pdf.text('AUSENTE', 140, yPosition);
+                    break;
+                case 'justificado':
+                    pdf.setTextColor(33, 150, 243);
+                    pdf.text('JUSTIFICADO', 140, yPosition);
+                    break;
+            }
+            
+            yPosition += 8;
+        });
+    }
+    
+    return yPosition;
+}
+
+// Función auxiliar para generar todos los días programados
+function generarDiasProgramados(fechas, horariosEstudiante) {
+    const diasProgramados = [];
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    
+    // Crear una nueva fecha para evitar modificar la original
+    const fechaActual = new Date(fechas.inicio);
+    const fechaFin = new Date(fechas.fin);
+    
+    // Iterar cada día en el rango de fechas
+    while (fechaActual <= fechaFin) {
+        const diaSemana = diasSemana[fechaActual.getDay()];
+        
+        // Verificar si el estudiante tiene clases este día
+        horariosEstudiante.forEach(horario => {
+            if (horario.dia === diaSemana) {
+                diasProgramados.push({
+                    fecha: fechaActual.toISOString().split('T')[0],
+                    horario: `${horario.horaInicio}-${horario.horaFin}`,
+                    dia: diaSemana,
+                    fechaCompleta: new Date(fechaActual) // Guardar una copia de la fecha
+                });
+            }
+        });
+        
+        // Avanzar al siguiente día
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+    
+    return diasProgramados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+}
+
+// Función auxiliar para símbolos de estado
+function getSimboloEstado(estado) {
+    switch (estado) {
+        case 'PRESENTE': return 'P';
+        case 'TARDANZA': return 'T';
+        case 'AUSENTE': return 'A';
+        case 'JUSTIFICADO': return 'J';
+        default: return '?';
+    }
+}
+
+// Función para generar PDF de todos los estudiantes
+function generarPDFTodosEstudiantes(pdf, fechas, yPosition) {
+    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+    const estudiantesConAsistencia = {};
+    
+    datosCompletos.asistenciasEstudiantes.forEach(asistencia => {
+        const fechaAsistencia = new Date(asistencia.fecha);
+        if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
+            if (!estudiantesConAsistencia[asistencia.estudianteId]) {
+                const estudiante = datosCompletos.estudiantes.find(e => e.id == asistencia.estudianteId);
+                estudiantesConAsistencia[asistencia.estudianteId] = {
+                    estudiante: estudiante,
+                    total: 0,
+                    presente: 0,
+                    ausente: 0,
+                    tardanza: 0,
+                    justificado: 0
+                };
+            }
+            
+            estudiantesConAsistencia[asistencia.estudianteId].total++;
+            estudiantesConAsistencia[asistencia.estudianteId][asistencia.estado]++;
+        }
+    });
+    
+    pdf.setFontSize(10);
+    pdf.text('Resumen por estudiante:', 20, yPosition);
+    yPosition += 15;
+    
+    Object.values(estudiantesConAsistencia).forEach(datos => {
+        if (yPosition > 250) {
+            pdf.addPage();
+            yPosition = 20;
+        }
+        
+        const porcentaje = datos.total > 0 ? ((datos.presente + datos.tardanza) / datos.total * 100).toFixed(1) : 0;
+        const nombre = datos.estudiante ? datos.estudiante.nombre : 'Estudiante eliminado';
+        
+        pdf.text(`${nombre} - Total: ${datos.total} - Presente: ${datos.presente} - Asistencia: ${porcentaje}%`, 20, yPosition);
+        yPosition += 10;
+    });
+    
+    return yPosition;
 }
 // Manejar cambio de período en reportes
 document.addEventListener('DOMContentLoaded', function() {
