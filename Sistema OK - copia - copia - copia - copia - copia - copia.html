@@ -6,6 +6,7 @@
     <title>Sistema ADAMS - Academia de Gimnasia</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -825,12 +826,17 @@
             </section>
             <!-- Estudiantes -->
            <section id="estudiantes" class="section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2>👥 Gestión de Estudiantes</h2>
+   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h2>👥 Gestión de Estudiantes</h2>
+    <div style="display: flex; gap: 10px; align-items: center;">
         <button class="btn btn-primary" onclick="mostrarFormularioEstudiante()">
             ➕ Nuevo Estudiante
         </button>
+        <button class="btn btn-success" onclick="mostrarCargaMasiva()">
+            📁 Carga Masiva Excel
+        </button>
     </div>
+</div>
     <!-- FILTROS DE BÚSQUEDA PARA ESTUDIANTES -->
     <div class="form-section show" style="margin-bottom: 20px;">
         <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda</h4>
@@ -882,7 +888,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Fecha de Nacimiento *</label>
-                                <input type="date" id="fecha-nacimiento" required>
+                                <input type="date" id="fecha-nacimiento">
                             </div>
                         </div>
                         <div class="form-row">
@@ -892,13 +898,13 @@
                             </div>
                             <div class="form-group">
                                 <label>Nombre del Tutor *</label>
-                                <input type="text" id="tutor" required>
+                                <input type="text" id="tutor">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Teléfono *</label>
-                                <input type="tel" id="telefono" required>
+                                <input type="tel" id="telefono">
                             </div>
                             <div class="form-group">
                                 <label>Correo Electrónico</label>
@@ -983,10 +989,11 @@
                             <div class="form-group">
     <label>Estatus del Estudiante</label>
     <select id="estatus-estudiante">
-        <option value="activo">🟢 Activo</option>
-        <option value="inactivo">🟡 Inactivo</option>
-        <option value="baja">🔴 Baja</option>
-    </select>
+    <option value="activo">🟢 Activo</option>
+    <option value="inactivo">🟡 Inactivo</option>
+    <option value="pendiente">🟠 Pendiente</option>
+    <option value="baja">🔴 Baja</option>
+</select>
 </div>
                         </div>
                         <div style="margin-top: 30px; text-align: right;">
@@ -2475,6 +2482,76 @@
         </div>
     </div>
 </div>
+<!-- Modal para Carga Masiva -->
+<div id="modal-carga-masiva" class="modal-recibo" style="display: none;">
+    <div class="modal-content" style="max-width: 1000px;">
+        <div style="background: white; padding: 30px; border-radius: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #9c27b0;">📁 Carga Masiva de Estudiantes</h3>
+                <button class="btn btn-secondary" onclick="cerrarCargaMasiva()">✖ Cerrar</button>
+            </div>
+
+            <!-- Paso 1: Instrucciones -->
+            <div id="paso-instrucciones" style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h4>📋 Instrucciones</h4>
+                <p><strong>Formato requerido del archivo Excel:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Columna A:</strong> Nombre del Estudiante</li>
+                    <li><strong>Columna B:</strong> Fecha de Nacimiento (formato: YYYY-MM-DD o DD/MM/YYYY)</li>
+                    <li><strong>Columna C:</strong> Nombre del Tutor</li>
+                    <li><strong>Columna D:</strong> Teléfono del Tutor</li>
+                    <li><strong>Columna E:</strong> Correo Electrónico (opcional)</li>
+                </ul>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    <strong>Nota:</strong> Los estudiantes se cargarán con estatus "PENDIENTE" para completar información posteriormente.
+                </p>
+            </div>
+
+            <!-- Paso 2: Seleccionar archivo -->
+            <div class="form-section show">
+                <h4>📂 Seleccionar Archivo Excel</h4>
+                <input type="file" id="archivo-excel-masivo" accept=".xlsx,.xls" 
+                       onchange="procesarArchivoExcel()" 
+                       style="padding: 10px; border: 2px solid #9c27b0; border-radius: 8px; width: 100%;">
+            </div>
+
+            <!-- Paso 3: Vista previa (inicialmente oculta) -->
+            <div id="vista-previa-datos" style="display: none; margin-top: 20px;">
+                <h4>👀 Vista Previa de Datos</h4>
+                <div id="resumen-carga" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+                <div style="max-height: 400px; overflow-y: auto; border: 2px solid #e9ecef; border-radius: 8px;">
+                    <table class="table" style="margin: 0;">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Fecha Nac.</th>
+                                <th>Tutor</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-vista-previa">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paso 4: Botones de acción -->
+            <div id="botones-carga" style="display: none; text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+                <button class="btn btn-secondary" onclick="cancelarCargaMasiva()" style="margin-right: 10px;">
+                    ❌ Cancelar
+                </button>
+                <button class="btn btn-success" onclick="confirmarCargaMasiva()" id="btn-confirmar-carga">
+                    ✅ Confirmar Carga Masiva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Notification -->
     <div id="notification" class="notification">
         <span id="notification-text"></span>
@@ -3103,16 +3180,35 @@ function debugFormularioEstudiante() {
             const esEdicion = document.getElementById('form-estudiante').dataset.editando;
             const estudianteId = esEdicion ? parseInt(esEdicion) : null;
             
-            // Validar disciplinas
+            // Validar disciplinas - SOLO si no es estudiante pendiente
             const disciplinasSeleccionadas = [];
             document.querySelectorAll('#formulario-estudiante input[type="checkbox"]:checked').forEach(cb => {
                 disciplinasSeleccionadas.push(cb.value);
             });
-
-            if (disciplinasSeleccionadas.length === 0) {
-                mostrarNotificacion('Selecciona al menos una disciplina', 'error');
+            
+            const estatusActual = document.getElementById('estatus-estudiante').value;
+            
+            if (disciplinasSeleccionadas.length === 0 && estatusActual !== 'pendiente') {
+                mostrarNotificacion('Selecciona al menos una disciplina (o marca como PENDIENTE)', 'error');
                 return;
+                sistemaADAMS.estudiantes[indiceEstudiante] = {
+    ...estudianteExistente, // Mantener ID y fecha de registro original
+    nombre: formatearNombrePropio(nombre),
+    edad: edad,
+    fechaNacimiento: fechaNacimiento,
+    curp: curp,
+    tutor: tutor,
+    telefono: telefono,
+    email: email,
+    disciplinas: disciplinasSeleccionadas,
+    colegiatura: parseFloat(document.getElementById('colegiatura').value),
+    horarios: horarios,
+    esHermano: document.getElementById('es-hermano').value === 'si',
+    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
+    estatus: estatusFinal, // Usar el estatus calculado automáticamente
+};
             }
+            
 
             // Validar horarios
             const horarios = [];
@@ -3171,44 +3267,48 @@ function debugFormularioEstudiante() {
                 }
 
                 // Actualizar datos del estudiante existente
-                const estudianteExistente = sistemaADAMS.estudiantes[indiceEstudiante];
-                sistemaADAMS.estudiantes[indiceEstudiante] = {
-                    ...estudianteExistente, // Mantener ID y fecha de registro original
-                    nombre: formatearNombrePropio(document.getElementById('nombre').value),
-                    edad: edad,
-                    fechaNacimiento: document.getElementById('fecha-nacimiento').value,
-                    curp: document.getElementById('curp').value,
-                    tutor: formatearNombrePropio(document.getElementById('tutor').value),
-                    telefono: document.getElementById('telefono').value,
-                    email: document.getElementById('email').value,
-                    disciplinas: disciplinasSeleccionadas,
-                    colegiatura: parseFloat(document.getElementById('colegiatura').value),
-                    horarios: horarios,
-                    esHermano: document.getElementById('es-hermano').value === 'si',
-                    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
-estatus: document.getElementById('estatus-estudiante').value,
-                };
+               // Actualizar datos del estudiante existente
+const estudianteExistente = sistemaADAMS.estudiantes[indiceEstudiante];
+sistemaADAMS.estudiantes[indiceEstudiante] = {
+    ...estudianteExistente, // Mantener ID y fecha de registro original
+    nombre: formatearNombrePropio(nombre),
+    edad: edad,
+    fechaNacimiento: fechaNacimiento,
+    curp: curp,
+    tutor: tutor,
+    telefono: telefono,
+    email: email,
+    disciplinas: disciplinasSeleccionadas,
+    colegiatura: parseFloat(document.getElementById('colegiatura').value),
+    horarios: horarios,
+    esHermano: document.getElementById('es-hermano').value === 'si',
+    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
+    estatus: estatusFinal, // Usar el estatus calculado automáticamente
+};
 
                 mostrarNotificacion('Estudiante actualizado exitosamente', 'success');
             } else {
                 // CREAR NUEVO ESTUDIANTE
-                const nuevoEstudiante = {
-                    id: Date.now(),
-                    nombre: document.getElementById('nombre').value,
-                    edad: edad,
-                    fechaNacimiento: document.getElementById('fecha-nacimiento').value,
-                    curp: document.getElementById('curp').value,
-                    tutor: document.getElementById('tutor').value,
-                    telefono: document.getElementById('telefono').value,
-                    email: document.getElementById('email').value,
-                    disciplinas: disciplinasSeleccionadas,
-                    colegiatura: parseFloat(document.getElementById('colegiatura').value),
-                    horarios: horarios,
-                    esHermano: document.getElementById('es-hermano').value === 'si',
-                    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
-                    estado: 'activo',
-                    fechaRegistro: new Date().toISOString()
-                };
+                // CREAR NUEVO ESTUDIANTE - Auto-asignar estatus
+const estatusNuevo = (disciplinasSeleccionadas.length > 0 && horarios.length > 0) ? 'activo' : 'pendiente';
+
+const nuevoEstudiante = {
+    id: Date.now(),
+    nombre: formatearNombrePropio(nombre),
+    edad: edad,
+    fechaNacimiento: fechaNacimiento,
+    curp: curp,
+    tutor: tutor,
+    telefono: telefono,
+    email: email,
+    disciplinas: disciplinasSeleccionadas,
+    colegiatura: parseFloat(document.getElementById('colegiatura').value),
+    horarios: horarios,
+    esHermano: document.getElementById('es-hermano').value === 'si',
+    porcentajeBeca: parseInt(document.getElementById('beca').value) || 0,
+    estatus: estatusNuevo, // Auto-asignado basado en completitud
+    fechaRegistro: new Date().toISOString()
+};
 
                 sistemaADAMS.estudiantes.push(nuevoEstudiante);
                 mostrarNotificacion('Estudiante registrado exitosamente', 'success');
@@ -9127,18 +9227,24 @@ function formatearNombrePropio(nombre) {
 function getEstatusBadge(estatus) {
     switch(estatus) {
         case 'activo':
-            return '<span class="status status-activo">🟢 Activo</span>';
+            return '<span class="status status-activo">🟢 ACTIVO</span>';
         case 'inactivo':
-            return '<span class="status status-inactivo">🟡 Inactivo</span>';
+            return '<span class="status status-inactivo">🟡 INACTIVO</span>';
+        case 'pendiente':
+            return '<span class="status" style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;">🟠 PENDIENTE</span>';
         case 'baja':
-            return '<span class="status status-baja">🔴 Baja</span>';
+            return '<span class="status status-baja">🔴 BAJA</span>';
         default:
-            return '<span class="status status-activo">🟢 Activo</span>';
+            return '<span class="status status-activo">🟢 ACTIVO</span>';
     }
 }
 
         function actualizarDashboard() {
-            const estudiantesActivos = sistemaADAMS.estudiantes.filter(e => (e.estatus || 'activo') === 'activo').length;
+            // Filtrar estudiantes activos o pendientes que tengan horarios
+const estudiantesActivos = sistemaADAMS.estudiantes.filter(e => 
+    (e.estatus === 'activo' || e.estatus === 'pendiente') && 
+    e.horarios && e.horarios.length > 0
+);
             const entrenadoresActivos = sistemaADAMS.entrenadores.filter(e => e.estado === 'activo').length;
             
             // Calcular ingresos reales del mes actual
@@ -12111,6 +12217,375 @@ function verificarPagosAtrasados() {
     
     console.log(`Estudiantes sin pago del mes actual (${mesActual}/${añoActual}):`, estudiantesAtrasados.length);
     return estudiantesAtrasados;
+}
+// ==================== FUNCIONES DE CARGA MASIVA ====================
+
+// Variable global para almacenar datos del Excel
+let datosExcelTemporal = [];
+
+function mostrarCargaMasiva() {
+    document.getElementById('modal-carga-masiva').style.display = 'flex';
+    
+    // Resetear estado
+    document.getElementById('archivo-excel-masivo').value = '';
+    document.getElementById('vista-previa-datos').style.display = 'none';
+    document.getElementById('botones-carga').style.display = 'none';
+    datosExcelTemporal = [];
+}
+
+function cerrarCargaMasiva() {
+    document.getElementById('modal-carga-masiva').style.display = 'none';
+    datosExcelTemporal = [];
+}
+
+function procesarArchivoExcel() {
+    const archivo = document.getElementById('archivo-excel-masivo').files[0];
+    
+    if (!archivo) {
+        mostrarNotificacion('Selecciona un archivo Excel', 'error');
+        return;
+    }
+    
+    // Verificar extensión
+    const extension = archivo.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(extension)) {
+        mostrarNotificacion('Solo se permiten archivos .xlsx o .xls', 'error');
+        return;
+    }
+    
+    mostrarNotificacion('Procesando archivo Excel...', 'success');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            // Leer el archivo Excel usando SheetJS
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            // Usar la primera hoja
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Convertir a JSON - IMPORTANTE: range: 1 para saltar solo la fila de encabezados
+            const datosJson = XLSX.utils.sheet_to_json(worksheet, {
+                header: ['nombre', 'fechaNacimiento', 'tutor', 'telefono', 'email'],
+                range: 1 // Cambiar a 2 si tienes doble encabezado
+            });
+            
+            console.log('Datos extraídos del Excel:', datosJson);
+            
+            if (datosJson.length === 0) {
+                mostrarNotificacion('El archivo Excel está vacío o no tiene el formato correcto', 'error');
+                return;
+            }
+            
+            procesarDatosExcel(datosJson);
+            
+        } catch (error) {
+            console.error('Error procesando Excel:', error);
+            mostrarNotificacion('Error al leer el archivo Excel: ' + error.message, 'error');
+        }
+    };
+    
+    reader.readAsArrayBuffer(archivo);
+}
+
+function procesarDatosExcel(datosOriginales) {
+    datosExcelTemporal = [];
+    let validos = 0;
+    let errores = 0;
+    
+    datosOriginales.forEach((fila, indice) => {
+        const filaNumero = indice + 2; // +2 porque saltamos header y los arrays empiezan en 0
+        
+        // Limpiar y validar datos
+        const datosLimpios = {
+            nombre: limpiarTexto(fila.nombre),
+            fechaNacimiento: procesarFecha(fila.fechaNacimiento),
+            tutor: limpiarTexto(fila.tutor),
+            telefono: limpiarTelefono(fila.telefono),
+            email: limpiarEmail(fila.email),
+            filaOriginal: filaNumero,
+            errores: [],
+            valido: true
+        };
+        
+        // Validaciones mínimas
+// Validaciones MUY flexibles - solo el nombre es obligatorio
+        if (!datosLimpios.nombre || datosLimpios.nombre.length < 2) {
+            datosLimpios.errores.push('Nombre requerido');
+            datosLimpios.valido = false;
+        }
+        
+        // Los demás campos son opcionales para carga masiva - solo advertencias
+        if (!datosLimpios.fechaNacimiento) {
+            datosLimpios.errores.push('Sin fecha de nacimiento');
+            // NO marcamos como inválido - solo advertencia
+        }
+        
+        if (!datosLimpios.tutor || datosLimpios.tutor.length < 2) {
+            datosLimpios.errores.push('Sin tutor asignado');
+            // NO marcamos como inválido - solo advertencia
+        }
+        
+        if (!datosLimpios.telefono || datosLimpios.telefono.length < 10) {
+            datosLimpios.errores.push('Sin teléfono válido');
+            // NO marcamos como inválido - solo advertencia
+        }
+        
+        // Verificar duplicados con estudiantes existentes
+        const existeDuplicado = sistemaADAMS.estudiantes.find(e => 
+            e.nombre.toLowerCase() === datosLimpios.nombre.toLowerCase() && 
+            e.fechaNacimiento === datosLimpios.fechaNacimiento
+        );
+        
+        if (existeDuplicado) {
+            datosLimpios.errores.push('Ya existe un estudiante con este nombre y fecha');
+            datosLimpios.valido = false;
+        }
+        
+        datosExcelTemporal.push(datosLimpios);
+        
+        if (datosLimpios.valido) {
+            validos++;
+        } else {
+            errores++;
+        }
+    });
+    
+    mostrarVistaPrevia(validos, errores);
+}
+
+// Funciones auxiliares para limpiar datos
+function limpiarTexto(texto) {
+    if (!texto) return '';
+    return String(texto).trim().replace(/\s+/g, ' ');
+}
+
+function procesarFecha(fecha) {
+    if (!fecha) return null;
+    
+    try {
+        // Si ya es un objeto Date de Excel
+        if (fecha instanceof Date) {
+            return fecha.toISOString().split('T')[0];
+        }
+        
+        // Si es un número de serie de Excel
+        if (typeof fecha === 'number') {
+            const fechaExcel = new Date((fecha - 25569) * 86400 * 1000);
+            return fechaExcel.toISOString().split('T')[0];
+        }
+        
+        // Si es texto, intentar parsearlo
+        const fechaString = String(fecha).trim();
+        
+        // Formato DD/MM/YYYY
+        if (fechaString.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+            const [dia, mes, año] = fechaString.split('/');
+            return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
+        
+        // Formato YYYY-MM-DD
+        if (fechaString.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+            return fechaString;
+        }
+        
+        // Intentar crear fecha directamente
+        const fechaParsed = new Date(fechaString);
+        if (!isNaN(fechaParsed.getTime())) {
+            return fechaParsed.toISOString().split('T')[0];
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error procesando fecha:', fecha, error);
+        return null;
+    }
+}
+
+function limpiarTelefono(telefono) {
+    if (!telefono) return '';
+    // Mantener solo números
+    return String(telefono).replace(/[^\d]/g, '');
+}
+
+function limpiarEmail(email) {
+    if (!email) return '';
+    const emailLimpio = String(email).trim().toLowerCase();
+    // Validación básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailLimpio) ? emailLimpio : '';
+}
+
+function mostrarVistaPrevia(validos, errores) {
+    // Actualizar resumen
+    document.getElementById('resumen-carga').innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; text-align: center;">
+            <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px;">
+                <strong style="font-size: 24px;">${validos}</strong><br>
+                <span>Registros válidos</span>
+            </div>
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px;">
+                <strong style="font-size: 24px;">${errores}</strong><br>
+                <span>Registros con errores</span>
+            </div>
+            <div style="background: #e2e3e5; color: #383d41; padding: 15px; border-radius: 8px;">
+                <strong style="font-size: 24px;">${datosExcelTemporal.length}</strong><br>
+                <span>Total procesados</span>
+            </div>
+        </div>
+    `;
+    
+    // Generar tabla de vista previa
+    // Generar tabla de vista previa - TODOS los registros con nombre son válidos
+    const tbody = document.getElementById('tabla-vista-previa');
+    tbody.innerHTML = datosExcelTemporal.map(dato => `
+        <tr style="background: ${dato.valido ? '#f8fff8' : '#fff0f0'};">
+            <td>
+                ${dato.nombre}
+                ${dato.errores.includes('Nombre requerido') ? '<br><small style="color: red;">⚠ Nombre requerido</small>' : ''}
+            </td>
+            <td>
+                ${dato.fechaNacimiento || '<span style="color: #ccc;">No válida</span>'}
+                ${dato.errores.includes('Fecha de nacimiento inválida') ? '<br><small style="color: red;">⚠ Fecha inválida</small>' : ''}
+            </td>
+            <td>
+                ${dato.tutor}
+                ${dato.errores.includes('Nombre del tutor requerido') ? '<br><small style="color: red;">⚠ Tutor requerido</small>' : ''}
+            </td>
+            <td>
+                ${dato.telefono}
+                ${dato.errores.includes('Teléfono inválido (mínimo 10 dígitos)') ? '<br><small style="color: red;">⚠ Teléfono inválido</small>' : ''}
+            </td>
+            <td>${dato.email || '<span style="color: #ccc;">Sin email</span>'}</td>
+            <td>
+                ${dato.valido ? 
+                    '<span style="color: green;">✅ Válido</span>' : 
+                    '<span style="color: red;">❌ Errores</span>'
+                }
+                ${dato.errores.includes('Ya existe un estudiante con este nombre y fecha') ? '<br><small style="color: orange;">⚠ Duplicado</small>' : ''}
+            </td>
+        </tr>
+    `).join('');
+    
+    // Mostrar vista previa y botones
+    document.getElementById('vista-previa-datos').style.display = 'block';
+    document.getElementById('botones-carga').style.display = 'block';
+    
+    // Habilitar/deshabilitar botón según si hay registros válidos
+    const btnConfirmar = document.getElementById('btn-confirmar-carga');
+    // Calcular cuántos tienen al menos el nombre
+    const conNombre = datosExcelTemporal.filter(dato => dato.nombre && dato.nombre.length >= 2).length;
+    
+    if (conNombre > 0) {
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerHTML = `✅ Cargar ${conNombre} Estudiante${conNombre > 1 ? 's' : ''} (${conNombre - validos} como PENDIENTES)`;
+    } else {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '❌ No hay registros con nombre válido';
+    }
+    
+    mostrarNotificacion(`Procesados ${datosExcelTemporal.length} registros: ${validos} válidos, ${errores} con errores`, 'success');
+}
+
+function cancelarCargaMasiva() {
+    if (confirm('¿Seguro que quieres cancelar la carga masiva?')) {
+        cerrarCargaMasiva();
+    }
+}
+
+function confirmarCargaMasiva() {
+    // Ahora "válidos" son todos los que tienen nombre
+    const datosValidos = datosExcelTemporal.filter(dato => dato.nombre && dato.nombre.length >= 2);
+    
+    if (datosValidos.length === 0) {
+        mostrarNotificacion('No hay registros válidos para cargar', 'error');
+        return;
+    }
+    
+    if (!confirm(`¿Confirmas la carga masiva de ${datosValidos.length} estudiante${datosValidos.length > 1 ? 's' : ''}?`)) {
+        return;
+    }
+    
+    // Procesar carga masiva
+    let cargadosExitosamente = 0;
+    
+    datosValidos.forEach(dato => {
+        try {
+           // Calcular edad SOLO si hay fecha válida
+            let edad = 0;
+            if (dato.fechaNacimiento) {
+                try {
+                    const fechaNacimiento = new Date(dato.fechaNacimiento);
+                    const hoy = new Date();
+                    if (!isNaN(fechaNacimiento.getTime())) {
+                        edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+                        if (hoy.getMonth() < fechaNacimiento.getMonth() || 
+                            (hoy.getMonth() === fechaNacimiento.getMonth() && hoy.getDate() < fechaNacimiento.getDate())) {
+                            edad--;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error calculando edad para:', dato.nombre);
+                    edad = 0;
+                }
+            }
+            
+            const nuevoEstudiante = {
+                id: Date.now() + Math.random(), // ID único
+                nombre: formatearNombrePropio(dato.nombre),
+                edad: edad, // Puede ser 0 si no hay fecha válida
+                fechaNacimiento: dato.fechaNacimiento || '', // Puede estar vacío
+                curp: '', // Vacío en carga masiva
+                tutor: dato.tutor ? formatearNombrePropio(dato.tutor) : '', // Puede estar vacío
+                telefono: dato.telefono || '', // Puede estar vacío
+                email: dato.email || '', // Puede estar vacío
+                disciplinas: [], // Vacío - se asignará después
+                colegiatura: 900, // Colegiatura base por defecto
+                horarios: [], // Vacío - se asignará después
+                esHermano: false,
+                porcentajeBeca: 0,
+                estatus: 'pendiente', // ESTADO PENDIENTE
+                fechaRegistro: new Date().toISOString(),
+                cargaMasiva: true, // Marcar como carga masiva
+                filaOriginal: dato.filaOriginal
+            };
+            
+            sistemaADAMS.estudiantes.push(nuevoEstudiante);
+            cargadosExitosamente++;
+            
+        } catch (error) {
+            console.error('Error cargando estudiante:', dato, error);
+        }
+    });
+    
+    // Guardar en localStorage
+    guardarDatos();
+    
+    // Actualizar interfaz
+    actualizarTablaEstudiantes();
+    actualizarDashboard();
+    
+    // Cerrar modal y mostrar resultado
+    cerrarCargaMasiva();
+    
+    mostrarNotificacion(
+        `🎉 Carga masiva completada: ${cargadosExitosamente} estudiante${cargadosExitosamente > 1 ? 's' : ''} cargado${cargadosExitosamente > 1 ? 's' : ''} con estatus PENDIENTE`, 
+        'success'
+    );
+    
+    // Cambiar automáticamente al filtro de pendientes para mostrar los nuevos
+    document.getElementById('filtro-estatus-estudiante').value = 'pendiente';
+    filtrarEstudiantes();
+}
+
+// Función auxiliar para formatear nombres (si no existe)
+function formatearNombrePropio(texto) {
+    if (!texto) return '';
+    return texto.split(' ')
+        .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+        .join(' ');
 }
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
 console.log('=== FUNCIONES DE MES DE COLEGIATURA CARGADAS ===');
