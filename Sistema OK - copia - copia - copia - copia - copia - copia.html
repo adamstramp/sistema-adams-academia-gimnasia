@@ -1366,9 +1366,14 @@
             <section id="pagos" class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                     <h2>💰 Gestión de Pagos</h2>
-                    <button class="btn btn-primary" onclick="mostrarFormularioPago()">
-                        💳 Registrar Pago
-                    </button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+    <button class="btn btn-primary" onclick="mostrarFormularioPago()">
+        💳 Registrar Pago
+    </button>
+    <button class="btn btn-secondary" onclick="mostrarFormularioEstadoCuenta()" style="font-size: 12px;">
+        📊 Estado de Cuenta
+    </button>
+</div>
                 </div>
                 <div class="tabs-container">
                     <div class="tabs">
@@ -1475,6 +1480,52 @@
                                     </div>
                                 </form>
                             </div>
+                            <!-- Formulario de Estado de Cuenta -->
+<div id="formulario-estado-cuenta" class="form-section">
+    <h3>📊 Generar Estado de Cuenta</h3>
+    <form id="form-estado-cuenta" onsubmit="generarEstadoCuenta(event)">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Seleccionar Estudiante *</label>
+                <select id="estudiante-estado-cuenta" required>
+                    <option value="">Seleccionar estudiante...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Período del Estado de Cuenta</label>
+                <select id="periodo-estado-cuenta" onchange="toggleFechasPersonalizadas()">
+                    <option value="mes-actual">Mes Actual</option>
+                    <option value="mes-anterior">Mes Anterior</option>
+                    <option value="trimestre">Último Trimestre</option>
+                    <option value="semestre">Último Semestre</option>
+                    <option value="año">Año Actual</option>
+                    <option value="personalizado">Período Personalizado</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Fechas personalizadas -->
+        <div id="fechas-personalizadas-estado" class="form-row" style="display: none;">
+            <div class="form-group">
+                <label>Fecha de Inicio *</label>
+                <input type="date" id="fecha-inicio-estado">
+            </div>
+            <div class="form-group">
+                <label>Fecha de Fin *</label>
+                <input type="date" id="fecha-fin-estado">
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: right;">
+            <button type="button" class="btn btn-secondary" onclick="ocultarFormularioEstadoCuenta()">
+                Cancelar
+            </button>
+            <button type="submit" class="btn btn-success" style="margin-left: 10px;">
+                📄 Generar Estado de Cuenta PDF
+            </button>
+        </div>
+    </form>
+</div>
                             <!-- Filtros de Pagos -->
 <div class="form-section show" style="margin-bottom: 20px;">
     <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda de Pagos</h4>
@@ -3380,6 +3431,19 @@ function debugFormularioEstudiante() {
         function actualizarTablaEstudiantes() {
     const tbody = document.getElementById('tabla-estudiantes');
     
+    // AGREGAR ESTA VALIDACIÓN CRÍTICA:
+    if (!sistemaADAMS || !sistemaADAMS.estudiantes) {
+        console.error('Sistema ADAMS no inicializado correctamente');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                    Error: Sistema no inicializado. Refresca la página.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
     if (sistemaADAMS.estudiantes.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -3520,7 +3584,7 @@ function actualizarContadorEstudiantes(filtrados, total) {
             }
         }
         function cambiarEstatusRapido(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) {
         mostrarNotificacion('Estudiante no encontrado', 'error');
         return;
@@ -3580,6 +3644,28 @@ document.getElementById('fecha-pago-manual').value = obtenerFechaHoy();
             document.getElementById('concepto-temporal').value = '';
             document.getElementById('monto-recibido').value = '';
             document.getElementById('cambio-entregar').value = '';
+
+            // Restaurar selector de estudiante si estaba bloqueado
+const selectEstudiante = document.getElementById('pago-estudiante');
+selectEstudiante.disabled = false;
+selectEstudiante.style.backgroundColor = '';
+selectEstudiante.style.color = '';
+
+selectEstudiante.style.border = '';
+
+// Restaurar label original
+const label = selectEstudiante.parentElement.querySelector('label');
+if (label) {
+    label.innerHTML = 'Seleccionar Estudiante *';
+    label.style.color = '';
+}
+
+// Remover mensaje de bloqueo
+const mensajeBloqueo = document.querySelector('.estudiante-bloqueado-msg');
+if (mensajeBloqueo) {
+    mensajeBloqueo.remove();
+}
+
         }
 
         function cargarEstudiantesEnPago() {
@@ -3603,7 +3689,7 @@ document.getElementById('fecha-pago-manual').value = obtenerFechaHoy();
                 return;
             }
 
-            const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+            const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
             if (!estudiante) return;
 
             // Calcular último pago
@@ -3967,9 +4053,9 @@ document.getElementById('fecha-pago-manual').value = obtenerFechaHoy();
         function procesarPago(event) {
             event.preventDefault();
             
-            const estudianteId = parseInt(document.getElementById('pago-estudiante').value);
+            const estudianteId = document.getElementById('pago-estudiante').value;
             const metodoPago = document.querySelector('input[name="metodo-pago"]:checked');
-            const montoRecibido = parseFloat(document.getElementById('monto-recibido').value);
+            const montoRecibido = parseFloat(document.getElementById('monto-recibido').value) || montoTotal;
             const esEdicion = document.getElementById('form-pago').dataset.editando;
             
             if (!estudianteId || !metodoPago) {
@@ -4033,7 +4119,7 @@ const nuevoPago = crearObjetoPago(estudianteId, metodoPago.value, montoRecibido,
             });
 
             // Actualizar estado del estudiante
-            const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+            const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
             if (estudiante && carritoConceptos.some(c => c.tipo === 'colegiatura' || c.tipo === 'ajuste-colegiatura')) {
                 estudiante.estado = 'activo';
                 estudiante.ultimoPago = new Date().toISOString();
@@ -4063,16 +4149,32 @@ generarReporteFinanciero();
 ocultarFormularioPago();
         }
 
-        function crearObjetoPago(estudianteId, metodoPago, montoRecibido, montoTotal, pagoId = null, fechaManual = null) {
+function crearObjetoPago(estudianteId, metodoPago, montoRecibido, montoTotal, pagoId = null, fechaManual = null) {
+    // AGREGAR: Buscar datos del estudiante
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+    const nombreEstudiante = estudiante ? estudiante.nombre : 'Estudiante no encontrado';
+    const tutorEstudiante = estudiante ? estudiante.tutor : '';
+    // Validar que los montos sean coherentes
+if (!montoRecibido || montoRecibido < 0) {
+    console.warn('Monto recibido inválido, usando total como monto recibido');
+    montoRecibido = montoTotal;
+}
+
+if (montoRecibido < montoTotal) {
+    console.warn('Monto recibido menor al total:', montoRecibido, 'vs', montoTotal);
+}
+    
     const pago = {
         id: pagoId || Date.now(),
         estudianteId: estudianteId,
+        estudianteNombre: nombreEstudiante,  // NUEVO
+        estudianteTutor: tutorEstudiante,    // NUEVO
         fecha: fechaManual ? new Date(fechaManual + 'T12:00:00').toISOString() : new Date().toISOString(),
         fechaRegistro: new Date().toISOString(),
         conceptos: carritoConceptos.map(c => ({...c})), // Copia profunda
         montoTotal: montoTotal,
         montoRecibido: montoRecibido,
-        cambio: montoRecibido - montoTotal,
+        cambio: Math.max(0, montoRecibido - montoTotal),
         metodoPago: metodoPago,
         estado: 'completado'
     };
@@ -4177,7 +4279,7 @@ ocultarFormularioPago();
         // PASO 3: REEMPLAZAR LA FUNCIÓN mostrarRecibo EXISTENTE CON ESTA
 
 function mostrarRecibo(pago) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === pago.estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == pago.estudianteId);
     
     // Generar detalle de conceptos mejorado
     let detalleConceptos = '';
@@ -4639,7 +4741,7 @@ function imprimirRecibo() {
     const pagosOrdenados = pagosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     tbody.innerHTML = pagosOrdenados.map(pago => {
-        const estudiante = sistemaADAMS.estudiantes.find(e => e.id === pago.estudianteId);
+        const estudiante = sistemaADAMS.estudiantes.find(e => e.id == pago.estudianteId);
         let conceptoText = {
     'colegiatura': 'Colegiatura',
     'ajuste-colegiatura': 'Ajuste Colegiatura',
@@ -4665,11 +4767,11 @@ if ((pago.concepto === 'colegiatura' || pago.concepto === 'ajuste-colegiatura') 
             <tr>
                 <td>${formatearFecha(pago.fecha)}</td>
                 <td>
-                    <strong>${estudiante ? estudiante.nombre : 'Estudiante no encontrado'}</strong><br>
-                    <small style="color: #666;">${estudiante ? estudiante.tutor : ''}</small>
-                </td>
+    <strong>${pago.estudianteNombre || (estudiante ? estudiante.nombre : 'Estudiante no encontrado')}</strong><br>
+    <small style="color: #666;">${pago.estudianteTutor || (estudiante ? estudiante.tutor : '')}</small>
+</td>
                 <td>${conceptoText}</td>
-                <td><strong>$${pago.montoTotal.toFixed(2)}</strong></td>
+                <td><strong>$${(pago.montoTotal || 0).toFixed(2)}</strong></td>
                 <td>${pago.metodoPago}</td>
                 <td><span class="status status-active">Pagado</span></td>
                 <td>
@@ -4741,13 +4843,13 @@ function actualizarContadorPagos(filtrados, total) {
 }
 
     function reimprimeRecibo(pagoId) {
-    const pago = sistemaADAMS.pagos.find(p => p.id === pagoId);
+    const pago = sistemaADAMS.pagos.find(p => p.id == pagoId);
     if (!pago) {
         mostrarNotificacion('Pago no encontrado', 'error');
         return;
     }
     
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === pago.estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == pago.estudianteId);
     if (!estudiante) {
         mostrarNotificacion('Estudiante no encontrado', 'error');
         return;
@@ -4792,7 +4894,7 @@ function generarHTMLRecibo(pago, estudiante) {
             return `
                 <div class="concepto-item">
                     <span>${descripcion}</span>
-                    <span>$${concepto.total.toFixed(2)}</span>
+                    <span>$${(concepto.total || 0).toFixed(2)}</span>
                 </div>
             `;
         }).join('');
@@ -4808,7 +4910,7 @@ function generarHTMLRecibo(pago, estudiante) {
         detalleConceptos = `
             <div class="concepto-item">
                 <span>${descripcionLegacy}</span>
-                <span>$${pago.montoTotal.toFixed(2)}</span>
+                <span>$${(pago.montoTotal || 0).toFixed(2)}</span>
             </div>
         `;
     }
@@ -4867,7 +4969,7 @@ function generarHTMLRecibo(pago, estudiante) {
                 ${detalleConceptos}
                 <div class="concepto-item">
                     <span><strong>TOTAL A PAGAR</strong></span>
-                    <span><strong>$${pago.montoTotal.toFixed(2)}</strong></span>
+                    <span><strong>$${(pago.montoTotal || 0).toFixed(2)}</strong></span>
                 </div>
             </div>
             
@@ -4876,15 +4978,15 @@ function generarHTMLRecibo(pago, estudiante) {
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 15px 0;">
                     <div>
                         <div style="font-size: 14px; opacity: 0.9;">Monto Recibido</div>
-                        <div style="font-size: 20px; font-weight: bold;">$${pago.montoRecibido.toFixed(2)}</div>
+                        <div style="font-size: 20px; font-weight: bold;">$${(pago.montoRecibido || 0).toFixed(2)}</div>
                     </div>
                     <div>
                         <div style="font-size: 14px; opacity: 0.9;">Total</div>
-                        <div class="total-amount">$${pago.montoTotal.toFixed(2)}</div>
+                        <div class="total-amount">$${(pago.montoTotal || 0).toFixed(2)}</div>
                     </div>
                     <div>
                         <div style="font-size: 14px; opacity: 0.9;">Cambio</div>
-                        <div style="font-size: 20px; font-weight: bold;">$${pago.cambio.toFixed(2)}</div>
+                        <div style="font-size: 20px; font-weight: bold;">$${(pago.cambio || 0).toFixed(2)}</div>
                     </div>
                 </div>
             </div>
@@ -5841,7 +5943,7 @@ function cargarProductosEnPago() {
         let carritoConceptos = [];
         let conceptoTemporal = {};
 
-        function mostrarCamposConcepto() {
+function mostrarCamposConcepto() {
     const concepto = document.getElementById('concepto-temporal').value;
     const campos = document.getElementById('campos-dinamicos');
     const titulo = document.getElementById('titulo-concepto');
@@ -5857,21 +5959,145 @@ function cargarProductosEnPago() {
 
     switch(concepto) {
         case 'colegiatura':
-            mostrarCamposColegiatura(campos);
+            // Verificar que hay un estudiante seleccionado
+            const estudianteSeleccionado = document.getElementById('pago-estudiante').value;
+            if (!estudianteSeleccionado) {
+                mostrarNotificacion('Selecciona un estudiante primero', 'error');
+                document.getElementById('concepto-temporal').value = '';
+                return;
+            }
+
+            const estudianteData = sistemaADAMS.estudiantes.find(e => e.id == estudianteSeleccionado);
+            const montoBase = estudianteData ? estudianteData.colegiatura : 900;
+
+            campos.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mes de la Colegiatura *</label>
+                        <select id="mes-colegiatura" required>
+    <option value="">Seleccionar mes...</option>
+    <option value="1" ${new Date().getMonth() + 1 === 1 ? 'selected' : ''}>Enero</option>
+    <option value="2" ${new Date().getMonth() + 1 === 2 ? 'selected' : ''}>Febrero</option>
+    <option value="3" ${new Date().getMonth() + 1 === 3 ? 'selected' : ''}>Marzo</option>
+    <option value="4" ${new Date().getMonth() + 1 === 4 ? 'selected' : ''}>Abril</option>
+    <option value="5" ${new Date().getMonth() + 1 === 5 ? 'selected' : ''}>Mayo</option>
+    <option value="6" ${new Date().getMonth() + 1 === 6 ? 'selected' : ''}>Junio</option>
+    <option value="7" ${new Date().getMonth() + 1 === 7 ? 'selected' : ''}>Julio</option>
+    <option value="8" ${new Date().getMonth() + 1 === 8 ? 'selected' : ''}>Agosto</option>
+    <option value="9" ${new Date().getMonth() + 1 === 9 ? 'selected' : ''}>Septiembre</option>
+    <option value="10" ${new Date().getMonth() + 1 === 10 ? 'selected' : ''}>Octubre</option>
+    <option value="11" ${new Date().getMonth() + 1 === 11 ? 'selected' : ''}>Noviembre</option>
+    <option value="12" ${new Date().getMonth() + 1 === 12 ? 'selected' : ''}>Diciembre</option>
+</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Año de la Colegiatura *</label>
+                        <select id="año-colegiatura" required>
+    <option value="${new Date().getFullYear()}" selected>${new Date().getFullYear()}</option>
+    <option value="${new Date().getFullYear() - 1}">${new Date().getFullYear() - 1}</option>
+</select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Monto de Colegiatura</label>
+                        <input type="number" id="monto-colegiatura" value="${montoBase}" 
+                               step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total del Concepto</label>
+                        <input type="number" id="total-concepto" value="${montoBase}" 
+                               step="0.01" min="0" required style="font-weight: bold;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Aplicar descuento por beca</label>
+                        <input type="checkbox" id="aplicar-beca" checked>
+                        <small>El descuento se calculará automáticamente según el perfil del estudiante</small>
+                    </div>
+                </div>
+            `;
             break;
+
         case 'ajuste-colegiatura':
-            mostrarCamposAjuste(campos);
+            const estudianteSeleccionado2 = document.getElementById('pago-estudiante').value;
+            if (!estudianteSeleccionado2) {
+                mostrarNotificacion('Selecciona un estudiante primero', 'error');
+                document.getElementById('concepto-temporal').value = '';
+                return;
+            }
+
+            campos.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mes del Ajuste *</label>
+                        <select id="mes-ajuste" required>
+    <option value="">Seleccionar mes...</option>
+    <option value="1" ${new Date().getMonth() + 1 === 1 ? 'selected' : ''}>Enero</option>
+    <option value="2" ${new Date().getMonth() + 1 === 2 ? 'selected' : ''}>Febrero</option>
+    <option value="3" ${new Date().getMonth() + 1 === 3 ? 'selected' : ''}>Marzo</option>
+    <option value="4" ${new Date().getMonth() + 1 === 4 ? 'selected' : ''}>Abril</option>
+    <option value="5" ${new Date().getMonth() + 1 === 5 ? 'selected' : ''}>Mayo</option>
+    <option value="6" ${new Date().getMonth() + 1 === 6 ? 'selected' : ''}>Junio</option>
+    <option value="7" ${new Date().getMonth() + 1 === 7 ? 'selected' : ''}>Julio</option>
+    <option value="8" ${new Date().getMonth() + 1 === 8 ? 'selected' : ''}>Agosto</option>
+    <option value="9" ${new Date().getMonth() + 1 === 9 ? 'selected' : ''}>Septiembre</option>
+    <option value="10" ${new Date().getMonth() + 1 === 10 ? 'selected' : ''}>Octubre</option>
+    <option value="11" ${new Date().getMonth() + 1 === 11 ? 'selected' : ''}>Noviembre</option>
+    <option value="12" ${new Date().getMonth() + 1 === 12 ? 'selected' : ''}>Diciembre</option>
+</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Año del Ajuste *</label>
+                        <select id="año-ajuste" required>
+    <option value="${new Date().getFullYear()}" selected>${new Date().getFullYear()}</option>
+    <option value="${new Date().getFullYear() - 1}">${new Date().getFullYear() - 1}</option>
+</select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Monto del Ajuste *</label>
+                        <input type="number" id="monto-ajuste-concepto" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivo del Ajuste</label>
+                        <input type="text" id="motivo-ajuste-concepto" placeholder="Ej: Inscripción a mitad de mes">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Total del Concepto</label>
+                    <input type="number" id="total-concepto" step="0.01" min="0" readonly style="background: #f0f0f0;">
+                </div>
+            `;
             break;
+
         case 'inscripcion':
         case 'reinscripcion':
-            mostrarCamposInscripcion(campos, concepto);
+            campos.innerHTML = `
+                <div class="form-group">
+                    <label>Monto *</label>
+                    <input type="number" id="monto-inscripcion" value="500" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="observaciones-concepto" rows="3"></textarea>
+                </div>
+            `;
             break;
-        case 'producto':
-            mostrarCamposProducto(campos);
-            break;
+
         default:
-            // Para conceptos personalizados nuevos
-            mostrarCamposConceptoPersonalizado(campos, concepto);
+            campos.innerHTML = `
+                <div class="form-group">
+                    <label>Monto *</label>
+                    <input type="number" id="monto-personalizado" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="observaciones-concepto" rows="3"></textarea>
+                </div>
+            `;
             break;
     }
     
@@ -5898,7 +6124,7 @@ function cargarProductosEnPago() {
 
         function mostrarCamposColegiatura(campos) {
     const estudianteId = parseInt(document.getElementById('pago-estudiante').value);
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     
     if (!estudiante) {
         campos.innerHTML = '<p style="color: red;">Selecciona un estudiante primero</p>';
@@ -6115,7 +6341,7 @@ function verificarPagoExistenteMes(estudianteId, mes, año) {
 
         function mostrarCamposAjuste(campos) {
     const estudianteId = parseInt(document.getElementById('pago-estudiante').value);
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     
     if (!estudiante) {
         campos.innerHTML = '<p style="color: red;">Selecciona un estudiante primero</p>';
@@ -6389,43 +6615,46 @@ function validarConceptoTemporal() {
         conceptoTemporal.nombre = conceptoTemporal.producto.nombre;
     } 
     
-    // VALIDACIÓN PARA COLEGIATURA (CON MES Y AÑO)
-    else if (conceptoTemporal.tipo === 'colegiatura') {
-        // NUEVA VALIDACIÓN: Verificar que se seleccionó mes y año
-        const mesSeleccionado = document.getElementById('mes-colegiatura')?.value;
-        const añoSeleccionado = document.getElementById('año-colegiatura')?.value;
-        
-        if (!mesSeleccionado || !añoSeleccionado) {
-            mostrarNotificacion('Selecciona el mes y año de la colegiatura', 'error');
-            return false;
-        }
-        
-        // Validar que sean números válidos
-        const mes = parseInt(mesSeleccionado);
-        const año = parseInt(añoSeleccionado);
-        
-        if (mes < 1 || mes > 12) {
-            mostrarNotificacion('Mes inválido', 'error');
-            return false;
-        }
-        
-        if (año < 2020 || año > 2030) {
-            mostrarNotificacion('Año inválido', 'error');
-            return false;
-        }
-        
-        // Agregar información del mes al concepto temporal
-        conceptoTemporal.mesAplicacion = mes;
-        conceptoTemporal.añoAplicacion = año;
-        conceptoTemporal.descripcionMes = new Date(año, mes - 1, 1).toLocaleDateString('es-ES', { 
-            month: 'long', 
-            year: 'numeric' 
-        });
-        
-        // Para colegiatura, verificar si se editó manualmente el total
-        const totalEditado = parseFloat(document.getElementById('total-concepto').value) || 0;
-        conceptoTemporal.total = totalEditado;
-    } 
+    // VALIDACIÓN PARA COLEGIATURA (CON MES Y AÑO) - VERSIÓN ACTUALIZADA
+else if (conceptoTemporal.tipo === 'colegiatura') {
+    // Verificar que se seleccionó mes y año
+    const mesSeleccionado = document.getElementById('mes-colegiatura')?.value;
+    const añoSeleccionado = document.getElementById('año-colegiatura')?.value;
+    const montoTotal = parseFloat(document.getElementById('total-concepto')?.value) || 0;
+    
+    if (!mesSeleccionado || !añoSeleccionado) {
+        mostrarNotificacion('Selecciona el mes y año de la colegiatura', 'error');
+        return false;
+    }
+    
+    if (montoTotal <= 0) {
+        mostrarNotificacion('El monto debe ser mayor a 0', 'error');
+        return false;
+    }
+    
+    // Validar que sean números válidos
+    const mes = parseInt(mesSeleccionado);
+    const año = parseInt(añoSeleccionado);
+    
+    if (mes < 1 || mes > 12) {
+        mostrarNotificacion('Mes inválido', 'error');
+        return false;
+    }
+    
+    if (año < 2020 || año > 2030) {
+        mostrarNotificacion('Año inválido', 'error');
+        return false;
+    }
+    
+    // Agregar información del mes al concepto temporal
+    conceptoTemporal.mesAplicacion = mes;
+    conceptoTemporal.añoAplicacion = año;
+    conceptoTemporal.descripcionMes = new Date(año, mes - 1, 1).toLocaleDateString('es-ES', { 
+        month: 'long', 
+        year: 'numeric' 
+    });
+    conceptoTemporal.total = montoTotal;
+}
     
     // VALIDACIÓN PARA AJUSTE DE COLEGIATURA (CON MES Y AÑO)
     else if (conceptoTemporal.tipo === 'ajuste-colegiatura') {
@@ -6549,7 +6778,7 @@ function validarConceptoTemporal() {
                     <strong>${descripcionDetallada}</strong>
                 </div>
                 <div style="text-align: right;">
-                    <strong>$${concepto.total.toFixed(2)}</strong><br>
+                    <strong>$${(concepto.total || 0).toFixed(2)}</strong><br>
                     <button class="btn btn-danger btn-small" onclick="eliminarDelCarrito(${index})">
                         🗑️ Quitar
                     </button>
@@ -6559,9 +6788,9 @@ function validarConceptoTemporal() {
     }).join('');
 
     // Calcular total
-    const total = carritoConceptos.reduce((sum, concepto) => sum + concepto.total, 0);
-    document.getElementById('total-carrito').textContent = total.toFixed(2);
-    document.getElementById('monto-recibido').value = total.toFixed(2);
+    const total = carritoConceptos.reduce((sum, concepto) => sum + (concepto.total || 0), 0);
+    document.getElementById('total-carrito').textContent = (total || 0).toFixed(2);
+    document.getElementById('monto-recibido').value = (total || 0).toFixed(2);
 
     carrito.style.display = 'block';
     document.getElementById('seccion-metodo-pago').style.display = 'block';
@@ -6581,40 +6810,91 @@ function validarConceptoTemporal() {
         }
         // FUNCIONES PARA EDITAR Y ELIMINAR PAGOS
         function editarPago(pagoId) {
-            const pago = sistemaADAMS.pagos.find(p => p.id === pagoId);
+            const pago = sistemaADAMS.pagos.find(p => p.id == pagoId);
             if (!pago) {
                 mostrarNotificacion('Pago no encontrado', 'error');
                 return;
             }
 
-            // Cargar datos del pago en el formulario
-            document.getElementById('pago-estudiante').value = pago.estudianteId;
-            cargarDatosEstudiante();
+// Cargar datos del pago en el formulario
+document.getElementById('pago-estudiante').value = pago.estudianteId;
+cargarDatosEstudiante();
 
-            // Recrear el carrito basado en el pago existente
-            carritoConceptos = [];
-            
-            // Convertir el pago existente a formato de carrito
-            const conceptoPago = {
-                tipo: pago.concepto,
-                total: pago.montoTotal,
-                observaciones: pago.observaciones || ''
-            };
+// ESPERAR a que se cargue el estudiante, luego bloquear
+setTimeout(() => {
+    const selectEstudiante = document.getElementById('pago-estudiante');
+    const estudianteSeleccionado = sistemaADAMS.estudiantes.find(e => e.id == pago.estudianteId);
+    
+    if (estudianteSeleccionado) {
+        // Asegurar que el estudiante esté seleccionado correctamente
+        selectEstudiante.value = pago.estudianteId;
+        
+        // BLOQUEAR la selección pero mantener el nombre visible
+        selectEstudiante.disabled = true;
+        selectEstudiante.style.backgroundColor = '#f8f9fa';
+        selectEstudiante.style.color = '#6c757d';
+        selectEstudiante.style.border = '2px solid #dc3545';
+        
+        // Cambiar el label para mostrar el nombre
+        const label = selectEstudiante.parentElement.querySelector('label');
+        if (label) {
+            label.innerHTML = `Estudiante (BLOQUEADO): <strong>${estudianteSeleccionado.nombre}</strong>`;
+            label.style.color = '#dc3545';
+        }
+        
+        // Agregar mensaje de bloqueo si no existe
+        const estudianteContainer = selectEstudiante.parentElement;
+        if (!estudianteContainer.querySelector('.estudiante-bloqueado-msg')) {
+            const mensajeBloqueo = document.createElement('small');
+            mensajeBloqueo.className = 'estudiante-bloqueado-msg';
+            mensajeBloqueo.style.color = '#dc3545';
+            mensajeBloqueo.style.fontWeight = 'bold';
+            mensajeBloqueo.style.display = 'block';
+            mensajeBloqueo.style.marginTop = '5px';
+            mensajeBloqueo.innerHTML = '🔒 Para cambiar estudiante, elimina este pago y crea uno nuevo.';
+            estudianteContainer.appendChild(mensajeBloqueo);
+        }
+    }
+}, 100);
 
-            // Agregar datos específicos según el tipo
-            if (pago.concepto === 'colegiatura') {
-                conceptoPago.montoBase = pago.montoBase || pago.montoTotal;
-                conceptoPago.descuentoBeca = pago.descuentoBeca || 0;
-                conceptoPago.recargo = pago.recargoFinal || 0;
-                conceptoPago.detalleRecargo = pago.detalleRecargo || '';
-            } else if (pago.concepto === 'producto' && pago.producto) {
-                conceptoPago.producto = pago.producto;
-                conceptoPago.talla = pago.talla;
-                conceptoPago.cantidad = pago.cantidad;
-                conceptoPago.nombre = pago.producto.nombre;
-            }
+cargarDatosEstudiante();
 
-            carritoConceptos.push(conceptoPago);
+// Recrear el carrito basado en el pago existente
+carritoConceptos = [];
+
+if (pago.conceptos && pago.conceptos.length > 0) {
+    // Pago moderno con array de conceptos
+    carritoConceptos = pago.conceptos.map(concepto => ({...concepto}));
+} else {
+    // Pago legacy con concepto único
+    const conceptoPago = {
+        tipo: pago.concepto,
+        total: pago.montoTotal,
+        observaciones: pago.observaciones || ''
+    };
+    
+    // Agregar datos específicos según el tipo
+    if (pago.concepto === 'colegiatura') {
+        conceptoPago.montoBase = pago.montoBase || pago.montoTotal;
+        conceptoPago.descuentoBeca = pago.descuentoBeca || 0;
+        conceptoPago.recargo = pago.recargoFinal || 0;
+        conceptoPago.detalleRecargo = pago.detalleRecargo || '';
+        
+        // Agregar información del mes si existe
+        if (pago.mesAplicacion && pago.añoAplicacion) {
+            conceptoPago.mesAplicacion = pago.mesAplicacion;
+            conceptoPago.añoAplicacion = pago.añoAplicacion;
+            conceptoPago.descripcionMes = pago.descripcionMes;
+        }
+    } else if (pago.concepto === 'producto' && pago.producto) {
+        conceptoPago.producto = pago.producto;
+        conceptoPago.talla = pago.talla;
+        conceptoPago.cantidad = pago.cantidad;
+        conceptoPago.nombre = pago.producto.nombre;
+    }
+    
+    carritoConceptos.push(conceptoPago);
+}
             actualizarCarritoVisual();
 
             // Marcar que estamos editando
@@ -6882,7 +7162,7 @@ mostrarNotificacion('Pago eliminado correctamente', 'success');
         }
 
         function enviarRecordatorio(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) {
         mostrarNotificacion('Estudiante no encontrado', 'error');
         return;
@@ -6980,7 +7260,7 @@ function cerrarModalContacto() {
 }
 
 function enviarWhatsAppAmigable(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) return;
     
     const ultimoPago = obtenerUltimoPago(estudiante.id);
@@ -7017,7 +7297,7 @@ Saludos cordiales 🤝`;
 }
 
 function enviarWhatsAppFormal(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) return;
     
     const ultimoPago = obtenerUltimoPago(estudiante.id);
@@ -7061,7 +7341,7 @@ Administración ${nombreAcademia}`;
 }
 
 function llamadaTelefonica(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) return;
     
     // Abrir marcador del teléfono
@@ -7177,7 +7457,7 @@ function mostrarModalEnvioMasivo(estudiantesMorosos) {
 }
 
 function enviarWhatsAppIndividual(index, estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (!estudiante) return;
     
     const nombreAcademia = obtenerNombreAcademia();
@@ -12900,7 +13180,7 @@ function exportarReportesCompletos() {
 
 // Función auxiliar para contactar estudiante
 function contactarEstudiante(estudianteId) {
-    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     if (estudiante) {
         mostrarNotificacion(`Recordatorio enviado a ${estudiante.tutor} (${estudiante.telefono})`, 'success');
     }
@@ -13629,6 +13909,234 @@ function formatearNombrePropio(texto) {
     return texto.split(' ')
         .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
         .join(' ');
+}
+// FUNCIONES PARA ESTADO DE CUENTA
+function mostrarFormularioEstadoCuenta() {
+    document.getElementById('formulario-estado-cuenta').classList.add('show');
+    cargarEstudiantesEnEstadoCuenta();
+}
+
+function ocultarFormularioEstadoCuenta() {
+    document.getElementById('formulario-estado-cuenta').classList.remove('show');
+    document.getElementById('form-estado-cuenta').reset();
+    document.getElementById('fechas-personalizadas-estado').style.display = 'none';
+}
+
+function cargarEstudiantesEnEstadoCuenta() {
+    const select = document.getElementById('estudiante-estado-cuenta');
+    select.innerHTML = '<option value="">Seleccionar estudiante...</option>';
+    
+    // Ordenar estudiantes alfabéticamente
+    const estudiantesOrdenados = sistemaADAMS.estudiantes
+        .filter(e => e.estatus !== 'baja')
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+    
+    estudiantesOrdenados.forEach(estudiante => {
+        select.innerHTML += `
+            <option value="${estudiante.id}">${estudiante.nombre} - ${estudiante.tutor}</option>
+        `;
+    });
+}
+
+function toggleFechasPersonalizadas() {
+    const periodo = document.getElementById('periodo-estado-cuenta').value;
+    const fechasDiv = document.getElementById('fechas-personalizadas-estado');
+    
+    if (periodo === 'personalizado') {
+        fechasDiv.style.display = 'block';
+        document.getElementById('fecha-inicio-estado').required = true;
+        document.getElementById('fecha-fin-estado').required = true;
+    } else {
+        fechasDiv.style.display = 'none';
+        document.getElementById('fecha-inicio-estado').required = false;
+        document.getElementById('fecha-fin-estado').required = false;
+    }
+}
+
+function generarEstadoCuenta(event) {
+    event.preventDefault();
+    
+    const estudianteId = document.getElementById('estudiante-estado-cuenta').value;
+    const periodo = document.getElementById('periodo-estado-cuenta').value;
+    
+    if (!estudianteId) {
+        mostrarNotificacion('Selecciona un estudiante', 'error');
+        return;
+    }
+    
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+    if (!estudiante) {
+        mostrarNotificacion('Estudiante no encontrado', 'error');
+        return;
+    }
+    
+    // Calcular fechas del período
+    const fechas = calcularFechasPeriodo(periodo);
+    if (!fechas) return;
+    
+    // Filtrar pagos del estudiante en el período
+    const pagosEstudiante = sistemaADAMS.pagos.filter(pago => {
+        if (pago.estudianteId != estudianteId) return false;
+        
+        const fechaPago = new Date(pago.fecha);
+        return fechaPago >= fechas.inicio && fechaPago <= fechas.fin;
+    });
+    
+    if (pagosEstudiante.length === 0) {
+        mostrarNotificacion('No hay pagos en el período seleccionado', 'error');
+        return;
+    }
+    
+    // Generar el estado de cuenta
+    generarPDFEstadoCuenta(estudiante, pagosEstudiante, fechas);
+    ocultarFormularioEstadoCuenta();
+}
+
+function calcularFechasPeriodo(periodo) {
+    const hoy = new Date();
+    let inicio, fin;
+    
+    switch(periodo) {
+        case 'mes-actual':
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+            break;
+        case 'mes-anterior':
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            break;
+        case 'trimestre':
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
+            fin = hoy;
+            break;
+        case 'semestre':
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
+            fin = hoy;
+            break;
+        case 'año':
+            inicio = new Date(hoy.getFullYear(), 0, 1);
+            fin = hoy;
+            break;
+        case 'personalizado':
+            const fechaInicioInput = document.getElementById('fecha-inicio-estado').value;
+            const fechaFinInput = document.getElementById('fecha-fin-estado').value;
+            
+            if (!fechaInicioInput || !fechaFinInput) {
+                mostrarNotificacion('Selecciona las fechas del período personalizado', 'error');
+                return null;
+            }
+            
+            inicio = new Date(fechaInicioInput);
+            fin = new Date(fechaFinInput);
+            break;
+        default:
+            return null;
+    }
+    
+    return { inicio, fin };
+}
+
+function generarPDFEstadoCuenta(estudiante, pagos, fechas) {
+    // Crear HTML del estado de cuenta
+    const estadoCuentaHTML = generarHTMLEstadoCuenta(estudiante, pagos, fechas);
+    
+    // Crear elemento temporal para PDF
+    const tempDiv = document.createElement('div');
+    tempDiv.id = 'estado-cuenta-temp-pdf';
+    tempDiv.innerHTML = estadoCuentaHTML;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    document.body.appendChild(tempDiv);
+    
+    // Generar PDF
+    setTimeout(() => {
+        descargarEstadoCuentaPDF('estado-cuenta-temp-pdf', estudiante.nombre, fechas);
+    }, 100);
+}
+
+function generarHTMLEstadoCuenta(estudiante, pagos, fechas) {
+    const totalPagado = pagos.reduce((sum, pago) => sum + (pago.montoTotal || 0), 0);
+    
+    const detallesPagos = pagos.map(pago => {
+        const conceptosTexto = pago.conceptos && pago.conceptos.length > 0 
+            ? pago.conceptos.map(c => c.descripcion || obtenerNombreConcepto(c.tipo)).join(', ')
+            : obtenerNombreConcepto(pago.concepto);
+            
+        return `
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatearFecha(pago.fecha)}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${conceptosTexto}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${pago.metodoPago}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(pago.montoTotal || 0).toFixed(2)}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    return `
+        <div style="max-width: 800px; margin: 0 auto; padding: 30px; font-family: Arial, sans-serif;">
+            <div style="text-align: center; border-bottom: 3px solid #9c27b0; padding-bottom: 20px; margin-bottom: 30px;">
+                <h1 style="color: #9c27b0; margin: 0;">${obtenerNombreAcademia()}</h1>
+                <h2 style="color: #666; margin: 10px 0;">Estado de Cuenta</h2>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                <div>
+                    <h3 style="color: #9c27b0; margin-bottom: 15px;">Datos del Estudiante</h3>
+                    <p><strong>Nombre:</strong> ${estudiante.nombre}</p>
+                    <p><strong>Tutor:</strong> ${estudiante.tutor}</p>
+                    <p><strong>Teléfono:</strong> ${estudiante.telefono}</p>
+                </div>
+                <div>
+                    <h3 style="color: #9c27b0; margin-bottom: 15px;">Período del Estado</h3>
+                    <p><strong>Desde:</strong> ${formatearFecha(fechas.inicio.toISOString())}</p>
+                    <p><strong>Hasta:</strong> ${formatearFecha(fechas.fin.toISOString())}</p>
+                    <p><strong>Total de Pagos:</strong> ${pagos.length}</p>
+                </div>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white;">
+                        <th style="padding: 15px; text-align: left;">Fecha</th>
+                        <th style="padding: 15px; text-align: left;">Concepto</th>
+                        <th style="padding: 15px; text-align: left;">Método</th>
+                        <th style="padding: 15px; text-align: right;">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${detallesPagos}
+                </tbody>
+            </table>
+            
+            <div style="text-align: right; background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                <h3 style="color: #9c27b0; margin: 0;">Total Pagado: $${totalPagado.toFixed(2)}</h3>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
+                <p>Estado de cuenta generado el ${formatearFecha(new Date().toISOString())}</p>
+            </div>
+        </div>
+    `;
+}
+
+function descargarEstadoCuentaPDF(elementId, nombreEstudiante, fechas) {
+    const element = document.getElementById(elementId);
+    
+    // Configuración para html2canvas y jsPDF
+    const opt = {
+        margin: 0.5,
+        filename: `Estado_Cuenta_${nombreEstudiante.replace(/\s+/g, '_')}_${fechas.inicio.toISOString().split('T')[0]}_${fechas.fin.toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    // Generar PDF
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Limpiar elemento temporal
+        document.body.removeChild(element);
+        mostrarNotificacion('Estado de cuenta generado exitosamente', 'success');
+    });
 }
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
 console.log('=== FUNCIONES DE MES DE COLEGIATURA CARGADAS ===');
