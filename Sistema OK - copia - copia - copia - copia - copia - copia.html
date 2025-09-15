@@ -1055,6 +1055,7 @@
                         <button class="tab" onclick="cambiarTab('asignacion-horarios', this)">⏰ Asignación de Horarios</button>
                         <button class="tab" onclick="cambiarTab('nomina-semanal', this)">💰 Nómina Semanal</button>
                         <button class="tab" onclick="cambiarTab('asistencias-entrenadores', this)">✅ Control de Asistencias</button>
+                        <button class="tab" onclick="cambiarTab('estado-cuenta-entrenadores', this)">📊 Estado de Cuenta</button>
                     </div>
                     <div class="tab-content">
                         <!-- Lista de Entrenadores -->
@@ -1105,7 +1106,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label>Tarifa por Hora (MXN) *</label>
-                                            <input type="number" id="entrenador-tarifa" required min="10" max="900" step="5" value="90">
+                                            <input type="number" id="entrenador-tarifa" required min="0" max="900" step="0.01" value="90">
                                         </div>
                                     </div>
                                     <div class="form-row">
@@ -1260,19 +1261,18 @@
                         </div>
                         <!-- Nómina Semanal -->
                         <div id="nomina-semanal" class="tab-pane">
-                            <h3>💰 Nómina Semanal de Entrenadores</h3>                           
+                            <h3>💰 Cálculo Teórico de Nómina Semanal</h3>
+<div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+    <p style="margin: 0; color: #1976d2;">
+        ℹ️ <strong>Información:</strong> Esta sección muestra un cálculo teórico basado en los horarios programados. 
+        Para registrar pagos reales, utiliza la sección "Estado de Cuenta".
+    </p>
+</div>
                             <div class="form-section show">
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Semana de Pago</label>
                                         <input type="week" id="semana-nomina" onchange="calcularNomina()">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Estado de Nómina</label>
-                                        <select id="estado-nomina">
-                                            <option value="pendiente">Pendiente</option>
-                                            <option value="pagada">Pagada</option>
-                                        </select>
                                     </div>
                                 </div>
                                 <button class="btn btn-primary" onclick="calcularNomina()">
@@ -1287,22 +1287,21 @@
                                         <span id="total-horas">0 horas</span>
                                     </div>
                                     <div class="nomina-row">
-                                        <span>Total a Pagar:</span>
-                                        <span id="total-pagar">$0.00</span>
-                                    </div>
+    <span>Total Teórico a Pagar:</span>
+    <span id="total-pagar">$0.00</span>
+</div>
                                 </div>
                                 <div class="table-container">
                                     <table class="table">
                                         <thead>
-                                            <tr>
-                                                <th>Entrenador</th>
-                                                <th>Horas Trabajadas</th>
-                                                <th>Tarifa/Hora</th>
-                                                <th>Subtotal</th>
-                                                <th>Estado</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
+    <tr>
+        <th>Entrenador</th>
+        <th>Horas Programadas</th>
+        <th>Tarifa/Hora</th>
+        <th>Subtotal Teórico</th>
+        <th>Observaciones</th>
+    </tr>
+</thead>
                                         <tbody id="tabla-nomina">
                                             <tr>
                                                 <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
@@ -1359,6 +1358,150 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Estado de Cuenta de Entrenadores -->
+<div id="estado-cuenta-entrenadores" class="tab-pane">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>📊 Estado de Cuenta de Entrenadores</h3>
+        <button class="btn btn-primary" onclick="mostrarFormularioEstadoCuentaEntrenador()">
+            📄 Generar Estado de Cuenta
+        </button>
+    </div>
+    
+    <!-- Formulario para Estado de Cuenta -->
+    <div id="formulario-estado-cuenta-entrenador" class="form-section">
+        <h4>📋 Configurar Estado de Cuenta</h4>
+        <form id="form-estado-cuenta-entrenador" onsubmit="generarEstadoCuentaEntrenador(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Seleccionar Entrenador *</label>
+                    <select id="entrenador-estado-cuenta" required>
+                        <option value="">Seleccionar entrenador...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Período de Consulta *</label>
+                    <select id="periodo-estado-cuenta-entrenador" onchange="toggleFechasPersonalizadasEntrenador()" required>
+                        <option value="">Seleccionar período...</option>
+                        <option value="mes-actual">Mes Actual</option>
+                        <option value="mes-anterior">Mes Anterior</option>
+                        <option value="trimestre">Último Trimestre</option>
+                        <option value="semestre">Último Semestre</option>
+                        <option value="año">Año Actual</option>
+                        <option value="personalizado">Período Personalizado</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Fechas personalizadas -->
+            <div id="fechas-personalizadas-estado-entrenador" class="form-row" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <div class="form-group">
+                    <label>Fecha de Inicio *</label>
+                    <input type="date" id="fecha-inicio-estado-entrenador">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Fin *</label>
+                    <input type="date" id="fecha-fin-estado-entrenador">
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" class="btn btn-secondary" onclick="ocultarFormularioEstadoCuentaEntrenador()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
+                    📄 Generar PDF
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Formulario de Registro de Pagos -->
+    <div class="form-section show" style="margin-top: 30px;">
+        <h4>💰 Registrar Pago a Entrenador</h4>
+        <form id="form-pago-entrenador" onsubmit="registrarPagoEntrenador(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Entrenador *</label>
+                    <select id="pago-entrenador-select" required>
+                        <option value="">Seleccionar entrenador...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha del Pago *</label>
+                    <input type="date" id="fecha-pago-entrenador" required>
+                </div>
+                <div class="form-group">
+                    <label>Monto Pagado *</label>
+                    <input type="number" id="monto-pago-entrenador" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Período Correspondiente</label>
+                    <input type="text" id="periodo-pago-entrenador" placeholder="Ej: Semana 3 Enero, Quincena 1 Feb">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="observaciones-pago-entrenador" rows="2" placeholder="Detalles adicionales del pago..."></textarea>
+                </div>
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+                <button type="submit" class="btn btn-success">
+                    💾 Registrar Pago
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Historial de Pagos -->
+    <div class="table-container" style="margin-top: 30px;">
+        <h4>📋 Historial de Pagos a Entrenadores</h4>
+        <div style="margin-bottom: 15px;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Filtrar por entrenador</label>
+                    <select id="filtro-entrenador-pagos" onchange="filtrarPagosEntrenadores()">
+                        <option value="">Todos los entrenadores</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Filtrar por período</label>
+                    <select id="filtro-periodo-pagos" onchange="filtrarPagosEntrenadores()">
+                        <option value="">Todos los períodos</option>
+                        <option value="mes-actual">Mes Actual</option>
+                        <option value="mes-anterior">Mes Anterior</option>
+                        <option value="trimestre">Último Trimestre</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: end;">
+                    <button class="btn btn-secondary" onclick="limpiarFiltrosPagosEntrenadores()">
+                        🔄 Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Entrenador</th>
+                    <th>Fecha de Pago</th>
+                    <th>Monto</th>
+                    <th>Período</th>
+                    <th>Observaciones</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-pagos-entrenadores">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                        No hay pagos registrados
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
                     </div>
                 </div>
             </section>
@@ -8655,6 +8798,14 @@ function guardarAsistenciasDelDia() {
     // También guardar estados de clases de muestra
     guardarEstadosClasesMuestra();
     mostrarNotificacion(`${asistenciasGuardadas} asistencias guardadas`, 'success');
+    mostrarNotificacion(`${asistenciasGuardadas} asistencias guardadas`, 'success');
+    
+    // AGREGAR ESTAS LÍNEAS NUEVAS:
+    // Refrescar reporte si está visible
+    const reporteContainer = document.getElementById('reporte-asistencia-container');
+    if (reporteContainer && reporteContainer.innerHTML.trim() !== '') {
+        generarReporteAsistencia();
+    }
 }
 function guardarAsistenciasPorHorario(contenedorHorario) {
     try {
@@ -9054,16 +9205,24 @@ function calcularFechasPeriodoAsistencia(periodo) {
         case 'semana-actual':
             const inicioSemana = new Date(hoy);
             inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1); // Lunes
+            inicioSemana.setHours(0, 0, 0, 0); // Inicio del día
             inicio = inicioSemana;
-            fin = hoy;
+            fin = new Date(hoy);
+            fin.setHours(23, 59, 59, 999); // Final del día
             break;
         case 'mes-actual':
-            inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fin = hoy;
+            // CORREGIDO: Crear fecha local sin zona horaria
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0, 0, 0, 0);
+            fin = new Date(hoy);
+            fin.setHours(23, 59, 59, 999);
             break;
         case 'mes-anterior':
-            inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            const mesAnterior = hoy.getMonth() === 0 ? 11 : hoy.getMonth() - 1;
+            const añoAnterior = hoy.getMonth() === 0 ? hoy.getFullYear() - 1 : hoy.getFullYear();
+            inicio = new Date(`${añoAnterior}-${String(mesAnterior + 1).padStart(2, '0')}-01T00:00:00`);
+            // Último día del mes anterior
             fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            fin.setHours(23, 59, 59, 999);
             break;
         case 'personalizado':
             const fechaDesde = document.getElementById('fecha-desde').value;
@@ -9072,12 +9231,15 @@ function calcularFechasPeriodoAsistencia(periodo) {
                 mostrarNotificacion('Selecciona las fechas del período personalizado', 'error');
                 return null;
             }
-            inicio = new Date(fechaDesde);
-            fin = new Date(fechaHasta);
+            // CORREGIDO: Agregar hora para evitar problemas de zona horaria
+            inicio = new Date(fechaDesde + 'T00:00:00');
+            fin = new Date(fechaHasta + 'T23:59:59');
             break;
         default:
-            inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fin = hoy;
+            // Por defecto mes actual
+            inicio = new Date(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01T00:00:00`);
+            fin = new Date(hoy);
+            fin.setHours(23, 59, 59, 999);
     }
 
     return { inicio, fin };
@@ -9134,17 +9296,16 @@ function generarReporteGeneral(fechas) {
 }
 // Generar reporte por estudiante
 function generarReportePorEstudiante(fechas) {
-    // Cargar datos completos del sistema
-    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+    // USAR DATOS EN MEMORIA EN LUGAR DE LOCALSTORAGE
     const estudiantesConAsistencia = {};
     
-    datosCompletos.asistenciasEstudiantes.forEach(asistencia => {
+    // Usar sistemaADAMS en lugar de localStorage
+    sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
         const fechaAsistencia = new Date(asistencia.fecha);
         if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
             if (!estudiantesConAsistencia[asistencia.estudianteId]) {
-                // Cargar datos completos del sistema
-const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
-const estudiante = datosCompletos.estudiantes.find(e => e.id == asistencia.estudianteId);
+                // Usar sistemaADAMS.estudiantes directamente
+                const estudiante = sistemaADAMS.estudiantes.find(e => e.id == asistencia.estudianteId);
                 estudiantesConAsistencia[asistencia.estudianteId] = {
                     estudiante: estudiante,
                     total: 0,
@@ -9214,7 +9375,7 @@ function generarReportePorGrupo(fechas) {
     const gruposData = {};
     
     sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
-        const fechaAsistencia = new Date(asistencia.fecha);
+        const fechaAsistencia = new Date(asistencia.fecha + 'T12:00:00');
         if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
             // Cargar datos completos del sistema
 const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
@@ -9307,13 +9468,45 @@ function exportarReporteAsistencia() {
     let yPosition = 50;
     
     if (tipoReporte === 'por-estudiante') {
-        const estudianteEspecifico = document.getElementById('estudiante-especifico').value;
+        // Buscar el selector correcto del estudiante
+        let estudianteEspecifico = null;
+        
+        // Intentar diferentes IDs posibles para el selector de estudiante
+        const posiblesIDs = [
+            'estudiante-especifico',
+            'seleccionar-estudiante-reporte', 
+            'estudiante-reporte-individual',
+            'select-estudiante-asistencia'
+        ];
+        
+        for (let id of posiblesIDs) {
+            const elemento = document.getElementById(id);
+            if (elemento && elemento.value) {
+                estudianteEspecifico = elemento.value;
+                break;
+            }
+        }
+        
+        // Si no encuentra selector o no hay estudiante seleccionado, buscar cualquier select visible
+        if (!estudianteEspecifico) {
+            const todosLosSelects = document.querySelectorAll('select');
+            for (let select of todosLosSelects) {
+                if (select.offsetParent !== null && select.value && !isNaN(select.value)) {
+                    // Es un select visible con un valor numérico (probablemente ID de estudiante)
+                    const esPosibleEstudiante = sistemaADAMS.estudiantes.some(e => e.id == select.value);
+                    if (esPosibleEstudiante) {
+                        estudianteEspecifico = select.value;
+                        break;
+                    }
+                }
+            }
+        }
         
         if (estudianteEspecifico) {
-            // Reporte de estudiante específico
+            // Reporte detallado de estudiante específico (CON DISEÑO ORIGINAL)
             yPosition = generarPDFEstudianteEspecifico(pdf, estudianteEspecifico, fechas, yPosition);
         } else {
-            // Reporte de todos los estudiantes
+            // Reporte de todos los estudiantes (versión simple)
             yPosition = generarPDFTodosEstudiantes(pdf, fechas, yPosition);
         }
     } else {
@@ -9363,8 +9556,8 @@ function cargarEstudiantesEnSelector() {
 
 // Función para generar PDF de estudiante específico
 function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
-    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
-    const estudiante = datosCompletos.estudiantes.find(e => e.id == estudianteId);
+    
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
     
     if (!estudiante) {
         pdf.setTextColor(255, 0, 0);
@@ -9400,39 +9593,41 @@ function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
     
     yPosition += 4;
     
-    // Cálculos de datos
-    const horariosEstudiante = estudiante.horarios || [];
-    if (horariosEstudiante.length === 0) {
-        pdf.setTextColor(255, 87, 34);
-        pdf.text('Este estudiante no tiene horarios asignados', 20, yPosition);
-        return yPosition + 10;
-    }
+    // USAR LA MISMA LÓGICA QUE EL REPORTE WEB
+    const estudiantesConAsistencia = {};
     
-    const diasProgramados = generarDiasProgramados(fechas, horariosEstudiante);
-    const asistenciasRegistradas = datosCompletos.asistenciasEstudiantes.filter(asistencia => {
-        const fechaAsistencia = new Date(asistencia.fecha);
-        return asistencia.estudianteId == estudianteId && 
-               fechaAsistencia >= fechas.inicio && 
-               fechaAsistencia <= fechas.fin;
-    });
-    
-    let presente = 0, ausente = 0, tardanza = 0, justificado = 0;
-    diasProgramados.forEach(diaProgramado => {
-        const asistencia = asistenciasRegistradas.find(a => 
-            a.fecha === diaProgramado.fecha && a.horario === diaProgramado.horario
-        );
-        
-        if (asistencia) {
-            if (asistencia.estado === 'presente') presente++;
-            else if (asistencia.estado === 'tardanza') tardanza++;
-            else if (asistencia.estado === 'justificado') justificado++;
-            else ausente++;
-        } else {
-            ausente++;
+    sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
+    const fechaAsistencia = new Date(asistencia.fecha + 'T12:00:00'); // Mediodía para evitar zona horaria
+    if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin && asistencia.estudianteId == estudianteId) {
+            if (!estudiantesConAsistencia[asistencia.estudianteId]) {
+                estudiantesConAsistencia[asistencia.estudianteId] = {
+                    estudiante: estudiante,
+                    total: 0,
+                    presente: 0,
+                    ausente: 0,
+                    tardanza: 0,
+                    justificado: 0
+                };
+            }
+            
+            estudiantesConAsistencia[asistencia.estudianteId].total++;
+            estudiantesConAsistencia[asistencia.estudianteId][asistencia.estado]++;
         }
     });
     
-    const total = diasProgramados.length;
+    // Si no hay asistencias registradas, mostrar mensaje
+    if (!estudiantesConAsistencia[estudianteId]) {
+        pdf.setTextColor(255, 87, 34);
+        pdf.text('No hay asistencias registradas en este período', 20, yPosition);
+        return yPosition + 10;
+    }
+    
+    const datos = estudiantesConAsistencia[estudianteId];
+    const presente = datos.presente;
+    const ausente = datos.ausente;
+    const tardanza = datos.tardanza;
+    const justificado = datos.justificado;
+    const total = datos.total;
     const porcentaje = total > 0 ? ((presente + tardanza) / total * 100).toFixed(1) : 0;
     
     // Header resumen
@@ -9480,8 +9675,15 @@ function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
     
     yPosition += 14;
     
-    // Tabla de detalles
-    if (diasProgramados.length > 0) {
+    // Tabla de detalles usando las asistencias reales
+    const asistenciasDelPeriodo = sistemaADAMS.asistenciasEstudiantes.filter(asistencia => {
+        const fechaAsistencia = new Date(asistencia.fecha + 'T12:00:00');
+        return asistencia.estudianteId == estudianteId && 
+               fechaAsistencia >= fechas.inicio && 
+               fechaAsistencia <= fechas.fin;
+    }).sort((a, b) => new Date(a.fecha + 'T12:00:00') - new Date(b.fecha + 'T12:00:00'));
+    
+    if (asistenciasDelPeriodo.length > 0) {
         pdf.setFontSize(8);
         
         // Headers de tabla con espacio suficiente
@@ -9497,7 +9699,7 @@ function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
         
         yPosition += 10;
         
-        diasProgramados.forEach((diaProgramado, index) => {
+        asistenciasDelPeriodo.forEach((asistencia, index) => {
             if (yPosition > 270) {
                 pdf.addPage();
                 yPosition = 20;
@@ -9512,18 +9714,13 @@ function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
                 yPosition += 10;
             }
             
-            const asistencia = asistenciasRegistradas.find(a => 
-                a.fecha === diaProgramado.fecha && a.horario === diaProgramado.horario
-            );
-            
             // Fecha en formato 01-Sep
-            const fechaObj = new Date(diaProgramado.fecha + 'T12:00:00');
+            const fechaObj = new Date(asistencia.fecha + 'T12:00:00');
             const dia = fechaObj.getDate().toString().padStart(2, '0');
             const mes = fechaObj.toLocaleDateString('es-ES', { month: 'short' });
             const fechaFormato = `${dia}-${mes}`;
             
             const diaCorto = fechaObj.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase();
-            const estado = asistencia ? asistencia.estado : 'ausente';
             
             // Fondo alternado
             if (index % 2 === 0) {
@@ -9536,10 +9733,10 @@ function generarPDFEstudianteEspecifico(pdf, estudianteId, fechas, yPosition) {
             pdf.setFontSize(8);
             pdf.text(fechaFormato, 20, yPosition);
             pdf.text(diaCorto, 55, yPosition);
-            pdf.text(diaProgramado.horario, 85, yPosition);
+            pdf.text(asistencia.horario, 85, yPosition);
             
             // Estado con color
-            switch (estado) {
+            switch (asistencia.estado) {
                 case 'presente':
                     pdf.setTextColor(46, 125, 50);
                     pdf.text('PRESENTE', 140, yPosition);
@@ -9610,14 +9807,14 @@ function getSimboloEstado(estado) {
 
 // Función para generar PDF de todos los estudiantes
 function generarPDFTodosEstudiantes(pdf, fechas, yPosition) {
-    const datosCompletos = JSON.parse(localStorage.getItem('sistemaADAMS')) || { estudiantes: [], asistenciasEstudiantes: [] };
+    
     const estudiantesConAsistencia = {};
     
-    datosCompletos.asistenciasEstudiantes.forEach(asistencia => {
+    sistemaADAMS.asistenciasEstudiantes.forEach(asistencia => {
         const fechaAsistencia = new Date(asistencia.fecha);
         if (fechaAsistencia >= fechas.inicio && fechaAsistencia <= fechas.fin) {
             if (!estudiantesConAsistencia[asistencia.estudianteId]) {
-                const estudiante = datosCompletos.estudiantes.find(e => e.id == asistencia.estudianteId);
+                const estudiante = sistemaADAMS.estudiantes.find(e => e.id == asistencia.estudianteId);
                 estudiantesConAsistencia[asistencia.estudianteId] = {
                     estudiante: estudiante,
                     total: 0,
@@ -9865,69 +10062,57 @@ document.querySelectorAll('input[type="checkbox"][id^="grupo-"]').forEach(checkb
         }
 
         function calcularNomina() {
-            const semanaInput = document.getElementById('semana-nomina').value;
-            if (!semanaInput) {
-                document.getElementById('tabla-nomina').innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
-                            Selecciona una semana para calcular la nómina
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+    const semanaInput = document.getElementById('semana-nomina').value;
+    if (!semanaInput) {
+        document.getElementById('tabla-nomina').innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: #666; padding: 40px;">
+                    Selecciona una semana para calcular la nómina
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-            const [año, semana] = semanaInput.split('-W');
-            const fechaInicio = getFirstDayOfWeek(parseInt(año), parseInt(semana));
-            const fechaFin = new Date(fechaInicio);
-            fechaFin.setDate(fechaFin.getDate() + 6);
+    const [año, semana] = semanaInput.split('-W');
+    const fechaInicio = getFirstDayOfWeek(parseInt(año), parseInt(semana));
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaFin.getDate() + 6);
 
-            let totalHoras = 0;
-            let totalPagar = 0;
+    let totalHoras = 0;
+    let totalPagar = 0;
 
-            const tbody = document.getElementById('tabla-nomina');
-            tbody.innerHTML = sistemaADAMS.entrenadores.map(entrenador => {
-                // Calcular horas trabajadas por este entrenador en la semana
-                const horasSemanales = calcularHorasEntrenador(entrenador, fechaInicio, fechaFin);
-                const subtotal = horasSemanales * entrenador.tarifaHora;
-                
-                totalHoras += horasSemanales;
-                totalPagar += subtotal;
+    const tbody = document.getElementById('tabla-nomina');
+    tbody.innerHTML = sistemaADAMS.entrenadores.map(entrenador => {
+        // Calcular horas trabajadas por este entrenador en la semana
+        const horasSemanales = calcularHorasEntrenador(entrenador, fechaInicio, fechaFin);
+        const subtotal = horasSemanales * entrenador.tarifaHora;
+        
+        totalHoras += horasSemanales;
+        totalPagar += subtotal;
 
-                const estadoPago = obtenerEstadoPago(entrenador.id, semanaInput);
+        return `
+            <tr>
+                <td>
+                    <strong>${entrenador.nombre}</strong><br>
+                    <small style="color: #666;">${entrenador.disciplinas.join(', ')}</small>
+                </td>
+                <td>${horasSemanales} horas</td>
+                <td>$${entrenador.tarifaHora}/hora</td>
+                <td><strong>$${subtotal.toLocaleString()}</strong></td>
+                <td>
+                    <small style="color: #666;">
+                        Cálculo teórico basado en horarios programados
+                    </small>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
-                return `
-                    <tr>
-                        <td>
-                            <strong>${entrenador.nombre}</strong><br>
-                            <small style="color: #666;">${entrenador.disciplinas.join(', ')}</small>
-                        </td>
-                        <td>${horasSemanales} horas</td>
-                        <td>$${entrenador.tarifaHora}/hora</td>
-                        <td><strong>$${subtotal.toLocaleString()}</strong></td>
-                        <td>
-                            <span class="status ${estadoPago === 'pagada' ? 'status-active' : 'status-warning'}">
-                                ${estadoPago === 'pagada' ? 'Pagada' : 'Pendiente'}
-                            </span>
-                        </td>
-                        <td>
-                            ${estadoPago === 'pendiente' ? 
-                                `<button class="btn btn-success btn-small" onclick="marcarComoPagada(${entrenador.id}, '${semanaInput}')">
-                                    ✅ Marcar Pagada
-                                </button>` : 
-                                `<button class="btn btn-secondary btn-small" onclick="marcarComoPendiente(${entrenador.id}, '${semanaInput}')">
-                                    ↩️ Marcar Pendiente
-                                </button>`
-                            }
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Actualizar resumen
-            document.getElementById('total-horas').textContent = `${totalHoras} horas`;
-            document.getElementById('total-pagar').textContent = `$${totalPagar.toLocaleString()}`;
-        }
+    // Actualizar resumen
+    document.getElementById('total-horas').textContent = `${totalHoras} horas`;
+    document.getElementById('total-pagar').textContent = `$${totalPagar.toLocaleString()}`;
+}
 
         function getFirstDayOfWeek(año, semana) {
             const enero4 = new Date(año, 0, 4);
@@ -14183,7 +14368,409 @@ document.body.appendChild(tempDiv);
         descargarEstadoCuentaPDF('estado-cuenta-temp-pdf', estudiante.nombre, fechas);
     }, 1000);
 }
+// ==================== ESTADO DE CUENTA ENTRENADORES ====================
 
+// Mostrar/Ocultar formulario de estado de cuenta
+function mostrarFormularioEstadoCuentaEntrenador() {
+    document.getElementById('formulario-estado-cuenta-entrenador').classList.add('show');
+    cargarEntrenadoresEnEstadoCuenta();
+}
+
+function ocultarFormularioEstadoCuentaEntrenador() {
+    document.getElementById('formulario-estado-cuenta-entrenador').classList.remove('show');
+    document.getElementById('form-estado-cuenta-entrenador').reset();
+    document.getElementById('fechas-personalizadas-estado-entrenador').style.display = 'none';
+}
+
+// Cargar entrenadores en los selectores
+function cargarEntrenadoresEnEstadoCuenta() {
+    const selects = [
+        'entrenador-estado-cuenta',
+        'pago-entrenador-select',
+        'filtro-entrenador-pagos'
+    ];
+    
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        // Mantener la primera opción
+        const firstOption = select.querySelector('option[value=""]');
+        select.innerHTML = '';
+        if (firstOption) select.appendChild(firstOption);
+        
+        // Agregar entrenadores activos ordenados alfabéticamente
+        const entrenadoresOrdenados = sistemaADAMS.entrenadores
+            .filter(e => e.estado === 'activo')
+            .sort((a, b) => a.nombre.localeCompare(b.nombre));
+        
+        entrenadoresOrdenados.forEach(entrenador => {
+            const option = document.createElement('option');
+            option.value = entrenador.id;
+            option.textContent = `${entrenador.nombre} - $${entrenador.tarifaHora}/hora`;
+            select.appendChild(option);
+        });
+    });
+}
+
+// Toggle fechas personalizadas
+function toggleFechasPersonalizadasEntrenador() {
+    const periodo = document.getElementById('periodo-estado-cuenta-entrenador').value;
+    const fechasDiv = document.getElementById('fechas-personalizadas-estado-entrenador');
+    
+    if (periodo === 'personalizado') {
+        fechasDiv.style.display = 'block';
+        document.getElementById('fecha-inicio-estado-entrenador').required = true;
+        document.getElementById('fecha-fin-estado-entrenador').required = true;
+    } else {
+        fechasDiv.style.display = 'none';
+        document.getElementById('fecha-inicio-estado-entrenador').required = false;
+        document.getElementById('fecha-fin-estado-entrenador').required = false;
+    }
+}
+
+// Registrar pago a entrenador
+function registrarPagoEntrenador(event) {
+    event.preventDefault();
+    
+    const entrenadorId = parseInt(document.getElementById('pago-entrenador-select').value);
+    const fechaPago = document.getElementById('fecha-pago-entrenador').value;
+    const monto = parseFloat(document.getElementById('monto-pago-entrenador').value);
+    const periodo = document.getElementById('periodo-pago-entrenador').value;
+    const observaciones = document.getElementById('observaciones-pago-entrenador').value;
+    
+    if (!entrenadorId || !fechaPago || !monto) {
+        mostrarNotificacion('Completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    // Inicializar estructura de pagos a entrenadores si no existe
+    if (!sistemaADAMS.pagosEntrenadores) {
+        sistemaADAMS.pagosEntrenadores = [];
+    }
+    
+    const nuevoPago = {
+        id: Date.now(),
+        entrenadorId: entrenadorId,
+        fechaPago: fechaPago,
+        monto: monto,
+        periodo: periodo || 'No especificado',
+        observaciones: observaciones || '',
+        fechaRegistro: new Date().toISOString()
+    };
+    
+    sistemaADAMS.pagosEntrenadores.push(nuevoPago);
+    guardarDatos();
+    
+    // Limpiar formulario
+    document.getElementById('form-pago-entrenador').reset();
+    
+    // Actualizar tabla
+    cargarTablaPagosEntrenadores();
+    
+    mostrarNotificacion('Pago registrado exitosamente', 'success');
+}
+
+// Cargar tabla de pagos de entrenadores
+function cargarTablaPagosEntrenadores() {
+    if (!sistemaADAMS.pagosEntrenadores) {
+        sistemaADAMS.pagosEntrenadores = [];
+    }
+    
+    const tbody = document.getElementById('tabla-pagos-entrenadores');
+    
+    if (sistemaADAMS.pagosEntrenadores.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                    No hay pagos registrados
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Ordenar pagos por fecha (más recientes primero)
+    const pagosOrdenados = sistemaADAMS.pagosEntrenadores
+        .sort((a, b) => new Date(b.fechaPago) - new Date(a.fechaPago));
+    
+    tbody.innerHTML = pagosOrdenados.map(pago => {
+        const entrenador = sistemaADAMS.entrenadores.find(e => e.id === pago.entrenadorId);
+        const nombreEntrenador = entrenador ? entrenador.nombre : 'Entrenador no encontrado';
+        
+        return `
+            <tr>
+                <td><strong>${nombreEntrenador}</strong></td>
+                <td>${formatearFecha(pago.fechaPago)}</td>
+                <td><strong>$${pago.monto.toFixed(2)}</strong></td>
+                <td>${pago.periodo}</td>
+                <td>${pago.observaciones}</td>
+                <td>
+                    <button class="btn btn-danger btn-small" onclick="eliminarPagoEntrenador(${pago.id})" 
+                            title="Eliminar pago">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Filtrar pagos de entrenadores
+function filtrarPagosEntrenadores() {
+    // Implementar filtros si es necesario
+    cargarTablaPagosEntrenadores();
+}
+
+function limpiarFiltrosPagosEntrenadores() {
+    document.getElementById('filtro-entrenador-pagos').value = '';
+    document.getElementById('filtro-periodo-pagos').value = '';
+    cargarTablaPagosEntrenadores();
+}
+
+// Eliminar pago de entrenador
+function eliminarPagoEntrenador(pagoId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este pago?')) {
+        return;
+    }
+    
+    sistemaADAMS.pagosEntrenadores = sistemaADAMS.pagosEntrenadores.filter(p => p.id !== pagoId);
+    guardarDatos();
+    cargarTablaPagosEntrenadores();
+    mostrarNotificacion('Pago eliminado exitosamente', 'success');
+}
+
+// Generar estado de cuenta PDF
+function generarEstadoCuentaEntrenador(event) {
+    event.preventDefault();
+    
+    const entrenadorId = parseInt(document.getElementById('entrenador-estado-cuenta').value);
+    const periodo = document.getElementById('periodo-estado-cuenta-entrenador').value;
+    
+    if (!entrenadorId || !periodo) {
+        mostrarNotificacion('Selecciona un entrenador y un período', 'error');
+        return;
+    }
+    
+    const entrenador = sistemaADAMS.entrenadores.find(e => e.id === entrenadorId);
+    if (!entrenador) {
+        mostrarNotificacion('Entrenador no encontrado', 'error');
+        return;
+    }
+    
+    const fechas = calcularFechasPeriodoEntrenador(periodo);
+    if (!fechas) return;
+    
+    // Filtrar pagos del entrenador en el período
+    const pagosEntrenador = (sistemaADAMS.pagosEntrenadores || []).filter(pago => {
+        if (pago.entrenadorId !== entrenadorId) return false;
+        const fechaPago = new Date(pago.fechaPago);
+        return fechaPago >= fechas.inicio && fechaPago <= fechas.fin;
+    });
+    
+    // Generar PDF
+    crearPDFEstadoCuentaEntrenador(entrenador, pagosEntrenador, fechas);
+    ocultarFormularioEstadoCuentaEntrenador();
+}
+
+// Calcular fechas del período para entrenadores
+function calcularFechasPeriodoEntrenador(periodo) {
+    const hoy = new Date();
+    let fechaInicio, fechaFin;
+    
+    switch (periodo) {
+        case 'mes-actual':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+            break;
+        case 'mes-anterior':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            break;
+        case 'trimestre':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
+            fechaFin = hoy;
+            break;
+        case 'semestre':
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
+            fechaFin = hoy;
+            break;
+        case 'año':
+            fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+            fechaFin = hoy;
+            break;
+        case 'personalizado':
+            const inicio = document.getElementById('fecha-inicio-estado-entrenador').value;
+            const fin = document.getElementById('fecha-fin-estado-entrenador').value;
+            
+            if (!inicio || !fin) {
+                mostrarNotificacion('Selecciona las fechas de inicio y fin', 'error');
+                return null;
+            }
+            
+            fechaInicio = new Date(inicio);
+            fechaFin = new Date(fin);
+            
+            if (fechaInicio > fechaFin) {
+                mostrarNotificacion('La fecha de inicio debe ser anterior a la fecha de fin', 'error');
+                return null;
+            }
+            break;
+        default:
+            mostrarNotificacion('Período no válido', 'error');
+            return null;
+    }
+    
+    return { inicio: fechaInicio, fin: fechaFin };
+}
+
+// Crear PDF del estado de cuenta del entrenador
+function crearPDFEstadoCuentaEntrenador(entrenador, pagos, fechas) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configuración
+    let yPos = 20;
+    const leftMargin = 20;
+    const rightMargin = 190;
+    
+    // Encabezado
+    doc.setFontSize(20);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Academia de Gimnasia ADAMS', leftMargin, yPos);
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Estado de Cuenta - Entrenador', leftMargin, yPos);
+    yPos += 12;
+    
+    // Línea divisoria
+    doc.setDrawColor(156, 39, 176);
+    doc.setLineWidth(1);
+    doc.line(leftMargin, yPos, rightMargin, yPos);
+    yPos += 12;
+    
+    // Datos del entrenador
+    doc.setFontSize(14);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Datos del Entrenador', leftMargin, yPos);
+    yPos += 6;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Nombre: ${entrenador.nombre}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Tarifa por hora: $${entrenador.tarifaHora}/hora`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Disciplinas: ${entrenador.disciplinas.join(', ')}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Teléfono: ${entrenador.telefono || 'No especificado'}`, leftMargin, yPos);
+    yPos += 10;
+    
+    // Período
+    doc.setFontSize(12);
+    doc.setTextColor(156, 39, 176);
+    doc.text('Período del Estado', leftMargin, yPos);
+    yPos += 6;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Desde: ${formatearFecha(fechas.inicio.toISOString())}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Hasta: ${formatearFecha(fechas.fin.toISOString())}`, leftMargin, yPos);
+    yPos += 5;
+    doc.text(`Total de Pagos: ${pagos.length}`, leftMargin, yPos);
+    yPos += 15;
+    
+    if (pagos.length === 0) {
+        doc.setFontSize(14);
+        doc.setTextColor(156, 39, 176);
+        doc.text('No hay pagos registrados en este período', leftMargin, yPos);
+    } else {
+        // Tabla de pagos
+        doc.setFontSize(14);
+        doc.setTextColor(156, 39, 176);
+        doc.text('Historial de Pagos', leftMargin, yPos);
+        yPos += 8;
+        
+        // Encabezados de tabla
+        doc.setFillColor(156, 39, 176);
+        doc.rect(leftMargin, yPos, 170, 8, 'F');
+        
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Fecha de Pago', leftMargin + 2, yPos + 6);
+        doc.text('Monto', leftMargin + 50, yPos + 6);
+        doc.text('Período', leftMargin + 90, yPos + 6);
+        doc.text('Observaciones', leftMargin + 130, yPos + 6);
+        yPos += 7;
+        
+        // Datos de pagos
+        doc.setTextColor(0, 0, 0);
+        let total = 0;
+        
+        pagos.forEach(pago => {
+            doc.text(formatearFecha(pago.fechaPago), leftMargin + 2, yPos + 6);
+            doc.text(`$${pago.monto.toFixed(2)}`, leftMargin + 50, yPos + 6);
+            doc.text(pago.periodo.substring(0, 15), leftMargin + 90, yPos + 6);
+            doc.text((pago.observaciones || '').substring(0, 20), leftMargin + 130, yPos + 6);
+            
+            total += pago.monto;
+            yPos += 7;
+            
+            // Línea divisoria
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.1);
+            doc.line(leftMargin, yPos, rightMargin, yPos);
+        });
+        
+        yPos += 8;
+        
+        // Total
+        doc.setFontSize(16);
+        doc.setTextColor(156, 39, 176);
+        doc.text(`Total Pagado: $${total.toFixed(2)}`, leftMargin + 100, yPos);
+        yPos += 8;
+        
+        // Estadísticas adicionales
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Número de pagos: ${pagos.length}`, leftMargin, yPos);
+        yPos += 5;
+        doc.text(`Promedio por pago: $${(total / pagos.length).toFixed(2)}`, leftMargin, yPos);
+    }
+    
+    // Footer
+    yPos += 18;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Estado de cuenta generado el ${formatearFecha(new Date().toISOString())}`, leftMargin, yPos);
+    
+    // Descargar
+    const filename = `Estado_Cuenta_${entrenador.nombre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+    
+    mostrarNotificacion('Estado de cuenta generado exitosamente', 'success');
+}
+
+// Inicializar cuando se carga el tab de entrenadores
+function inicializarEstadoCuentaEntrenadores() {
+    cargarEntrenadoresEnEstadoCuenta();
+    cargarTablaPagosEntrenadores();
+}
+
+// Llamar al inicializar el sistema
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar al cambio de tabs existente
+    const tabOriginal = window.cambiarTab;
+    window.cambiarTab = function(tabId, element) {
+        tabOriginal(tabId, element);
+        if (tabId === 'estado-cuenta-entrenadores') {
+            inicializarEstadoCuentaEntrenadores();
+        }
+    };
+});
 
 
 
