@@ -837,9 +837,15 @@
             </section>
             <!-- Estudiantes -->
            <section id="estudiantes" class="section">
-   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
     <h2>👥 Gestión de Alumnos</h2>
     <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-success" onclick="descargarPlantillaEstudiantes()">
+            📥 Descargar Plantilla Excel
+        </button>
+        <button class="btn btn-secondary" onclick="exportarDatosAlumnos()">
+            📊 Exportar Datos CSV
+        </button>
         <button class="btn btn-primary" onclick="mostrarFormularioEstudiante()">
             ➕ Nuevo Alumno
         </button>
@@ -1851,6 +1857,47 @@
                         <div id="control-morosidad" class="tab-pane">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h3>⚠️ Control de Morosidad</h3>
+    <!-- FILTROS DE BÚSQUEDA PARA MOROSOS -->
+<div class="form-section show" style="margin-bottom: 20px;">
+    <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda</h4>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Buscar por nombre (estudiante o tutor)</label>
+            <input type="text" id="filtro-nombre-moroso" 
+                   placeholder="Escribe nombre del estudiante o tutor..." 
+                   onkeyup="filtrarMorosos()" 
+                   style="background: white;">
+        </div>
+        <div class="form-group">
+            <label>Filtrar por días de atraso</label>
+            <select id="filtro-dias-atraso" onchange="filtrarMorosos()">
+                <option value="">Todos los atrasos</option>
+                <option value="1-30">1-30 días</option>
+                <option value="31-60">31-60 días</option>
+                <option value="61-90">61-90 días</option>
+                <option value="90+">Más de 90 días</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Filtrar por monto adeudado</label>
+            <select id="filtro-monto-adeudo" onchange="filtrarMorosos()">
+                <option value="">Todos los montos</option>
+                <option value="0-500">$0 - $500</option>
+                <option value="500-1000">$500 - $1,000</option>
+                <option value="1000-2000">$1,000 - $2,000</option>
+                <option value="2000+">Más de $2,000</option>
+            </select>
+        </div>
+        <div class="form-group" style="display: flex; align-items: end;">
+            <button class="btn btn-secondary" onclick="limpiarFiltrosMorosos()" style="margin-top: 10px;">
+                🔄 Limpiar Filtros
+            </button>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 10px;">
+        <small style="color: #666;">Mostrando <span id="contador-morosos-filtrados">0</span> de <span id="contador-morosos-total">0</span> estudiantes morosos</small>
+    </div>
+</div>
     <button class="btn btn-success" onclick="enviarRecordatoriosMasivos()">
         📱 WhatsApp Masivo
     </button>
@@ -7191,89 +7238,53 @@ mostrarNotificacion('Pago eliminado correctamente', 'success');
 
         // FUNCIONES DE CONTROL DE MOROSIDAD
         function actualizarControlMorosidad() {
-            if (!sistemaADAMS.pagos) sistemaADAMS.pagos = [];
+    console.log('Actualizando control de morosidad...');
+    
+    const estudiantes = sistemaADAMS.estudiantes || [];
+    let estudiantesMorosos = [];
+    let totalAdeudo = 0;
+    let inactivosPorPago = 0;
+    
+    estudiantes.forEach(estudiante => {
+        const ultimoPago = obtenerUltimoPago(estudiante.id);
+        const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
+        
+        // Consideramos moroso si tiene más de 10 días sin pagar
+        if (diasSinPagar >= 6) {
+            const montoAdeudado = calcularMontoAdeudado(estudiante, diasSinPagar);
             
-            const hoy = new Date();
-            let totalMorosos = 0;
-            let totalAdeudo = 0;
-            let inactivosPorPago = 0;
-            
-            const tbody = document.getElementById('tabla-morosidad');
-            const estudiantesMorosos = [];
-
-            sistemaADAMS.estudiantes.forEach(estudiante => {
-                const ultimoPago = obtenerUltimoPago(estudiante.id);
-                const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
-                
-                if (diasSinPagar > 5) { // Consideramos moroso después de 5 días
-                    const montoAdeudado = calcularMontoAdeudado(estudiante, diasSinPagar);
-                    const recargos = calcularRecargos(estudiante.colegiatura, diasSinPagar);
-                    
-                    estudiantesMorosos.push({
-                        estudiante: estudiante,
-                        ultimoPago: ultimoPago,
-                        diasSinPagar: diasSinPagar,
-                        montoAdeudado: montoAdeudado,
-                        recargos: recargos,
-                        estado: diasSinPagar > 15 ? 'inactivo' : 'moroso'
-                    });
-                    
-                    totalMorosos++;
-                    totalAdeudo += montoAdeudado + recargos;
-                    
-                    if (diasSinPagar > 15) {
-                        inactivosPorPago++;
-                        // Actualizar estado del estudiante
-                        estudiante.estado = 'inactivo';
-                    }
-                }
+            estudiantesMorosos.push({
+                id: estudiante.id,
+                nombre: estudiante.nombre,
+                tutor: estudiante.tutor,
+                telefono: estudiante.telefono,
+                ultimoPago: ultimoPago ? ultimoPago.fecha : null,
+                diasSinPagar: diasSinPagar,
+                montoAdeudado: montoAdeudado,
+                colegiatura: estudiante.colegiatura,
+                estado: estudiante.estatus || estudiante.estado || 'activo',
+                recargos: calcularRecargos(montoAdeudado, diasSinPagar)
             });
-
-            // Actualizar estadísticas
-            document.getElementById('total-morosos').textContent = totalMorosos;
-            document.getElementById('total-adeudo').textContent = `$${totalAdeudo.toFixed(2)}`;
-            document.getElementById('inactivos-por-pago').textContent = inactivosPorPago;
-
-            // Actualizar tabla
-            if (estudiantesMorosos.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
-                            ¡Excelente! No hay estudiantes morosos
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = estudiantesMorosos.map(item => `
-                    <tr>
-                        <td>
-                            <strong>${item.estudiante.nombre}</strong><br>
-                            <small style="color: #666;">Tutor: ${item.estudiante.tutor}</small><br>
-                            <small style="color: #666;">Tel: ${item.estudiante.telefono}</small>
-                        </td>
-                        <td>${item.ultimoPago ? formatearFecha(item.ultimoPago.fecha) : 'Sin registros'}</td>
-                        <td>
-                            <span class="status ${item.diasSinPagar > 15 ? 'status-inactive' : item.diasSinPagar > 10 ? 'status-warning' : 'status-warning'}">
-                                ${item.diasSinPagar} días
-                            </span>
-                        </td>
-                        <td><strong>$${item.montoAdeudado.toFixed(2)}</strong></td>
-                        <td><strong>$${item.recargos.toFixed(2)}</strong></td>
-                        <td>${getEstatusBadge(item.estado)}</td>
-                        <td>
-                            <button class="btn btn-primary btn-small" onclick="abrirFormularioPagoRapido(${item.estudiante.id})" style="margin-bottom: 5px;">
-                                💳 Pagar Ahora
-                            <button class="btn btn-success btn-small" onclick="enviarRecordatorio(${item.estudiante.id})" style="margin-bottom: 5px;">
-    📱 WhatsApp
-</button><br>
-<button class="btn btn-secondary btn-small" onclick="llamadaTelefonica(${item.estudiante.id})">
-    📞 Llamar
-</button>
-                        </td>
-                    </tr>
-                `).join('');
+            
+            totalAdeudo += montoAdeudado;
+            
+            if ((estudiante.estatus || estudiante.estado) === 'inactivo') {
+                inactivosPorPago++;
             }
         }
+    });
+    
+    // Guardar lista completa para filtros
+    window.estudiantesMorososCompletos = estudiantesMorosos;
+    
+    // Actualizar estadísticas
+    document.getElementById('total-morosos').textContent = estudiantesMorosos.length;
+    document.getElementById('total-adeudo').textContent = '$' + totalAdeudo.toLocaleString();
+    document.getElementById('inactivos-por-pago').textContent = inactivosPorPago;
+    
+    // Mostrar tabla con filtros aplicados
+    mostrarTablaMorosos(estudiantesMorosos);
+}
 
         function calcularMontoAdeudado(estudiante, diasSinPagar) {
             // Simplificado: asumimos que debe 1 colegiatura
@@ -7666,22 +7677,16 @@ function cerrarModalEnvioMasivo() {
 }
 
         // FUNCIONES DE REPORTES FINANCIEROS
-        function generarReporteFinanciero() {
+function generarReporteFinanciero() {
     const periodo = document.getElementById('periodo-reporte').value;
     const tipo = document.getElementById('tipo-reporte').value;
     
-    // Mostrar/ocultar campos personalizados
+    // Mostrar u ocultar campos de período personalizado
     const camposPersonalizados = document.getElementById('campos-periodo-personalizado');
     if (periodo === 'personalizado') {
         camposPersonalizados.style.display = 'block';
-        // No generar reporte hasta que se aplique el período personalizado
-        const container = document.getElementById('resumen-financiero');
-        container.innerHTML = `
-            <div style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 10px; padding: 20px; text-align: center;">
-                <h4 style="color: #1976d2; margin-bottom: 15px;">📅 Período Personalizado</h4>
-                <p>Selecciona las fechas de inicio y fin para generar el reporte personalizado.</p>
-            </div>
-        `;
+        // No generar reporte automáticamente, esperar a que el usuario seleccione fechas
+        document.getElementById('resumen-financiero').innerHTML = '<p style="text-align: center; color: #9c27b0; padding: 20px;">📅 Selecciona las fechas del período personalizado</p>';
         return;
     } else {
         camposPersonalizados.style.display = 'none';
@@ -7696,7 +7701,7 @@ function cerrarModalEnvioMasivo() {
     });
 
     const resumen = calcularResumenFinanciero(pagosDelPeriodo, tipo);
-    mostrarResumenFinanciero(resumen, periodo);
+    mostrarResumenFinanciero(resumen, periodo, pagosDelPeriodo.length);
 }
 
         function calcularFechasPeriodo(periodo, fechaInicioPersonalizada = null, fechaFinPersonalizada = null) {
@@ -7748,56 +7753,63 @@ function cerrarModalEnvioMasivo() {
     return { inicio, fin };
 }
 
-        function calcularResumenFinanciero(pagos, tipo) {
-    const resumen = {
-        totalIngresos: 0,
-        totalColegiaturas: 0,
-        totalInscripciones: 0,
-        totalProductos: 0,
-        totalRecargos: 0,
-        cantidadPagos: pagos.length,
-        promedioMensual: 0
-    };
-
-    pagos.forEach(pago => {
-        resumen.totalIngresos += pago.montoTotal;
+function calcularResumenFinanciero(pagos, tipo) {
+    console.log("📊 Calculando resumen financiero para", pagos.length, "pagos");
+    
+    let totalIngresos = 0;
+    let ingresosPorConcepto = {};
+    
+    pagos.forEach((pago, index) => {
+        // CORRECCIÓN: Usar montoTotal que es la propiedad correcta
+        const monto = parseFloat(pago.montoTotal || pago.monto || 0);
         
-        // Si el pago tiene múltiples conceptos
-        if (pago.conceptos && pago.conceptos.length > 0) {
-            pago.conceptos.forEach(concepto => {
-                switch(concepto.tipo) {
-                    case 'colegiatura':
-                    case 'ajuste-colegiatura':
-                        resumen.totalColegiaturas += concepto.total;
-                        break;
-                    case 'inscripcion':
-                    case 'reinscripcion':
-                        resumen.totalInscripciones += concepto.total;
-                        break;
-                    case 'producto':
-                        resumen.totalProductos += concepto.total;
-                        break;
-                }
-            });
-        } else {
-            // Para pagos antiguos sin el array de conceptos
-            switch(pago.concepto) {
-                case 'colegiatura':
-                case 'ajuste-colegiatura':
-                    resumen.totalColegiaturas += pago.montoTotal;
-                    break;
-                case 'inscripcion':
-                case 'reinscripcion':
-                    resumen.totalInscripciones += pago.montoTotal;
-                    break;
-                case 'producto':
-                    resumen.totalProductos += pago.montoTotal;
-                    break;
-            }
+        console.log(`Pago ${index + 1}: $${monto} (de ${pago.concepto})`);
+        
+        totalIngresos += monto;
+        
+        // Determinar concepto - puede estar en pago.concepto o ser un array
+        let concepto = 'Sin concepto';
+        
+        if (pago.concepto) {
+            concepto = pago.concepto;
+        } else if (pago.conceptos && Array.isArray(pago.conceptos) && pago.conceptos.length > 0) {
+            // Si es un array de conceptos, tomar el primero
+            concepto = pago.conceptos[0].concepto || pago.conceptos[0].nombre || 'Sin concepto';
         }
+        
+        // Normalizar nombres de conceptos
+        if (concepto.toLowerCase().includes('colegiatura')) {
+            concepto = 'Colegiatura Mensual';
+        } else if (concepto.toLowerCase().includes('inscripcion')) {
+            concepto = 'Inscripción';
+        } else if (concepto.toLowerCase().includes('reinscripcion')) {
+            concepto = 'Reinscripción';
+        } else if (concepto.toLowerCase().includes('producto') || concepto.toLowerCase().includes('uniforme')) {
+            concepto = 'Productos';
+        } else if (concepto.toLowerCase().includes('ajuste')) {
+            concepto = 'Ajuste de Colegiatura';
+        } else if (concepto.toLowerCase().includes('afiliacion')) {
+            concepto = 'Afiliación';
+        } else if (concepto.toLowerCase().includes('competencia')) {
+            concepto = 'Competencias';
+        }
+        
+        // Agregar al resumen por concepto
+        if (!ingresosPorConcepto[concepto]) {
+            ingresosPorConcepto[concepto] = { total: 0, cantidad: 0 };
+        }
+        ingresosPorConcepto[concepto].total += monto;
+        ingresosPorConcepto[concepto].cantidad += 1;
     });
-
-    return resumen;
+    
+    console.log("💰 Total de ingresos calculado:", totalIngresos);
+    console.log("📊 Ingresos por concepto:", ingresosPorConcepto);
+    
+    return {
+        totalIngresos: totalIngresos,
+        ingresosPorConcepto: ingresosPorConcepto,
+        totalPagos: pagos.length
+    };
 }
 
         function mostrarResumenFinanciero(resumen, periodo) {
@@ -12235,21 +12247,24 @@ function validarFechasPersonalizadas() {
     if (fechaInicio && fechaFin) {
         const inicio = new Date(fechaInicio);
         const fin = new Date(fechaFin);
+        const hoy = new Date();
         
-        if (inicio <= fin) {
+        if (inicio <= fin && inicio <= hoy && fin <= hoy) {
             btnAplicar.disabled = false;
             btnAplicar.innerHTML = '📅 Aplicar Período';
             btnAplicar.className = 'btn btn-primary';
             
-            // Mostrar información del período seleccionado
+            // Mostrar información del período
             const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-            document.getElementById('fecha-inicio-personalizada').title = `Período seleccionado: ${dias} días`;
-            document.getElementById('fecha-fin-personalizada').title = `Período seleccionado: ${dias} días`;
-        } else {
+            btnAplicar.title = `Período de ${dias} días`;
+        } else if (inicio > fin) {
             btnAplicar.disabled = true;
             btnAplicar.innerHTML = '❌ Fecha inválida';
             btnAplicar.className = 'btn btn-danger';
-            mostrarNotificacion('La fecha de inicio debe ser anterior a la fecha de fin', 'error');
+        } else if (inicio > hoy || fin > hoy) {
+            btnAplicar.disabled = true;
+            btnAplicar.innerHTML = '❌ Fecha futura';
+            btnAplicar.className = 'btn btn-warning';
         }
     } else {
         btnAplicar.disabled = true;
@@ -12275,146 +12290,157 @@ function aplicarPeriodoPersonalizado() {
         return;
     }
     
+    if (inicio > new Date() || fin > new Date()) {
+        mostrarNotificacion('No se pueden seleccionar fechas futuras', 'error');
+        return;
+    }
+    
     // Generar reporte con fechas personalizadas
     generarReportePersonalizado(fechaInicio, fechaFin);
     
     const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-    mostrarNotificacion(`Reporte generado para ${dias} días (${formatearFecha(inicio)} - ${formatearFecha(fin)})`, 'success');
+    mostrarNotificacion(`Reporte generado para ${dias} días (${inicio.toLocaleDateString()} - ${fin.toLocaleDateString()})`, 'success');
 }
 
 function generarReportePersonalizado(fechaInicio, fechaFin) {
-    if (!sistemaADAMS.pagos) sistemaADAMS.pagos = [];
+    console.log("🚀 Generando reporte personalizado...");
     
-    const fechas = calcularFechasPeriodo('personalizado', fechaInicio, fechaFin);
-    const pagosDelPeriodo = sistemaADAMS.pagos.filter(pago => {
-        const fechaPago = new Date(pago.fecha);
-        return fechaPago >= fechas.inicio && fechaPago <= fechas.fin;
-    });
-
-    const resumen = calcularResumenFinanciero(pagosDelPeriodo, 'general');
-    mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, pagosDelPeriodo.length);
-}
-
-function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, totalPagos) {
-    const container = document.getElementById('resumen-financiero');
-    // Corregir el problema de zona horaria en las fechas
-const [añoInicio, mesInicio, diaInicio] = fechaInicio.split('-');
-const [añoFin, mesFin, diaFin] = fechaFin.split('-');
-const inicio = new Date(parseInt(añoInicio), parseInt(mesInicio) - 1, parseInt(diaInicio));
-const fin = new Date(parseInt(añoFin), parseInt(mesFin) - 1, parseInt(diaFin));
-    const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-    
-    // Calcular ingresos por cada concepto personalizado
-    const ingresosPorConcepto = {};
-    let totalIngresos = 0;
-    
-    // Inicializar todos los conceptos configurados
-    sistemaADAMS.conceptosPago.forEach(concepto => {
-        if (concepto.activo) {
-            ingresosPorConcepto[concepto.tipo] = {
-                nombre: concepto.nombre,
-                total: 0,
-                cantidad: 0
-            };
-        }
-    });
-    
-    // Calcular totales por concepto desde los pagos del período personalizado
-    if (sistemaADAMS.pagos) {
-        const pagosDelPeriodo = sistemaADAMS.pagos.filter(pago => {
-            const fechaPago = new Date(pago.fecha);
-            return fechaPago >= inicio && fechaPago <= fin;
-        });
-        
-        pagosDelPeriodo.forEach(pago => {
-            totalIngresos += pago.montoTotal;
-            
-            if (pago.conceptos && pago.conceptos.length > 0) {
-                // Pagos con múltiples conceptos
-                pago.conceptos.forEach(concepto => {
-                    if (ingresosPorConcepto[concepto.tipo]) {
-                        ingresosPorConcepto[concepto.tipo].total += concepto.total;
-                        ingresosPorConcepto[concepto.tipo].cantidad += 1;
-                    }
-                });
-            } else {
-                // Pagos antiguos con un solo concepto
-                if (ingresosPorConcepto[pago.concepto]) {
-                    ingresosPorConcepto[pago.concepto].total += pago.montoTotal;
-                    ingresosPorConcepto[pago.concepto].cantidad += 1;
-                }
-            }
-        });
+    if (!sistemaADAMS.pagos) {
+        sistemaADAMS.pagos = [];
     }
     
-    // Generar las tarjetas de conceptos dinámicamente
-    const conceptosConIngresos = Object.entries(ingresosPorConcepto)
-        .filter(([tipo, datos]) => datos.total > 0 || datos.cantidad > 0)
-        .sort((a, b) => b[1].total - a[1].total); // Ordenar por monto descendente
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
     
-    const conceptosAMostrar = conceptosConIngresos.length > 0 ? 
-        conceptosConIngresos : 
-        Object.entries(ingresosPorConcepto).slice(0, 6);
+    console.log("Filtrando pagos entre:", fechaInicioObj, "y", fechaFinObj);
     
-    const tarjetasHTML = conceptosAMostrar.map(([tipo, datos], index) => {
-        const colores = [
-            { bg: '#e8f5e8', color: '#2e7d32' }, // Verde
-            { bg: '#e3f2fd', color: '#1976d2' }, // Azul
-            { bg: '#fff3e0', color: '#f57c00' }, // Naranja
-            { bg: '#fce4ec', color: '#c2185b' }, // Rosa
-            { bg: '#f3e5f5', color: '#7b1fa2' }, // Morado
-            { bg: '#e0f2f1', color: '#00695c' }  // Verde agua
-        ];
-        
-        const colorIndex = index % colores.length;
-        const { bg, color } = colores[colorIndex];
-        
-        return `
-            <div style="text-align: center; padding: 15px; background: ${bg}; border-radius: 10px;">
-                <h4 style="color: ${color}; font-size: 14px; margin-bottom: 8px;">${datos.nombre}</h4>
-                <div style="font-size: 20px; font-weight: bold; color: ${color};">$${datos.total.toFixed(2)}</div>
-                <small style="color: ${color}; opacity: 0.8;">${datos.cantidad} pago${datos.cantidad !== 1 ? 's' : ''}</small>
-            </div>
-        `;
-    }).join('');
+    const pagosDelPeriodo = sistemaADAMS.pagos.filter(pago => {
+        const fechaPago = new Date(pago.fecha);
+        return fechaPago >= fechaInicioObj && fechaPago <= fechaFinObj;
+    });
     
-    container.innerHTML = `
-        <!-- Información del período personalizado -->
-        <div style="grid-column: 1 / -1; text-align: center; padding: 20px; background: linear-gradient(135deg, #2196f3, #21cbf3); border-radius: 15px; margin-bottom: 20px;">
-            <h3 style="color: white; margin-bottom: 10px;">📅 REPORTE PERSONALIZADO</h3>
-            <div style="color: white; margin-bottom: 10px;">
-                <strong>${inicio.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                al
-                <strong>${fin.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-            </div>
-            <div style="font-size: 36px; font-weight: bold; color: white;">$${totalIngresos.toFixed(2)}</div>
-            <small style="color: white; opacity: 0.9;">${dias} días • ${totalPagos} pagos registrados</small>
-        </div>
-        
-        <!-- Grid de conceptos -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            ${tarjetasHTML}
-        </div>
-        
-        <!-- Estadísticas del período -->
-        <div style="padding: 20px; background: #f5f5f5; border-radius: 10px;">
-            <h4>📊 Estadísticas del Período Personalizado</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                <div>
-                    <strong>Duración del período:</strong> ${dias} días
-                </div>
-                <div>
-                    <strong>Promedio diario:</strong> $${dias > 0 ? (totalIngresos / dias).toFixed(2) : '0.00'}
-                </div>
-                <div>
-                    <strong>Total de pagos:</strong> ${totalPagos}
-                </div>
-                <div>
-                    <strong>Promedio por pago:</strong> $${totalPagos > 0 ? (totalIngresos / totalPagos).toFixed(2) : '0.00'}
-                </div>
+    console.log("Pagos encontrados:", pagosDelPeriodo.length);
+    
+    const tipo = document.getElementById('tipo-reporte').value;
+    const resumen = calcularResumenFinanciero(pagosDelPeriodo, tipo);
+    
+    const dias = Math.ceil((fechaFinObj - fechaInicioObj) / (1000 * 60 * 60 * 24)) + 1;
+    
+    mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, pagosDelPeriodo.length, dias);
+}
+
+function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, totalPagos, dias) {
+    const container = document.getElementById('resumen-financiero');
+    const inicioFormateado = new Date(fechaInicio).toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    const finFormateado = new Date(fechaFin).toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    console.log("Mostrando resumen:", resumen); // Debug
+    
+    // ENCABEZADO PRINCIPAL - Igual que el reporte mensual
+    let html = `
+        <div style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white; text-align: center; padding: 40px 20px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(156, 39, 176, 0.3);">
+            <h3 style="margin-bottom: 10px; font-size: 32px;">💰 INGRESOS TOTALES</h3>
+            <div style="font-size: 4em; font-weight: bold; margin: 20px 0;">$${(resumen.totalIngresos || 0).toLocaleString()}</div>
+            <div style="opacity: 0.9; font-size: 16px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3);">
+                <strong>📅 Período:</strong> ${inicioFormateado} - ${finFormateado}<br>
+                <strong>📊 Total:</strong> ${dias} días • ${totalPagos} pagos
             </div>
         </div>
     `;
+    
+    if (resumen.totalIngresos && resumen.totalIngresos > 0 && resumen.ingresosPorConcepto) {
+        // CONCEPTOS POR SEPARADO - Mismo estilo que el reporte mensual
+        const conceptos = Object.entries(resumen.ingresosPorConcepto).filter(([_, datos]) => datos.total > 0);
+        
+        if (conceptos.length > 0) {
+            html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">`;
+            
+            conceptos.forEach(([concepto, datos]) => {
+                // Colores para cada concepto (mismo que reporte mensual)
+                let colorFondo = '#e8f5e8';
+                let colorTexto = '#2e7d32';
+                
+                if (concepto.toLowerCase().includes('colegiatura')) {
+                    colorFondo = '#e8f5e8';
+                    colorTexto = '#2e7d32';
+                } else if (concepto.toLowerCase().includes('uniforme') || concepto.toLowerCase().includes('producto')) {
+                    colorFondo = '#e3f2fd';
+                    colorTexto = '#1565c0';
+                } else if (concepto.toLowerCase().includes('inscripcion') || concepto.toLowerCase().includes('reinscripcion')) {
+                    colorFondo = '#fff3e0';
+                    colorTexto = '#ef6c00';
+                } else if (concepto.toLowerCase().includes('afiliacion')) {
+                    colorFondo = '#fce4ec';
+                    colorTexto = '#c2185b';
+                } else if (concepto.toLowerCase().includes('competencia')) {
+                    colorFondo = '#f3e5f5';
+                    colorTexto = '#7b1fa2';
+                }
+                
+                html += `
+                    <div style="background: ${colorFondo}; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid ${colorTexto}20;">
+                        <h4 style="color: ${colorTexto}; margin-bottom: 15px; font-size: 18px;">${concepto}</h4>
+                        <div style="font-size: 2.5em; font-weight: bold; color: ${colorTexto}; margin: 15px 0;">$${datos.total.toLocaleString()}</div>
+                        <p style="color: ${colorTexto}; opacity: 0.8; font-size: 14px;">${datos.cantidad} pago${datos.cantidad > 1 ? 's' : ''}</p>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+        }
+        
+        // ESTADÍSTICAS DEL PERÍODO - Mismo estilo
+        html += `
+            <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 30px; border-radius: 15px; border: 2px solid #dee2e6;">
+                <h4 style="color: #495057; margin-bottom: 20px; display: flex; align-items: center;">
+                    📊 Estadísticas del Período
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div>
+                        <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Cantidad total de pagos:</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #495057;">${totalPagos}</div>
+                    </div>
+                    <div>
+                        <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Promedio por pago:</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #495057;">$${(resumen.totalIngresos / totalPagos).toLocaleString()}</div>
+                    </div>
+                    <div>
+                        <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Concepto más rentable:</div>
+                        <div style="font-size: 16px; font-weight: bold; color: #495057;">
+                            ${conceptos.length > 0 ? conceptos.reduce((max, curr) => curr[1].total > max[1].total ? curr : max)[0] : 'N/A'}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Período:</div>
+                        <div style="font-size: 16px; font-weight: bold; color: #495057;">PERÍODO PERSONALIZADO</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div style="text-align: center; padding: 60px 20px; color: #666; background: #f8f9fa; border-radius: 15px; border: 2px dashed #ddd;">
+                <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                <h4 style="margin-bottom: 15px; color: #999;">Sin datos en este período</h4>
+                <p>No se encontraron pagos en las fechas seleccionadas</p>
+                <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                    <strong>💡 Sugerencia:</strong> Verifica que las fechas incluyan días con pagos registrados
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
 }
 // Aplicar formato de nombre propio en tiempo real a los campos
 // Aplicar formato de nombre propio en tiempo real a los campos
@@ -14771,8 +14797,723 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 });
+// Funciones para período personalizado
+function validarFechasPersonalizadas() {
+    const fechaInicio = document.getElementById('fecha-inicio-personalizada').value;
+    const fechaFin = document.getElementById('fecha-fin-personalizada').value;
+    const btnAplicar = document.getElementById('btn-aplicar-personalizado');
+    
+    if (fechaInicio && fechaFin) {
+        const inicio = new Date(fechaInicio);
+        const fin = new Date(fechaFin);
+        const hoy = new Date();
+        
+        if (inicio <= fin && inicio <= hoy && fin <= hoy) {
+            btnAplicar.disabled = false;
+            btnAplicar.innerHTML = '📅 Aplicar Período';
+            btnAplicar.className = 'btn btn-primary';
+            
+            // Mostrar información del período
+            const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('fecha-inicio-personalizada').title = `Período seleccionado: ${dias} días`;
+            document.getElementById('fecha-fin-personalizada').title = `Período seleccionado: ${dias} días`;
+        } else if (inicio > fin) {
+            btnAplicar.disabled = true;
+            btnAplicar.innerHTML = '❌ Fecha inválida';
+            btnAplicar.className = 'btn btn-danger';
+        } else if (inicio > hoy || fin > hoy) {
+            btnAplicar.disabled = true;
+            btnAplicar.innerHTML = '❌ Fecha futura';
+            btnAplicar.className = 'btn btn-warning';
+        }
+    } else {
+        btnAplicar.disabled = true;
+        btnAplicar.innerHTML = '📅 Selecciona fechas';
+        btnAplicar.className = 'btn btn-secondary';
+    }
+}
 
+function aplicarPeriodoPersonalizado() {
+    const fechaInicio = document.getElementById('fecha-inicio-personalizada').value;
+    const fechaFin = document.getElementById('fecha-fin-personalizada').value;
+    
+    if (!fechaInicio || !fechaFin) {
+        mostrarNotificacion('Selecciona ambas fechas', 'error');
+        return;
+    }
+    
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    
+    if (inicio > fin) {
+        mostrarNotificacion('La fecha de inicio debe ser anterior a la fecha de fin', 'error');
+        return;
+    }
+    
+    if (inicio > new Date() || fin > new Date()) {
+        mostrarNotificacion('No se pueden seleccionar fechas futuras', 'error');
+        return;
+    }
+    
+    // Generar reporte con fechas personalizadas
+    generarReportePersonalizado(fechaInicio, fechaFin);
+    
+    const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+    mostrarNotificacion(`Reporte generado para ${dias} días (${inicio.toLocaleDateString()} - ${fin.toLocaleDateString()})`, 'success');
+}
 
+function generarReportePersonalizado(fechaInicio, fechaFin) {
+    console.log("🚀 Generando reporte personalizado...");
+    console.log("Fechas solicitadas:", fechaInicio, "a", fechaFin);
+    
+    if (!sistemaADAMS.pagos) {
+        sistemaADAMS.pagos = [];
+    }
+    
+    console.log("Total de pagos en sistema:", sistemaADAMS.pagos.length);
+    
+    // Mostrar todos los pagos para diagnóstico
+    sistemaADAMS.pagos.forEach((pago, index) => {
+        console.log(`Pago ${index + 1}:`, {
+            fecha: pago.fecha,
+            fechaFormateada: new Date(pago.fecha).toLocaleDateString(),
+            monto: pago.monto,
+            concepto: pago.concepto
+        });
+    });
+    
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+    
+    console.log("Rango de filtrado:", fechaInicioObj, "a", fechaFinObj);
+    
+    const pagosDelPeriodo = sistemaADAMS.pagos.filter(pago => {
+        const fechaPago = new Date(pago.fecha);
+        const dentroDelRango = fechaPago >= fechaInicioObj && fechaPago <= fechaFinObj;
+        
+        console.log(`¿Pago ${pago.monto} del ${fechaPago.toLocaleDateString()} está en rango?`, dentroDelRango);
+        
+        return dentroDelRango;
+    });
+    
+    console.log("Pagos filtrados:", pagosDelPeriodo.length);
+    console.log("Pagos encontrados:", pagosDelPeriodo);
+    
+    const tipo = document.getElementById('tipo-reporte').value;
+    const resumen = calcularResumenFinanciero(pagosDelPeriodo, tipo);
+    
+    console.log("Resumen calculado:", resumen);
+    
+    const dias = Math.ceil((fechaFinObj - fechaInicioObj) / (1000 * 60 * 60 * 24)) + 1;
+    
+    mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, pagosDelPeriodo.length, dias);
+}
+
+function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, totalPagos, dias) {
+    const container = document.getElementById('resumen-financiero');
+    const inicioFormateado = new Date(fechaInicio).toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    const finFormateado = new Date(fechaFin).toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    let html = `
+        <div style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">📊 Reporte Período Personalizado</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                <div>
+                    <div style="font-size: 24px; font-weight: bold;">${dias}</div>
+                    <div style="opacity: 0.9; font-size: 14px;">Días</div>
+                </div>
+                <div>
+                    <div style="font-size: 24px; font-weight: bold;">${totalPagos}</div>
+                    <div style="opacity: 0.9; font-size: 14px;">Pagos</div>
+                </div>
+                <div>
+                    <div style="font-size: 24px; font-weight: bold;">$${resumen.totalIngresos.toLocaleString()}</div>
+                    <div style="opacity: 0.9; font-size: 14px;">Total</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 14px;">
+                <strong>Desde:</strong> ${inicioFormateado}<br>
+                <strong>Hasta:</strong> ${finFormateado}
+            </div>
+        </div>
+    `;
+    
+    if (resumen.totalIngresos > 0) {
+        html += `
+            <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+                <h5 style="color: #9c27b0; margin-bottom: 15px;">💰 Desglose por Concepto</h5>
+                <div style="display: grid; gap: 10px;">
+        `;
+        
+        Object.entries(resumen.ingresosPorConcepto).forEach(([concepto, datos]) => {
+            if (datos.total > 0) {
+                const porcentaje = ((datos.total / resumen.totalIngresos) * 100).toFixed(1);
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <strong>${concepto}</strong> <small style="color: #666;">(${datos.cantidad} pagos)</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: bold; color: #9c27b0;">$${datos.total.toLocaleString()}</div>
+                            <div style="font-size: 12px; color: #666;">${porcentaje}%</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+        
+        // Promedio diario si es más de 1 día
+        if (dias > 1) {
+            const promedioDiario = resumen.totalIngresos / dias;
+            html += `
+                <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 10px; padding: 15px;">
+                    <h5 style="color: #2e7d32; margin-bottom: 10px;">📈 Estadísticas del Período</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <strong>Promedio diario:</strong> $${promedioDiario.toLocaleString()}<br>
+                            <strong>Pagos por día:</strong> ${(totalPagos / dias).toFixed(1)}
+                        </div>
+                        <div>
+                            <strong>Mayor ingreso día:</strong> Calculando...<br>
+                            <strong>Menor ingreso día:</strong> Calculando...
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        html += `
+            <div style="text-align: center; padding: 40px; color: #666; background: #f8f9fa; border-radius: 10px;">
+                <h4>📭 Sin datos en este período</h4>
+                <p>No se encontraron pagos en el período seleccionado</p>
+                <p><small>Verifica las fechas o intenta con otro período</small></p>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+function mostrarTablaMorosos(estudiantesMorosos) {
+    const tbody = document.getElementById('tabla-morosidad');
+    
+    if (estudiantesMorosos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                    No se encontraron estudiantes morosos con los filtros aplicados
+                </td>
+            </tr>
+        `;
+        actualizarContadorMorosos(0, window.estudiantesMorososCompletos?.length || 0);
+        return;
+    }
+
+    tbody.innerHTML = estudiantesMorosos.map(estudiante => {
+        const ultimoPagoTexto = estudiante.ultimoPago ? 
+            new Date(estudiante.ultimoPago).toLocaleDateString() : 'Sin registros';
+        
+        const estadoBadge = estudiante.estado === 'activo' ? 
+            '<span class="status status-active">Activo</span>' : 
+            '<span class="status status-inactive">Inactivo</span>';
+
+        return `
+            <tr>
+                <td>
+                    <strong>${estudiante.nombre}</strong><br>
+                    <small style="color: #666;">Tutor: ${estudiante.tutor}</small><br>
+                    <small style="color: #999;">${estudiante.telefono}</small>
+                </td>
+                <td>${ultimoPagoTexto}</td>
+                <td>
+                    <span style="color: ${estudiante.diasSinPagar > 30 ? '#dc3545' : '#ff9800'}; font-weight: bold;">
+                        ${estudiante.diasSinPagar} días
+                    </span>
+                </td>
+                <td style="font-weight: bold; color: #dc3545;">
+                    $${estudiante.montoAdeudado.toLocaleString()}
+                </td>
+                <td style="color: #ff9800; font-weight: bold;">
+                    $${estudiante.recargos.toFixed(2)}
+                </td>
+                <td>${estadoBadge}</td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn btn-success btn-small" 
+                                onclick="registrarPagoRapido(${estudiante.id})" 
+                                title="Registrar pago para este estudiante">
+                            💳 Pagar Ahora
+                        </button>
+                        <button class="btn btn-primary btn-small" 
+                                onclick="enviarRecordatorioWhatsApp(${estudiante.id})" 
+                                title="Enviar recordatorio amigable por WhatsApp">
+                            📱 WhatsApp
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    actualizarContadorMorosos(estudiantesMorosos.length, window.estudiantesMorososCompletos?.length || 0);
+}
+// Funciones de filtrado para morosos
+function filtrarMorosos() {
+    if (!window.estudiantesMorososCompletos) return;
+    
+    const filtroNombre = document.getElementById('filtro-nombre-moroso')?.value.toLowerCase().trim() || '';
+    const filtroDias = document.getElementById('filtro-dias-atraso')?.value || '';
+    const filtroMonto = document.getElementById('filtro-monto-adeudo')?.value || '';
+    
+    const morososFiltrados = window.estudiantesMorososCompletos.filter(estudiante => {
+        // Filtro por nombre
+        if (filtroNombre) {
+            const nombreCompleto = (estudiante.nombre + ' ' + estudiante.tutor).toLowerCase();
+            if (!nombreCompleto.includes(filtroNombre)) {
+                return false;
+            }
+        }
+        
+        // Filtro por días de atraso
+        if (filtroDias) {
+            const dias = estudiante.diasSinPagar;
+            switch(filtroDias) {
+                case '1-30': if (dias < 1 || dias > 30) return false; break;
+                case '31-60': if (dias < 31 || dias > 60) return false; break;
+                case '61-90': if (dias < 61 || dias > 90) return false; break;
+                case '90+': if (dias <= 90) return false; break;
+            }
+        }
+        
+        // Filtro por monto adeudado
+        if (filtroMonto) {
+            const monto = estudiante.montoAdeudado;
+            switch(filtroMonto) {
+                case '0-500': if (monto < 0 || monto > 500) return false; break;
+                case '500-1000': if (monto < 500 || monto > 1000) return false; break;
+                case '1000-2000': if (monto < 1000 || monto > 2000) return false; break;
+                case '2000+': if (monto <= 2000) return false; break;
+            }
+        }
+        
+        return true;
+    });
+    
+    mostrarTablaMorosos(morososFiltrados);
+}
+
+function limpiarFiltrosMorosos() {
+    document.getElementById('filtro-nombre-moroso').value = '';
+    document.getElementById('filtro-dias-atraso').value = '';
+    document.getElementById('filtro-monto-adeudo').value = '';
+    
+    if (window.estudiantesMorososCompletos) {
+        mostrarTablaMorosos(window.estudiantesMorososCompletos);
+    }
+}
+
+function actualizarContadorMorosos(filtrados, total) {
+    const contadorFiltrados = document.getElementById('contador-morosos-filtrados');
+    const contadorTotal = document.getElementById('contador-morosos-total');
+    if (contadorFiltrados) contadorFiltrados.textContent = filtrados;
+    if (contadorTotal) contadorTotal.textContent = total;
+}
+
+// Función simplificada para envío de WhatsApp
+function enviarRecordatorioWhatsApp(estudianteId) {
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id === estudianteId);
+    if (!estudiante) return;
+    
+    const moroso = window.estudiantesMorososCompletos?.find(m => m.id === estudianteId);
+    if (!moroso) return;
+    
+    const mensaje = `Hola ${estudiante.tutor}, espero te encuentres bien. 
+    
+Te escribo de la Academia ADAMS para recordarte amablemente que el pago de la colegiatura de ${estudiante.nombre} tiene ${moroso.diasSinPagar} días de atraso.
+
+Monto adeudado: $${moroso.montoAdeudado.toLocaleString()}
+
+Si ya realizaste el pago, por favor envíanos el comprobante. Si tienes alguna situación especial, con mucho gusto podemos platicar para encontrar una solución.
+
+¡Gracias por tu comprensión!`;
+    
+    const telefono = estudiante.telefono.replace(/\D/g, '');
+    const url = `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+}
+// FUNCIÓN SIMPLIFICADA PARA DESCARGAR PLANTILLA DE ALUMNOS
+function descargarPlantillaEstudiantes() {
+    try {
+        // Verificar que la librería XLSX esté disponible
+        if (typeof XLSX === 'undefined') {
+            console.warn('Librería XLSX no disponible, usando método CSV alternativo');
+            descargarPlantillaCSV();
+            return;
+        }
+
+        // === DATOS DE LA PLANTILLA (ENCABEZADOS EN FILA 1) ===
+        const datosAlumnos = [
+            // Encabezados directamente en fila 1
+            [
+                'Nombre Completo*',
+                'Fecha Nacimiento',
+                'CURP',
+                'Nombre Tutor',
+                'Teléfono',
+                'Email',
+                'Disciplinas',
+                'Colegiatura',
+                'Es Hermano',
+                'Porcentaje Beca',
+                'Estatus',
+                'Horario 1 - Día',
+                'Horario 1 - Disciplina',
+                'Horario 1 - Hora Inicio',
+                'Horario 1 - Hora Fin',
+                'Horario 1 - Grupo',
+                'Horario 2 - Día',
+                'Horario 2 - Disciplina',
+                'Horario 2 - Hora Inicio',
+                'Horario 2 - Hora Fin',
+                'Horario 2 - Grupo',
+                'Horario 3 - Día',
+                'Horario 3 - Disciplina',
+                'Horario 3 - Hora Inicio',
+                'Horario 3 - Hora Fin',
+                'Horario 3 - Grupo'
+            ],
+            // Ejemplos con datos mínimos
+            [
+                'Juan Pérez García',
+                '2010-05-15',
+                '',
+                'María García López',
+                '5551234567',
+                '',
+                'gimnasia',
+                900,
+                'no',
+                0,
+                'pendiente',
+                'lunes',
+                'gimnasia',
+                '15:00',
+                '16:00',
+                'A',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                ''
+            ],
+            [
+                'Ana Martínez Silva',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'pendiente',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                ''
+            ],
+            [
+                'Luis Hernández Mora',
+                '2011-12-03',
+                '',
+                'Patricia Mora Vega',
+                '',
+                'patricia@email.com',
+                'gimnasia,box',
+                850,
+                'no',
+                15,
+                'activo',
+                'martes',
+                'gimnasia',
+                '16:00',
+                '17:00',
+                'A',
+                'jueves',
+                'box',
+                '18:00',
+                '19:00',
+                'C',
+                '',
+                '',
+                '',
+                '',
+                ''
+            ]
+        ];
+
+        // === CREAR WORKBOOK SIMPLE ===
+        const workbook = XLSX.utils.book_new();
+
+        // Crear hoja de alumnos
+        const wsAlumnos = XLSX.utils.aoa_to_sheet(datosAlumnos);
+        
+        // Aplicar anchos de columna
+        wsAlumnos['!cols'] = [
+            { wch: 20 }, // Nombre Completo
+            { wch: 15 }, // Fecha Nacimiento
+            { wch: 20 }, // CURP
+            { wch: 20 }, // Nombre Tutor
+            { wch: 12 }, // Teléfono
+            { wch: 25 }, // Email
+            { wch: 20 }, // Disciplinas
+            { wch: 10 }, // Colegiatura
+            { wch: 10 }, // Es Hermano
+            { wch: 12 }, // Porcentaje Beca
+            { wch: 10 }, // Estatus
+            { wch: 12 }, // H1 Día
+            { wch: 12 }, // H1 Disciplina
+            { wch: 12 }, // H1 Hora Inicio
+            { wch: 12 }, // H1 Hora Fin
+            { wch: 8 },  // H1 Grupo
+            { wch: 12 }, // H2 Día
+            { wch: 12 }, // H2 Disciplina
+            { wch: 12 }, // H2 Hora Inicio
+            { wch: 12 }, // H2 Hora Fin
+            { wch: 8 },  // H2 Grupo
+            { wch: 12 }, // H3 Día
+            { wch: 12 }, // H3 Disciplina
+            { wch: 12 }, // H3 Hora Inicio
+            { wch: 12 }, // H3 Hora Fin
+            { wch: 8 }   // H3 Grupo
+        ];
+
+        // Agregar solo UNA hoja al workbook
+        XLSX.utils.book_append_sheet(workbook, wsAlumnos, 'Alumnos');
+
+        // === DESCARGAR ARCHIVO ===
+        const fecha = new Date().toISOString().slice(0, 10);
+        const nombreArchivo = `Plantilla_Alumnos_ADAMS_${fecha}.xlsx`;
+        
+        XLSX.writeFile(workbook, nombreArchivo);
+
+        // Mostrar notificación de éxito
+        mostrarNotificacion('📥 Plantilla Excel descargada exitosamente', 'success');
+        
+        console.log('Plantilla Excel generada:', nombreArchivo);
+
+    } catch (error) {
+        console.error('Error al crear la plantilla Excel:', error);
+        mostrarNotificacion('❌ Error al generar Excel. Descargando CSV alternativo...', 'error');
+        
+        // Fallback a CSV
+        setTimeout(() => {
+            descargarPlantillaCSV();
+        }, 1000);
+    }
+}
+
+// === MÉTODO ALTERNATIVO: CSV SIMPLIFICADO ===
+function descargarPlantillaCSV() {
+    const csvContent = `Nombre Completo*,Fecha Nacimiento,CURP,Nombre Tutor,Teléfono,Email,Disciplinas,Colegiatura,Es Hermano,Porcentaje Beca,Estatus,Horario 1 - Día,Horario 1 - Disciplina,Horario 1 - Hora Inicio,Horario 1 - Hora Fin,Horario 1 - Grupo,Horario 2 - Día,Horario 2 - Disciplina,Horario 2 - Hora Inicio,Horario 2 - Hora Fin,Horario 2 - Grupo,Horario 3 - Día,Horario 3 - Disciplina,Horario 3 - Hora Inicio,Horario 3 - Hora Fin,Horario 3 - Grupo
+Juan Pérez García,2010-05-15,,María García López,5551234567,,gimnasia,900,no,0,pendiente,lunes,gimnasia,15:00,16:00,A,,,,,,,,,
+Ana Martínez Silva,,,,,,,,,,,pendiente,,,,,,,,,,,,,,,
+Luis Hernández Mora,2011-12-03,,Patricia Mora Vega,,patricia@email.com,"gimnasia,box",850,no,15,activo,martes,gimnasia,16:00,17:00,A,jueves,box,18:00,19:00,C,,,,,`;
+
+    // Crear y descargar CSV
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const fecha = new Date().toISOString().slice(0, 10);
+    const nombreArchivo = `Plantilla_Alumnos_ADAMS_${fecha}.csv`;
+
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', nombreArchivo);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        mostrarNotificacion('📄 Plantilla CSV descargada exitosamente', 'success');
+        console.log('Plantilla CSV generada como alternativa:', nombreArchivo);
+    }
+}
+// FUNCIÓN PARA EXPORTAR TODOS LOS DATOS DE ALUMNOS EXISTENTES
+function exportarDatosAlumnos() {
+    try {
+        // Verificar si hay alumnos registrados
+        if (!sistemaADAMS.estudiantes || sistemaADAMS.estudiantes.length === 0) {
+            mostrarNotificacion('❌ No hay alumnos registrados para exportar', 'error');
+            return;
+        }
+
+        // === CREAR ENCABEZADOS ===
+        const encabezados = [
+            'ID',
+            'Nombre Completo',
+            'Edad',
+            'Fecha Nacimiento',
+            'CURP',
+            'Nombre Tutor',
+            'Teléfono',
+            'Email',
+            'Disciplinas',
+            'Colegiatura',
+            'Es Hermano',
+            'Porcentaje Beca',
+            'Estatus',
+            'Fecha Registro',
+            'Horario 1 - Día',
+            'Horario 1 - Disciplina',
+            'Horario 1 - Hora Inicio',
+            'Horario 1 - Hora Fin',
+            'Horario 1 - Grupo',
+            'Horario 2 - Día',
+            'Horario 2 - Disciplina',
+            'Horario 2 - Hora Inicio',
+            'Horario 2 - Hora Fin',
+            'Horario 2 - Grupo',
+            'Horario 3 - Día',
+            'Horario 3 - Disciplina',
+            'Horario 3 - Hora Inicio',
+            'Horario 3 - Hora Fin',
+            'Horario 3 - Grupo'
+        ];
+
+        // === PROCESAR DATOS DE ALUMNOS ===
+        const datosCSV = [encabezados]; // Comenzar con los encabezados
+
+        sistemaADAMS.estudiantes.forEach(alumno => {
+            const fila = [
+                alumno.id || '',
+                alumno.nombre || '',
+                alumno.edad || '',
+                alumno.fechaNacimiento || '',
+                alumno.curp || '',
+                alumno.tutor || '',
+                alumno.telefono || '',
+                alumno.email || '',
+                Array.isArray(alumno.disciplinas) ? alumno.disciplinas.join(',') : '',
+                alumno.colegiatura || '',
+                alumno.esHermano ? 'si' : 'no',
+                alumno.porcentajeBeca || 0,
+                alumno.estatus || alumno.estado || 'activo',
+                alumno.fechaRegistro || ''
+            ];
+
+            // === PROCESAR HORARIOS (hasta 3) ===
+            const horarios = alumno.horarios || [];
+            
+            // Horario 1
+            if (horarios[0]) {
+                fila.push(
+                    horarios[0].dia || '',
+                    horarios[0].disciplina || '',
+                    horarios[0].horaInicio || '',
+                    horarios[0].horaFin || '',
+                    horarios[0].grupo || ''
+                );
+            } else {
+                fila.push('', '', '', '', '');
+            }
+
+            // Horario 2
+            if (horarios[1]) {
+                fila.push(
+                    horarios[1].dia || '',
+                    horarios[1].disciplina || '',
+                    horarios[1].horaInicio || '',
+                    horarios[1].horaFin || '',
+                    horarios[1].grupo || ''
+                );
+            } else {
+                fila.push('', '', '', '', '');
+            }
+
+            // Horario 3
+            if (horarios[2]) {
+                fila.push(
+                    horarios[2].dia || '',
+                    horarios[2].disciplina || '',
+                    horarios[2].horaInicio || '',
+                    horarios[2].horaFin || '',
+                    horarios[2].grupo || ''
+                );
+            } else {
+                fila.push('', '', '', '', '');
+            }
+
+            datosCSV.push(fila);
+        });
+
+        // === CREAR CONTENIDO CSV ===
+        const csvContent = datosCSV.map(fila => 
+            fila.map(campo => {
+                // Escapar campos que contienen comas o comillas
+                if (typeof campo === 'string' && (campo.includes(',') || campo.includes('"'))) {
+                    return '"' + campo.replace(/"/g, '""') + '"';
+                }
+                return campo;
+            }).join(',')
+        ).join('\n');
+
+        // === DESCARGAR ARCHIVO ===
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const fecha = new Date().toISOString().slice(0, 10);
+        const hora = new Date().toTimeString().slice(0, 5).replace(':', '');
+        const nombreArchivo = `Datos_Alumnos_ADAMS_${fecha}_${hora}.csv`;
+
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', nombreArchivo);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            mostrarNotificacion(`📊 Datos de ${sistemaADAMS.estudiantes.length} alumnos exportados exitosamente`, 'success');
+            console.log('Datos exportados:', nombreArchivo);
+        }
+
+    } catch (error) {
+        console.error('Error al exportar datos:', error);
+        mostrarNotificacion('❌ Error al exportar los datos de alumnos', 'error');
+    }
+}
 
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
 console.log('=== FUNCIONES DE MES DE COLEGIATURA CARGADAS ===');
