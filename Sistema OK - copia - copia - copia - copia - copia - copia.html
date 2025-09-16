@@ -1855,53 +1855,68 @@
                         </div>
                         <!-- Control de Morosidad -->
                         <div id="control-morosidad" class="tab-pane">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h3>⚠️ Control de Morosidad</h3>
-    <!-- FILTROS DE BÚSQUEDA PARA MOROSOS -->
+    <button class="btn btn-success" onclick="enviarRecordatoriosMasivos()">
+        📱 WhatsApp Masivo
+    </button>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
+        <div class="stat-number" id="total-morosos">0</div>
+        <div class="stat-label">Estudiantes Morosos</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f44336, #d32f2f);">
+        <div class="stat-number" id="total-adeudo">$0</div>
+        <div class="stat-label">Adeudo Total</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #9c27b0, #e91e63);">
+        <div class="stat-number" id="inactivos-por-pago">0</div>
+        <div class="stat-label">Inactivos por Pago</div>
+    </div>
+</div>
+
+<!-- Filtros de Morosidad -->
 <div class="form-section show" style="margin-bottom: 20px;">
-    <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda</h4>
+    <h4 style="color: #9c27b0; margin-bottom: 15px;">🔍 Filtros de Búsqueda de Morosidad</h4>
     <div class="form-row">
         <div class="form-group">
-            <label>Buscar por nombre (estudiante o tutor)</label>
-            <input type="text" id="filtro-nombre-moroso" 
-                   placeholder="Escribe nombre del estudiante o tutor..." 
-                   onkeyup="filtrarMorosos()" 
+            <label>Buscar por estudiante</label>
+            <input type="text" id="filtro-estudiante-morosidad" 
+                   placeholder="Nombre del estudiante..." 
+                   onkeyup="filtrarMorosidad()" 
                    style="background: white;">
         </div>
         <div class="form-group">
             <label>Filtrar por días de atraso</label>
-            <select id="filtro-dias-atraso" onchange="filtrarMorosos()">
+            <select id="filtro-dias-atraso" onchange="filtrarMorosidad()">
                 <option value="">Todos los atrasos</option>
-                <option value="1-30">1-30 días</option>
-                <option value="31-60">31-60 días</option>
-                <option value="61-90">61-90 días</option>
-                <option value="90+">Más de 90 días</option>
+                <option value="6-10">6 a 10 días (10% recargo)</option>
+                <option value="11-15">11 a 15 días (15% recargo)</option>
+                <option value="16+">Más de 15 días (inactivos)</option>
             </select>
         </div>
         <div class="form-group">
-            <label>Filtrar por monto adeudado</label>
-            <select id="filtro-monto-adeudo" onchange="filtrarMorosos()">
+            <label>Filtrar por rango de adeudo</label>
+            <select id="filtro-rango-adeudo" onchange="filtrarMorosidad()">
                 <option value="">Todos los montos</option>
                 <option value="0-500">$0 - $500</option>
-                <option value="500-1000">$500 - $1,000</option>
-                <option value="1000-2000">$1,000 - $2,000</option>
+                <option value="501-1000">$501 - $1,000</option>
+                <option value="1001-2000">$1,001 - $2,000</option>
                 <option value="2000+">Más de $2,000</option>
             </select>
         </div>
         <div class="form-group" style="display: flex; align-items: end;">
-            <button class="btn btn-secondary" onclick="limpiarFiltrosMorosos()" style="margin-top: 10px;">
+            <button class="btn btn-secondary" onclick="limpiarFiltrosMorosidad()" style="margin-top: 10px;">
                 🔄 Limpiar Filtros
             </button>
         </div>
     </div>
     <div style="text-align: center; margin-top: 10px;">
-        <small style="color: #666;">Mostrando <span id="contador-morosos-filtrados">0</span> de <span id="contador-morosos-total">0</span> estudiantes morosos</small>
+        <small style="color: #666;">Mostrando <span id="contador-morosidad-filtrados">0</span> de <span id="contador-morosidad-total">0</span> estudiantes morosos</small>
     </div>
-</div>
-    <button class="btn btn-success" onclick="enviarRecordatoriosMasivos()">
-        📱 WhatsApp Masivo
-    </button>
-</div>                           
+</div>                        
                             <div class="stats-grid">
                                 <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
                                     <div class="stat-number" id="total-morosos">0</div>
@@ -2038,7 +2053,20 @@
                                 <option value="18:00-19:00">18:00 - 19:00</option>
                             </select>
                         </div>
+                        
                     </div>
+                    
+                    <!-- NUEVA SECCIÓN: Días Especiales -->
+                    <div id="seccion-dia-especial" style="text-align: center; margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 10px; border: 2px solid #ffc107; display: none;">
+                        <h5 style="color: #856404; margin-bottom: 10px;">🏛️ ¿Es un día especial?</h5>
+                        <button class="btn btn-warning" onclick="marcarDiaAsueto()" style="margin-right: 10px;">
+                            🏛️ Suspendido por Academia
+                        </button>
+                        <button class="btn btn-danger" onclick="marcarEmergencia()">
+                            ⚠️ Emergencia/Clima
+                        </button>
+                    </div>
+                    
                     <div style="text-align: right; margin: 15px 0;">
                         <button class="btn btn-success" onclick="guardarAsistenciasDelDia()">
                             💾 Guardar Asistencias y Clases Muestra
@@ -3859,16 +3887,21 @@ if (mensajeBloqueo) {
 
         }
 
-        function cargarEstudiantesEnPago() {
-            const select = document.getElementById('pago-estudiante');
-            select.innerHTML = '<option value="">Seleccionar estudiante...</option>';
-            
-            sistemaADAMS.estudiantes.forEach(estudiante => {
-                select.innerHTML += `
-                    <option value="${estudiante.id}">${estudiante.nombre} - ${estudiante.tutor}</option>
-                `;
-            });
-        }
+       function cargarEstudiantesEnPago() {
+    const select = document.getElementById('pago-estudiante');
+    select.innerHTML = '<option value="">Seleccionar estudiante...</option>';
+    
+    // Ordenar estudiantes alfabéticamente por nombre
+    const estudiantesOrdenados = sistemaADAMS.estudiantes
+        .filter(estudiante => estudiante.estatus !== 'baja') // Excluir dados de baja
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+    
+    estudiantesOrdenados.forEach(estudiante => {
+        select.innerHTML += `
+            <option value="${estudiante.id}">${estudiante.nombre} - ${estudiante.tutor}</option>
+        `;
+    });
+}
 
         function cargarDatosEstudiante() {
             const estudianteId = parseInt(document.getElementById('pago-estudiante').value);
@@ -7237,53 +7270,116 @@ mostrarNotificacion('Pago eliminado correctamente', 'success');
         }
 
         // FUNCIONES DE CONTROL DE MOROSIDAD
-        function actualizarControlMorosidad() {
-    console.log('Actualizando control de morosidad...');
-    
-    const estudiantes = sistemaADAMS.estudiantes || [];
-    let estudiantesMorosos = [];
+function actualizarControlMorosidad() {
+    const hoy = new Date();
+    const estudiantesMorosos = [];
     let totalAdeudo = 0;
     let inactivosPorPago = 0;
-    
-    estudiantes.forEach(estudiante => {
+
+    sistemaADAMS.estudiantes.forEach(estudiante => {
         const ultimoPago = obtenerUltimoPago(estudiante.id);
         const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
         
-        // Consideramos moroso si tiene más de 10 días sin pagar
-        if (diasSinPagar >= 6) {
-            const montoAdeudado = calcularMontoAdeudado(estudiante, diasSinPagar);
+        // Estudiante es moroso si tiene más de 5 días sin pagar
+        if (diasSinPagar > 5) {
+            let recargo = 0;
+            let montoAdeudado = estudiante.colegiatura;
             
-            estudiantesMorosos.push({
-                id: estudiante.id,
-                nombre: estudiante.nombre,
-                tutor: estudiante.tutor,
-                telefono: estudiante.telefono,
-                ultimoPago: ultimoPago ? ultimoPago.fecha : null,
-                diasSinPagar: diasSinPagar,
-                montoAdeudado: montoAdeudado,
-                colegiatura: estudiante.colegiatura,
-                estado: estudiante.estatus || estudiante.estado || 'activo',
-                recargos: calcularRecargos(montoAdeudado, diasSinPagar)
-            });
+            // Calcular recargos
+            if (diasSinPagar > 15) {
+                recargo = montoAdeudado * 0.15;
+                inactivosPorPago++;
+            } else if (diasSinPagar > 10) {
+                recargo = montoAdeudado * 0.15;
+            } else if (diasSinPagar > 5) {
+                recargo = montoAdeudado * 0.10;
+            }
             
+            montoAdeudado += recargo;
             totalAdeudo += montoAdeudado;
             
-            if ((estudiante.estatus || estudiante.estado) === 'inactivo') {
-                inactivosPorPago++;
-            }
+            estudiantesMorosos.push({
+                estudiante: estudiante,
+                ultimoPago: ultimoPago,
+                diasAtraso: diasSinPagar,
+                montoAdeudado: montoAdeudado,
+                recargo: recargo,
+                estado: diasSinPagar > 15 ? 'Inactivo' : 'Moroso'
+            });
         }
     });
-    
-    // Guardar lista completa para filtros
-    window.estudiantesMorososCompletos = estudiantesMorosos;
-    
-    // Actualizar estadísticas
+
+    // APLICAR FILTROS
+    const estudiantesFiltrados = aplicarFiltrosMorosidad(estudiantesMorosos);
+
+    // Actualizar estadísticas generales (sin filtros)
     document.getElementById('total-morosos').textContent = estudiantesMorosos.length;
-    document.getElementById('total-adeudo').textContent = '$' + totalAdeudo.toLocaleString();
+    document.getElementById('total-adeudo').textContent = `$${totalAdeudo.toLocaleString()}`;
     document.getElementById('inactivos-por-pago').textContent = inactivosPorPago;
+
+    // Actualizar contador
+    actualizarContadorMorosidad(estudiantesFiltrados.length, estudiantesMorosos.length);
+
+    // Actualizar tabla con datos filtrados
+    const tbody = document.getElementById('tabla-morosidad');
     
-    // Mostrar tabla con filtros aplicados
-    mostrarTablaMorosos(estudiantesMorosos);
+    if (estudiantesFiltrados.length === 0) {
+        const mensaje = estudiantesMorosos.length === 0 ? 
+            'No hay estudiantes morosos' : 
+            'No se encontraron estudiantes con los filtros aplicados';
+        
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                    ${mensaje}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Ordenar por días de atraso (mayor a menor)
+    const estudiantesOrdenados = estudiantesFiltrados.sort((a, b) => b.diasAtraso - a.diasAtraso);
+
+    tbody.innerHTML = estudiantesOrdenados.map(item => {
+        const fechaUltimoPago = item.ultimoPago ? 
+            new Date(item.ultimoPago.fecha).toLocaleDateString() : 
+            'Sin registros';
+            
+        const estadoBadge = item.estado === 'Inactivo' ? 
+            '<span class="status status-baja">🔴 Inactivo</span>' :
+            '<span class="status status-warning">🟡 Moroso</span>';
+
+        return `
+            <tr>
+                <td>
+                    <strong>${item.estudiante.nombre}</strong><br>
+                    <small style="color: #666;">Tutor: ${item.estudiante.tutor}</small>
+                </td>
+                <td>${fechaUltimoPago}</td>
+                <td>
+                    <strong style="color: ${item.diasAtraso > 15 ? '#dc3545' : item.diasAtraso > 10 ? '#ff9800' : '#f57c00'};">
+                        ${item.diasAtraso} días
+                    </strong>
+                </td>
+                <td style="font-weight: bold; color: #dc3545;">
+                    $${item.montoAdeudado.toLocaleString()}
+                </td>
+                <td style="font-weight: bold; color: #ff9800;">
+                    $${item.recargo.toLocaleString()}
+                </td>
+                <td>${estadoBadge}</td>
+                <td>
+                    <button class="btn btn-primary btn-small" onclick="registrarPagoMoroso(${item.estudiante.id})" style="margin-bottom: 5px;">
+                        💰 Registrar Pago
+                    </button><br>
+                    <button class="btn btn-success btn-small" onclick="enviarRecordatorioIndividual(${item.estudiante.id})">
+                        📱 WhatsApp
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
         function calcularMontoAdeudado(estudiante, diasSinPagar) {
@@ -8301,7 +8397,26 @@ function inicializarAsistencias() {
 
 // Establecer fecha actual al cargar asistencias
 function establecerFechaAsistenciaHoy() {
-    document.getElementById('fecha-asistencia').value = obtenerFechaHoy();
+    console.log('=== EJECUTANDO establecerFechaAsistenciaHoy ===');
+    
+    const fechaHoy = obtenerFechaHoy();
+    const inputFecha = document.getElementById('fecha-asistencia');
+    
+    console.log('Fecha calculada:', fechaHoy);
+    console.log('Input encontrado:', !!inputFecha);
+    
+    if (!inputFecha) {
+        console.error('No se encontró el input fecha-asistencia');
+        return;
+    }
+    
+    // Establecer la fecha
+    inputFecha.value = fechaHoy;
+    console.log('Fecha establecida en input:', inputFecha.value);
+    
+    // CLAVE: Disparar evento change manualmente (esto es lo que faltaba)
+    inputFecha.dispatchEvent(new Event('change'));
+    console.log('Evento change disparado');
 }
 
 // Cargar asistencias del día seleccionado
@@ -8310,6 +8425,30 @@ function cargarAsistenciasDia() {
     const filtroDisciplina = document.getElementById('filtro-disciplina').value;
     const filtroHorario = document.getElementById('filtro-horario').value;
     
+    // Mostrar/ocultar sección de días especiales
+    const seccionDiaEspecial = document.getElementById('seccion-dia-especial');
+    if (seccionDiaEspecial) {
+        seccionDiaEspecial.style.display = fecha ? 'block' : 'none';
+    }
+    
+    // Verificar si es día especial registrado
+    if (fecha && sistemaADAMS.diasEspeciales) {
+        const diaEspecial = sistemaADAMS.diasEspeciales.find(d => d.fecha === fecha);
+        if (diaEspecial) {
+            document.getElementById('asistencias-container').innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #d4edda; border-radius: 15px; border: 2px solid #28a745;">
+                    <h4 style="color: #155724;">🏛️ Día Especial Registrado</h4>
+                    <p><strong>Tipo:</strong> ${diaEspecial.tipo === 'asueto' ? 'Suspendido por Academia' : 'Emergencia/Clima'}</p>
+                    <p><strong>Motivo:</strong> ${diaEspecial.motivo}</p>
+                    <p style="color: #666; font-size: 14px;">No se registran asistencias para este día</p>
+                    <button class="btn btn-danger" onclick="eliminarDiaEspecial('${fecha}')">
+                        🗑️ Eliminar y Restaurar Día Normal
+                    </button>
+                </div>
+            `;
+            return;
+        }
+    }
     if (!fecha) {
         document.getElementById('asistencias-container').innerHTML = `
             <div style="text-align: center; color: #666; padding: 40px;">
@@ -8508,6 +8647,69 @@ function cargarAsistenciasDia() {
     }
 
     document.getElementById('asistencias-container').innerHTML = htmlAsistencias;
+}
+// NUEVAS FUNCIONES PARA DÍAS ESPECIALES
+function marcarDiaAsueto() {
+    const fecha = document.getElementById('fecha-asistencia').value;
+    if (!fecha) {
+        alert('Selecciona una fecha primero');
+        return;
+    }
+    
+    const motivo = prompt('Motivo del asueto:', 'Día festivo nacional - 15 de Septiembre');
+    if (!motivo) return;
+    
+    registrarDiaEspecial(fecha, 'asueto', motivo);
+    cargarAsistenciasDia();
+    alert('✅ Día marcado como asueto. No afectará el historial de asistencias.');
+}
+
+function marcarEmergencia() {
+    const fecha = document.getElementById('fecha-asistencia').value;
+    if (!fecha) {
+        alert('Selecciona una fecha primero');
+        return;
+    }
+    
+    const motivo = prompt('Motivo de la emergencia:', 'Suspensión por clima/emergencia');
+    if (!motivo) return;
+    
+    registrarDiaEspecial(fecha, 'emergencia', motivo);
+    cargarAsistenciasDia();
+    alert('⚠️ Día marcado como emergencia. No afectará el historial de asistencias.');
+}
+
+function registrarDiaEspecial(fecha, tipo, motivo) {
+    if (!sistemaADAMS.diasEspeciales) {
+        sistemaADAMS.diasEspeciales = [];
+    }
+    
+    const existente = sistemaADAMS.diasEspeciales.find(d => d.fecha === fecha);
+    if (existente) {
+        existente.tipo = tipo;
+        existente.motivo = motivo;
+        existente.actualizado = new Date().toISOString();
+    } else {
+        sistemaADAMS.diasEspeciales.push({
+            fecha: fecha,
+            tipo: tipo,
+            motivo: motivo,
+            registrado: new Date().toISOString()
+        });
+    }
+    
+    guardarDatos();
+}
+
+function eliminarDiaEspecial(fecha) {
+    if (confirm('¿Seguro que quieres eliminar este día especial y restaurar el día normal?')) {
+        if (sistemaADAMS.diasEspeciales) {
+            sistemaADAMS.diasEspeciales = sistemaADAMS.diasEspeciales.filter(d => d.fecha !== fecha);
+            guardarDatos();
+            cargarAsistenciasDia();
+            alert('✅ Día especial eliminado. Ahora es un día normal.');
+        }
+    }
 }
 
 function verificarAsistenciasGuardadas(fecha, horario) {
@@ -15513,6 +15715,84 @@ function exportarDatosAlumnos() {
         console.error('Error al exportar datos:', error);
         mostrarNotificacion('❌ Error al exportar los datos de alumnos', 'error');
     }
+}
+// FUNCIONES PARA FILTROS DE MOROSIDAD
+function filtrarMorosidad() {
+    actualizarControlMorosidad();
+}
+
+function limpiarFiltrosMorosidad() {
+    document.getElementById('filtro-estudiante-morosidad').value = '';
+    document.getElementById('filtro-dias-atraso').value = '';
+    document.getElementById('filtro-rango-adeudo').value = '';
+    actualizarControlMorosidad();
+}
+
+function aplicarFiltrosMorosidad(estudiantesMorosos) {
+    const filtroNombre = document.getElementById('filtro-estudiante-morosidad')?.value.toLowerCase().trim() || '';
+    const filtroDias = document.getElementById('filtro-dias-atraso')?.value || '';
+    const filtroMonto = document.getElementById('filtro-rango-adeudo')?.value || '';
+    
+    return estudiantesMorosos.filter(item => {
+        // Filtro por nombre
+        if (filtroNombre) {
+            const nombreCompleto = (item.estudiante.nombre + ' ' + item.estudiante.tutor).toLowerCase();
+            if (!nombreCompleto.includes(filtroNombre)) {
+                return false;
+            }
+        }
+        
+        // Filtro por días de atraso
+        if (filtroDias) {
+            const dias = item.diasAtraso;
+            switch (filtroDias) {
+                case '6-10':
+                    if (dias < 6 || dias > 10) return false;
+                    break;
+                case '11-15':
+                    if (dias < 11 || dias > 15) return false;
+                    break;
+                case '16+':
+                    if (dias <= 15) return false;
+                    break;
+            }
+        }
+        
+        // Filtro por rango de adeudo
+        if (filtroMonto) {
+            const monto = item.montoAdeudado;
+            switch (filtroMonto) {
+                case '0-500':
+                    if (monto < 0 || monto > 500) return false;
+                    break;
+                case '501-1000':
+                    if (monto < 501 || monto > 1000) return false;
+                    break;
+                case '1001-2000':
+                    if (monto < 1001 || monto > 2000) return false;
+                    break;
+                case '2000+':
+                    if (monto <= 2000) return false;
+                    break;
+            }
+        }
+        
+        return true;
+    });
+}
+
+function actualizarContadorMorosidad(filtrados, total) {
+    const contadorFiltrados = document.getElementById('contador-morosidad-filtrados');
+    const contadorTotal = document.getElementById('contador-morosidad-total');
+    if (contadorFiltrados) contadorFiltrados.textContent = filtrados;
+    if (contadorTotal) contadorTotal.textContent = total;
+}
+function obtenerFechaLocalCorrecta() {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
 }
 
 // VERIFICACIÓN DE FUNCIONES AGREGADAS
