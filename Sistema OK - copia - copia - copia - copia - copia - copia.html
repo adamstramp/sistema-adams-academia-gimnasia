@@ -4274,104 +4274,302 @@ if (mensajeBloqueo) {
             document.getElementById('cambio-entregar').value = cambio >= 0 ? `$${cambio.toFixed(2)}` : 'Monto insuficiente';
         }
 
-        function procesarPago(event) {
-            event.preventDefault();
-            
-            const estudianteId = document.getElementById('pago-estudiante').value;
-            const metodoPago = document.querySelector('input[name="metodo-pago"]:checked');
-            const montoRecibido = parseFloat(document.getElementById('monto-recibido').value) || montoTotal;
-            const esEdicion = document.getElementById('form-pago').dataset.editando;
-            
-            if (!estudianteId || !metodoPago) {
-                mostrarNotificacion('Completa todos los campos requeridos', 'error');
-                return;
-            }
-
-            if (carritoConceptos.length === 0) {
-                mostrarNotificacion('Agrega al menos un concepto al carrito', 'error');
-                return;
-            }
-
-            const montoTotal = carritoConceptos.reduce((sum, concepto) => sum + concepto.total, 0);
-            
-            if (montoRecibido < montoTotal) {
-                mostrarNotificacion('El monto recibido es insuficiente', 'error');
-                return;
-            }
-
-            if (esEdicion) {
-                // EDITAR PAGO EXISTENTE
-                const pagoId = parseInt(esEdicion);
-                const pagoIndex = sistemaADAMS.pagos.findIndex(p => p.id === pagoId);
-                
-                if (pagoIndex === -1) {
-                    mostrarNotificacion('Error: Pago no encontrado', 'error');
-                    return;
-                }
-
-                // Restaurar inventario del pago original si era producto
-                const pagoOriginal = sistemaADAMS.pagos[pagoIndex];
-                if (pagoOriginal.concepto === 'producto' && pagoOriginal.producto) {
-                    const producto = sistemaADAMS.productos.find(p => p.id === pagoOriginal.producto.id);
-                    if (producto && pagoOriginal.talla && pagoOriginal.cantidad) {
-                        producto.inventario[pagoOriginal.talla] += pagoOriginal.cantidad;
+// Función para detectar pagos duplicados
+function verificarPagoDuplicado(estudianteId, fechaPago, conceptosCarrito) {
+    // Convertir fecha a formato comparable (solo fecha, sin hora)
+    const fechaPagoStr = new Date(fechaPago + 'T12:00:00').toDateString();
+    
+    // Buscar pagos del mismo día para el mismo estudiante
+    const pagosMismoDia = sistemaADAMS.pagos.filter(pago => {
+        const fechaPagoExistente = new Date(pago.fecha).toDateString();
+        return pago.estudianteId == estudianteId && fechaPagoExistente === fechaPagoStr;
+    });
+    
+    if (pagosMismoDia.length === 0) {
+        return null; // No hay pagos del mismo día
+    }
+    
+    // Verificar si hay conceptos duplicados
+    const conceptosDuplicados = [];
+    
+    conceptosCarrito.forEach(conceptoNuevo => {
+        pagosMismoDia.forEach(pagoExistente => {
+            if (pagoExistente.conceptos && pagoExistente.conceptos.length > 0) {
+                pagoExistente.conceptos.forEach(conceptoExistente => {
+                    // Comparar el tipo de concepto
+                    if (conceptoNuevo.tipo === conceptoExistente.tipo) {
+                        // Para colegiaturas, verificar también el período
+                        if (conceptoNuevo.tipo === 'colegiatura') {
+                            if (conceptoNuevo.mesAplicacion === conceptoExistente.mesAplicacion && 
+                                conceptoNuevo.añoAplicacion === conceptoExistente.añoAplicacion) {
+                                conceptosDuplicados.push({
+                                    concepto: conceptoNuevo,
+                                    pagoExistente: pagoExistente
+                                });
+                            }
+                        } else if (conceptoNuevo.tipo === 'ajuste-colegiatura') {
+                            // Para ajustes, verificar mes y año también
+                            if (conceptoNuevo.mesAplicacion === conceptoExistente.mesAplicacion && 
+                                conceptoNuevo.añoAplicacion === conceptoExistente.añoAplicacion) {
+                                conceptosDuplicados.push({
+                                    concepto: conceptoNuevo,
+                                    pagoExistente: pagoExistente
+                                });
+                            }
+                        } else {
+                            // Para otros conceptos (inscripción, productos, etc.), solo verificar el tipo
+                            conceptosDuplicados.push({
+                                concepto: conceptoNuevo,
+                                pagoExistente: pagoExistente
+                            });
+                        }
                     }
-                }
-
-                // Actualizar el pago
-                const pagoActualizado = crearObjetoPago(estudianteId, metodoPago.value, montoRecibido, montoTotal, pagoId);
-                sistemaADAMS.pagos[pagoIndex] = pagoActualizado;
-                
-                mostrarNotificacion('Pago actualizado exitosamente', 'success');
-            } else {
-                // CREAR NUEVO PAGO
-                const fechaPagoManual = document.getElementById('fecha-pago-manual').value;
-const nuevoPago = crearObjetoPago(estudianteId, metodoPago.value, montoRecibido, montoTotal, null, fechaPagoManual);
-                sistemaADAMS.pagos.push(nuevoPago);
-                
-                mostrarNotificacion('Pago procesado exitosamente', 'success');
+                });
             }
+        });
+    });
+    
+    return conceptosDuplicados.length > 0 ? conceptosDuplicados : null;
+}
 
-            // Actualizar inventario para productos
-            carritoConceptos.forEach(concepto => {
-                if (concepto.tipo === 'producto' && concepto.producto) {
-                    const producto = sistemaADAMS.productos.find(p => p.id === concepto.producto.id);
-                    if (producto && concepto.talla && concepto.cantidad) {
-                        producto.inventario[concepto.talla] -= concepto.cantidad;
-                    }
-                }
-            });
-
-            // Actualizar estado del estudiante
-            const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
-            if (estudiante && carritoConceptos.some(c => c.tipo === 'colegiatura' || c.tipo === 'ajuste-colegiatura')) {
-                estudiante.estado = 'activo';
-                estudiante.ultimoPago = new Date().toISOString();
-            }
-
-            // Guardar y actualizar
-guardarDatos();
-
-// El recibo se puede generar desde el botón "Reimprimir" en el historial de pagos
-// const pagoParaRecibo = esEdicion ? 
-//     sistemaADAMS.pagos.find(p => p.id === parseInt(esEdicion)) :
-//     sistemaADAMS.pagos[sistemaADAMS.pagos.length - 1];
-// mostrarRecibo(pagoParaRecibo);
-mostrarNotificacion(esEdicion ? 
-    'Pago actualizado exitosamente' : 
-    'Pago registrado exitosamente - Puedes reimprimir el recibo desde el historial', 
-    'success');
-
-// Actualizar tablas
-actualizarTablaPagos();
-actualizarTablaEstudiantes();
-actualizarDashboard();
-
-// Actualizar reportes financieros automáticamente
-generarReporteFinanciero();
-
-ocultarFormularioPago();
+// Función para mostrar el modal de confirmación de duplicado
+function mostrarConfirmacionDuplicado(duplicados, callback) {
+    const estudianteId = document.getElementById('pago-estudiante').value;
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+    const fecha = document.getElementById('fecha-pago-manual').value;
+    
+    let mensaje = `⚠️ POSIBLE PAGO DUPLICADO DETECTADO\n\n`;
+    mensaje += `Estudiante: ${estudiante ? estudiante.nombre : 'N/A'}\n`;
+    mensaje += `Fecha: ${new Date(fecha).toLocaleDateString()}\n\n`;
+    mensaje += `Se encontraron los siguientes conceptos duplicados:\n\n`;
+    
+    duplicados.forEach((dup, index) => {
+        const nombreConcepto = obtenerNombreConcepto(dup.concepto.tipo);
+        mensaje += `${index + 1}. ${nombreConcepto}\n`;
+        if (dup.concepto.descripcionMes) {
+            mensaje += `   Período: ${dup.concepto.descripcionMes}\n`;
         }
+        mensaje += `   Monto: $${dup.concepto.total || dup.concepto.monto}\n`;
+        mensaje += `   Ya pagado el: ${new Date(dup.pagoExistente.fecha).toLocaleDateString()}\n\n`;
+    });
+    
+    mensaje += `¿Deseas proceder con este pago de todas formas?\n\n`;
+    mensaje += `• ACEPTAR: Procesar el pago (permitir duplicado)\n`;
+    mensaje += `• CANCELAR: No procesar el pago`;
+    
+    if (confirm(mensaje)) {
+        callback(true); // Proceder con el pago
+    } else {
+        callback(false); // No procesar el pago
+    }
+}
+
+// Función para detectar pagos duplicados
+function verificarPagoDuplicado(estudianteId, fechaPago, conceptosCarrito) {
+    // Convertir fecha a formato comparable (solo fecha, sin hora)
+    const fechaPagoStr = new Date(fechaPago + 'T12:00:00').toDateString();
+    
+    // Buscar pagos del mismo día para el mismo estudiante
+    const pagosMismoDia = sistemaADAMS.pagos.filter(pago => {
+        const fechaPagoExistente = new Date(pago.fecha).toDateString();
+        return pago.estudianteId == estudianteId && fechaPagoExistente === fechaPagoStr;
+    });
+    
+    if (pagosMismoDia.length === 0) {
+        return null; // No hay pagos del mismo día
+    }
+    
+    // Verificar si hay conceptos duplicados
+    const conceptosDuplicados = [];
+    
+    conceptosCarrito.forEach(conceptoNuevo => {
+        pagosMismoDia.forEach(pagoExistente => {
+            if (pagoExistente.conceptos && pagoExistente.conceptos.length > 0) {
+                pagoExistente.conceptos.forEach(conceptoExistente => {
+                    // Comparar el tipo de concepto
+                    if (conceptoNuevo.tipo === conceptoExistente.tipo) {
+                        // Para colegiaturas, verificar también el período
+                        if (conceptoNuevo.tipo === 'colegiatura') {
+                            if (conceptoNuevo.mesAplicacion === conceptoExistente.mesAplicacion && 
+                                conceptoNuevo.añoAplicacion === conceptoExistente.añoAplicacion) {
+                                conceptosDuplicados.push({
+                                    concepto: conceptoNuevo,
+                                    pagoExistente: pagoExistente
+                                });
+                            }
+                        } else if (conceptoNuevo.tipo === 'ajuste-colegiatura') {
+                            // Para ajustes, verificar mes y año también
+                            if (conceptoNuevo.mesAplicacion === conceptoExistente.mesAplicacion && 
+                                conceptoNuevo.añoAplicacion === conceptoExistente.añoAplicacion) {
+                                conceptosDuplicados.push({
+                                    concepto: conceptoNuevo,
+                                    pagoExistente: pagoExistente
+                                });
+                            }
+                        } else {
+                            // Para otros conceptos (inscripción, productos, etc.), solo verificar el tipo
+                            conceptosDuplicados.push({
+                                concepto: conceptoNuevo,
+                                pagoExistente: pagoExistente
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    return conceptosDuplicados.length > 0 ? conceptosDuplicados : null;
+}
+
+// Función para mostrar el modal de confirmación de duplicado
+function mostrarConfirmacionDuplicado(duplicados, callback) {
+    const estudianteId = document.getElementById('pago-estudiante').value;
+    const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+    const fecha = document.getElementById('fecha-pago-manual').value;
+    
+    let mensaje = `⚠️ POSIBLE PAGO DUPLICADO DETECTADO\n\n`;
+    mensaje += `Estudiante: ${estudiante ? estudiante.nombre : 'N/A'}\n`;
+    mensaje += `Fecha: ${new Date(fecha).toLocaleDateString()}\n\n`;
+    mensaje += `Se encontraron los siguientes conceptos duplicados:\n\n`;
+    
+    duplicados.forEach((dup, index) => {
+        const nombreConcepto = obtenerNombreConcepto(dup.concepto.tipo);
+        mensaje += `${index + 1}. ${nombreConcepto}\n`;
+        if (dup.concepto.descripcionMes) {
+            mensaje += `   Período: ${dup.concepto.descripcionMes}\n`;
+        }
+        mensaje += `   Monto: $${dup.concepto.total || dup.concepto.monto}\n`;
+        mensaje += `   Ya pagado el: ${new Date(dup.pagoExistente.fecha).toLocaleDateString()}\n\n`;
+    });
+    
+    mensaje += `¿Deseas proceder con este pago de todas formas?\n\n`;
+    mensaje += `• ACEPTAR: Procesar el pago (permitir duplicado)\n`;
+    mensaje += `• CANCELAR: No procesar el pago`;
+    
+    if (confirm(mensaje)) {
+        callback(true); // Proceder con el pago
+    } else {
+        callback(false); // No procesar el pago
+    }
+}
+
+function procesarPago(event) {
+    event.preventDefault();
+    
+    const estudianteId = document.getElementById('pago-estudiante').value;
+    const metodoPago = document.querySelector('input[name="metodo-pago"]:checked');
+    const montoRecibido = parseFloat(document.getElementById('monto-recibido').value) || montoTotal;
+    const esEdicion = document.getElementById('form-pago').dataset.editando;
+    const fechaPagoManual = document.getElementById('fecha-pago-manual').value;
+    
+    if (!estudianteId || !metodoPago) {
+        mostrarNotificacion('Completa todos los campos requeridos', 'error');
+        return;
+    }
+
+    if (carritoConceptos.length === 0) {
+        mostrarNotificacion('Agrega al menos un concepto al carrito', 'error');
+        return;
+    }
+
+    // NUEVA VERIFICACIÓN DE PAGOS DUPLICADOS (solo para pagos nuevos, no ediciones)
+    if (!esEdicion && fechaPagoManual) {
+        const duplicados = verificarPagoDuplicado(estudianteId, fechaPagoManual, carritoConceptos);
+        
+        if (duplicados) {
+            // Mostrar confirmación de duplicado y detener el proceso hasta la respuesta
+            mostrarConfirmacionDuplicado(duplicados, function(proceder) {
+                if (proceder) {
+                    // El usuario confirmó proceder con el pago duplicado
+                    continuarProcesoPago();
+                }
+                // Si no procede, simplemente no hace nada (se queda en el formulario)
+            });
+            return; // Importante: detener la ejecución aquí
+        }
+    }
+
+    // Si no hay duplicados o es una edición, continuar normalmente
+    continuarProcesoPago();
+
+    // Función interna para continuar con el proceso de pago
+    function continuarProcesoPago() {
+        const montoTotal = carritoConceptos.reduce((sum, concepto) => sum + concepto.total, 0);
+        
+        if (montoRecibido < montoTotal) {
+            mostrarNotificacion('El monto recibido es insuficiente', 'error');
+            return;
+        }
+
+        if (esEdicion) {
+            // EDITAR PAGO EXISTENTE
+            const pagoId = parseInt(esEdicion);
+            const pagoIndex = sistemaADAMS.pagos.findIndex(p => p.id === pagoId);
+            
+            if (pagoIndex === -1) {
+                mostrarNotificacion('Error: Pago no encontrado', 'error');
+                return;
+            }
+
+            // Restaurar inventario del pago original si era producto
+            const pagoOriginal = sistemaADAMS.pagos[pagoIndex];
+            if (pagoOriginal.concepto === 'producto' && pagoOriginal.producto) {
+                const producto = sistemaADAMS.productos.find(p => p.id === pagoOriginal.producto.id);
+                if (producto && pagoOriginal.talla && pagoOriginal.cantidad) {
+                    producto.inventario[pagoOriginal.talla] += pagoOriginal.cantidad;
+                }
+            }
+
+            // Actualizar el pago
+            const pagoActualizado = crearObjetoPago(estudianteId, metodoPago.value, montoRecibido, montoTotal, pagoId);
+            sistemaADAMS.pagos[pagoIndex] = pagoActualizado;
+            
+            mostrarNotificacion('Pago actualizado exitosamente', 'success');
+        } else {
+            // CREAR NUEVO PAGO
+            const nuevoPago = crearObjetoPago(estudianteId, metodoPago.value, montoRecibido, montoTotal, null, fechaPagoManual);
+            sistemaADAMS.pagos.push(nuevoPago);
+            
+            mostrarNotificacion('Pago procesado exitosamente', 'success');
+        }
+
+        // Actualizar inventario para productos
+        carritoConceptos.forEach(concepto => {
+            if (concepto.tipo === 'producto' && concepto.producto) {
+                const producto = sistemaADAMS.productos.find(p => p.id === concepto.producto.id);
+                if (producto && concepto.talla && concepto.cantidad) {
+                    producto.inventario[concepto.talla] -= concepto.cantidad;
+                }
+            }
+        });
+
+        // Actualizar estado del estudiante
+        const estudiante = sistemaADAMS.estudiantes.find(e => e.id == estudianteId);
+        if (estudiante && carritoConceptos.some(c => c.tipo === 'colegiatura' || c.tipo === 'ajuste-colegiatura')) {
+            estudiante.estado = 'activo';
+            estudiante.ultimoPago = new Date().toISOString();
+        }
+
+        // Guardar y actualizar
+        guardarDatos();
+
+        mostrarNotificacion(esEdicion ? 
+            'Pago actualizado exitosamente' : 
+            'Pago registrado exitosamente - Puedes reimprimir el recibo desde el historial', 
+            'success');
+
+        // Actualizar tablas
+        actualizarTablaPagos();
+        actualizarTablaEstudiantes();
+        actualizarDashboard();
+
+        // Actualizar reportes financieros automáticamente
+        generarReporteFinanciero();
+
+        ocultarFormularioPago();
+    }
+}
 
 function crearObjetoPago(estudianteId, metodoPago, montoRecibido, montoTotal, pagoId = null, fechaManual = null) {
     // AGREGAR: Buscar datos del estudiante
@@ -4931,6 +5129,7 @@ function imprimirRecibo() {
     }
 }
 
+
         function actualizarTablaPagos() {
     const tbody = document.getElementById('tabla-pagos');
     
@@ -5023,17 +5222,36 @@ function aplicarFiltrosPagos() {
     const filtroMetodo = document.getElementById('filtro-metodo-pago')?.value || '';
     
     return sistemaADAMS.pagos.filter(pago => {
-        // Filtro por estudiante
+        // Filtro por estudiante (buscar en nombre y tutor)
         if (filtroEstudiante) {
-            const estudiante = sistemaADAMS.estudiantes.find(e => e.id === pago.estudianteId);
-            if (!estudiante || !estudiante.nombre.toLowerCase().includes(filtroEstudiante)) {
+            const estudiante = sistemaADAMS.estudiantes.find(e => e.id == pago.estudianteId); // Cambié === por ==
+            const nombreEstudiante = (pago.estudianteNombre || (estudiante ? estudiante.nombre : '')).toLowerCase();
+            const tutorEstudiante = (pago.estudianteTutor || (estudiante ? estudiante.tutor : '')).toLowerCase();
+            
+            // Buscar en nombre del estudiante O en nombre del tutor
+            const encontrado = nombreEstudiante.includes(filtroEstudiante) || tutorEstudiante.includes(filtroEstudiante);
+            if (!encontrado) {
                 return false;
             }
         }
         
-        // Filtro por concepto
-        if (filtroConcepto && pago.concepto !== filtroConcepto) {
-            return false;
+        // Filtro por concepto (mejorado para pagos múltiples)
+        if (filtroConcepto) {
+            let coincide = false;
+            
+            // Verificar concepto principal
+            if (pago.concepto === filtroConcepto) {
+                coincide = true;
+            }
+            
+            // Verificar en conceptos múltiples
+            if (pago.conceptos && pago.conceptos.length > 0) {
+                coincide = pago.conceptos.some(c => c.tipo === filtroConcepto);
+            }
+            
+            if (!coincide) {
+                return false;
+            }
         }
         
         // Filtro por método
