@@ -753,6 +753,65 @@
     </style>
 </head>
 <body>
+    <!-- ✅ BUSCA ESTA LÍNEA EXACTA: -->
+<body>
+
+<!-- 🔥 PEGA AQUÍ JUSTO DESPUÉS DE <body>: -->
+<script>
+// ==========================================
+// FUNCIÓN UNIVERSAL PARA FORMATEAR NÚMEROS
+// ==========================================
+
+/**
+ * Formatea números con comas separadoras de miles y símbolo de peso mexicano
+ * @param {number|string} numero - El número a formatear
+ * @param {boolean} incluirSimbolo - Si incluir el símbolo $ (default: true)
+ * @param {number} decimales - Número de decimales a mostrar (default: 2)
+ * @returns {string} - Número formateado con comas
+ */
+function formatearNumero(numero, incluirSimbolo = true, decimales = 2) {
+    // Convertir a número si es string
+    const num = typeof numero === 'string' ? parseFloat(numero) : numero;
+    
+    // Verificar si es un número válido
+    if (isNaN(num)) return incluirSimbolo ? '$0.00' : '0.00';
+    
+    // Formatear con locale mexicano
+    const numeroFormateado = num.toLocaleString('es-MX', {
+        minimumFractionDigits: decimales,
+        maximumFractionDigits: decimales
+    });
+    
+    return incluirSimbolo ? `$${numeroFormateado}` : numeroFormateado;
+}
+
+/**
+ * Formatea números enteros (sin decimales) para contadores
+ * @param {number|string} numero - El número a formatear
+ * @returns {string} - Número formateado sin decimales
+ */
+function formatearContador(numero) {
+    const num = typeof numero === 'string' ? parseInt(numero) : numero;
+    if (isNaN(num)) return '0';
+    
+    return num.toLocaleString('es-MX');
+}
+
+/**
+ * Formatea porcentajes
+ * @param {number} numero - El número a formatear como porcentaje
+ * @param {number} decimales - Decimales a mostrar (default: 1)
+ * @returns {string} - Porcentaje formateado
+ */
+function formatearPorcentaje(numero, decimales = 1) {
+    const num = typeof numero === 'string' ? parseFloat(numero) : numero;
+    if (isNaN(num)) return '0%';
+    
+    return `${num.toFixed(decimales)}%`;
+}
+</script>
+
+<!-- ✅ DESPUÉS DE PEGAR LAS FUNCIONES, DEBE SEGUIR: -->
     <div class="container">
         <header class="header">
             <h1 id="header-nombre-academia">Academia de Gimnasia ADAMS</h1>
@@ -4651,52 +4710,87 @@ if (montoRecibido < montoTotal) {
     if (!sistemaADAMS.pagos || sistemaADAMS.pagos.length === 0) return null;
     
     const pagosEstudiante = sistemaADAMS.pagos
-        .filter(p => p.estudianteId === estudianteId && 
+        .filter(p => p.estudianteId == estudianteId && 
                     (p.concepto === 'colegiatura' || p.concepto === 'ajuste-colegiatura'))
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     
     return pagosEstudiante.length > 0 ? pagosEstudiante[0] : null;
 }
 
-        function calcularDiasSinPagar(ultimoPago, estudiante) {
-            const hoy = new Date();
-            const diaActual = hoy.getDate();
-            
-            // Si no hay último pago, usar fecha de registro del estudiante
-            if (!ultimoPago) {
-                if (!estudiante || !estudiante.fechaRegistro) {
-                    // Si es estudiante nuevo sin fecha de registro, asumir que se inscribió hoy
-                    // Los primeros 5 días del mes están en tiempo
-                    return diaActual > 5 ? diaActual - 5 : 0;
-                }
-                
-                const fechaRegistro = new Date(estudiante.fechaRegistro);
-                const mesRegistro = fechaRegistro.getMonth();
-                const añoRegistro = fechaRegistro.getFullYear();
-                
-                // Si se registró en el mes actual, calcular desde el día 5 del mes
-                if (mesRegistro === hoy.getMonth() && añoRegistro === hoy.getFullYear()) {
-                    return diaActual > 5 ? diaActual - 5 : 0;
-                } else {
-                    // Si se registró en un mes anterior, calcular normalmente
-                    const diferencia = hoy - fechaRegistro;
-                    return Math.floor(diferencia / (1000 * 60 * 60 * 24));
-                }
-            }
-            
-            // Si hay último pago, calcular desde la fecha del último pago
-            const fechaUltimoPago = new Date(ultimoPago.fecha);
-            const diferencia = hoy - fechaUltimoPago;
-            const diasTranscurridos = Math.floor(diferencia / (1000 * 60 * 60 * 24));
-            
-            // Si el último pago fue este mes, considerar los primeros 5 días como válidos
-            if (fechaUltimoPago.getMonth() === hoy.getMonth() && 
-                fechaUltimoPago.getFullYear() === hoy.getFullYear()) {
-                return diaActual > 5 ? diaActual - 5 : 0;
-            }
-            
-            return diasTranscurridos;
+        // ✅ NUEVA FUNCIÓN: Verificar si ya pagó el mes actual
+function tienePagoDelMesActual(estudianteId) {
+    if (!sistemaADAMS.pagos || sistemaADAMS.pagos.length === 0) return false;
+    
+    const hoy = new Date();
+    const mesActual = hoy.getMonth(); // 0-11
+    const añoActual = hoy.getFullYear();
+    
+    // Buscar pagos del estudiante del mes actual con colegiatura
+    const pagoEncontrado = sistemaADAMS.pagos.find(pago => {
+        // Verificar ID
+        if (pago.estudianteId != estudianteId) return false;
+        
+        // Verificar mes y año
+        let esMesActual = false;
+        if (pago.mesAplicacion && pago.añoAplicacion) {
+            esMesActual = (pago.mesAplicacion - 1) === mesActual && pago.añoAplicacion === añoActual;
+        } else {
+            const fechaPago = new Date(pago.fecha);
+            esMesActual = fechaPago.getMonth() === mesActual && fechaPago.getFullYear() === añoActual;
         }
+        
+        if (!esMesActual) return false;
+        
+        // VERIFICAR CONCEPTO DE COLEGIATURA (AMBOS CASOS):
+        
+        // CASO 1: Pago simple
+        if (pago.concepto && (pago.concepto === 'colegiatura' || pago.concepto === 'ajuste-colegiatura')) {
+            return true;
+        }
+        
+        // CASO 2: Pago múltiple
+        if (pago.conceptos && Array.isArray(pago.conceptos)) {
+            return pago.conceptos.some(concepto => 
+                concepto.tipo === 'colegiatura' || concepto.tipo === 'ajuste-colegiatura'
+            );
+        }
+        
+        return false;
+    });
+    
+    return pagoEncontrado ? true : false;
+}
+
+// ✅ FUNCIÓN REEMPLAZADA: Nueva lógica de cálculo de días
+function calcularDiasSinPagar(ultimoPago, estudiante) {
+    const hoy = new Date();
+    const diaActual = hoy.getDate();
+    
+    // LÓGICA PRINCIPAL: Si ya pagó el mes actual, no es moroso
+    if (tienePagoDelMesActual(estudiante.id)) {
+        return 0; // No es moroso, ya pagó este mes
+    }
+    
+    // Si no ha pagado el mes actual, verificar si ya pasaron los 5 días de gracia
+    if (diaActual <= 5) {
+        return 0; // Aún está en los primeros 5 días, no es moroso
+    }
+    
+    // Ya pasaron los 5 días de gracia y no ha pagado = ES MOROSO
+    return diaActual - 5; // Días de atraso desde el día 6
+}
+
+// ✅ FUNCIÓN AUXILIAR MEJORADA: Obtener último pago (ya corregida anteriormente)
+function obtenerUltimoPago(estudianteId) {
+    if (!sistemaADAMS.pagos || sistemaADAMS.pagos.length === 0) return null;
+    
+    const pagosEstudiante = sistemaADAMS.pagos
+        .filter(p => p.estudianteId == estudianteId && 
+                    (p.concepto === 'colegiatura' || p.concepto === 'ajuste-colegiatura'))
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    return pagosEstudiante.length > 0 ? pagosEstudiante[0] : null;
+}
 
         // PASO 3: REEMPLAZAR LA FUNCIÓN mostrarRecibo EXISTENTE CON ESTA
 
@@ -7530,10 +7624,12 @@ function actualizarControlMorosidad() {
     // APLICAR FILTROS
     const estudiantesFiltrados = aplicarFiltrosMorosidad(estudiantesMorosos);
 
+    // ✨ CAMBIOS PRINCIPALES - APLICAR FORMATO A ESTADÍSTICAS:
+    
     // Actualizar estadísticas generales (sin filtros)
-    document.getElementById('total-morosos').textContent = estudiantesMorosos.length;
-    document.getElementById('total-adeudo').textContent = `$${totalAdeudo.toLocaleString()}`;
-    document.getElementById('inactivos-por-pago').textContent = inactivosPorPago;
+    document.getElementById('total-morosos').textContent = formatearContador(estudiantesMorosos.length);
+    document.getElementById('total-adeudo').textContent = formatearNumero(totalAdeudo);
+    document.getElementById('inactivos-por-pago').textContent = formatearContador(inactivosPorPago);
 
     // Actualizar contador
     actualizarContadorMorosidad(estudiantesFiltrados.length, estudiantesMorosos.length);
@@ -7557,7 +7653,14 @@ function actualizarControlMorosidad() {
     }
 
     // Ordenar por días de atraso (mayor a menor)
-    const estudiantesOrdenados = estudiantesFiltrados.sort((a, b) => b.diasAtraso - a.diasAtraso);
+    const estudiantesOrdenados = estudiantesFiltrados.sort((a, b) => {
+    // Primer criterio: Mayor días de atraso primero
+    if (b.diasAtraso !== a.diasAtraso) {
+        return b.diasAtraso - a.diasAtraso;
+    }
+    // Segundo criterio: Orden alfabético por nombre
+    return a.estudiante.nombre.localeCompare(b.estudiante.nombre, 'es', { sensitivity: 'base' });
+});
 
     tbody.innerHTML = estudiantesOrdenados.map(item => {
         const fechaUltimoPago = item.ultimoPago ? 
@@ -7577,14 +7680,14 @@ function actualizarControlMorosidad() {
                 <td>${fechaUltimoPago}</td>
                 <td>
                     <strong style="color: ${item.diasAtraso > 15 ? '#dc3545' : item.diasAtraso > 10 ? '#ff9800' : '#f57c00'};">
-                        ${item.diasAtraso} días
+                        ${formatearContador(item.diasAtraso)} días
                     </strong>
                 </td>
                 <td style="font-weight: bold; color: #dc3545;">
-                    $${item.montoAdeudado.toLocaleString()}
+                    ${formatearNumero(item.montoAdeudado)}
                 </td>
                 <td style="font-weight: bold; color: #ff9800;">
-                    $${item.recargo.toLocaleString()}
+                    ${formatearNumero(item.recargo)}
                 </td>
                 <td>${estadoBadge}</td>
                 <td>
@@ -8126,7 +8229,7 @@ function calcularResumenFinanciero(pagos, tipo) {
     };
 }
 
-        function mostrarResumenFinanciero(resumen, periodo) {
+function mostrarResumenFinanciero(resumen, periodo) {
     const container = document.getElementById('resumen-financiero');
     
     // Calcular ingresos por cada concepto personalizado
@@ -8210,17 +8313,21 @@ function calcularResumenFinanciero(pagos, tipo) {
         return `
             <div style="text-align: center; padding: 15px; background: ${bg}; border-radius: 10px;">
                 <h4 style="color: ${color}; font-size: 14px; margin-bottom: 8px;">${datos.nombre}</h4>
-                <div style="font-size: 20px; font-weight: bold; color: ${color};">$${datos.total.toFixed(2)}</div>
-                <small style="color: ${color}; opacity: 0.8;">${datos.cantidad} pago${datos.cantidad !== 1 ? 's' : ''}</small>
+                <div style="font-size: 20px; font-weight: bold; color: ${color};">${formatearNumero(datos.total)}</div>
+                <small style="color: ${color}; opacity: 0.8;">${formatearContador(datos.cantidad)} pago${datos.cantidad !== 1 ? 's' : ''}</small>
             </div>
         `;
     }).join('');
+    
+    // ✨ CAMBIO IMPORTANTE: Calcular promedio por pago con mejor control
+    const totalPagos = conceptosAMostrar.reduce((sum, [_, datos]) => sum + datos.cantidad, 0);
+    const promedioPorPago = totalPagos > 0 ? totalIngresos / totalPagos : 0;
     
     container.innerHTML = `
         <!-- Tarjeta de total general -->
         <div style="grid-column: 1 / -1; text-align: center; padding: 20px; background: linear-gradient(135deg, #9c27b0, #e91e63); border-radius: 15px; margin-bottom: 20px;">
             <h3 style="color: white; margin-bottom: 10px;">💰 INGRESOS TOTALES</h3>
-            <div style="font-size: 36px; font-weight: bold; color: white;">$${totalIngresos.toFixed(2)}</div>
+            <div style="font-size: 36px; font-weight: bold; color: white;">${formatearNumero(totalIngresos)}</div>
         </div>
         
         <!-- Grid de conceptos -->
@@ -8233,10 +8340,10 @@ function calcularResumenFinanciero(pagos, tipo) {
             <h4>📊 Estadísticas del Período</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
                 <div>
-                    <strong>Cantidad total de pagos:</strong> ${conceptosAMostrar.reduce((sum, [_, datos]) => sum + datos.cantidad, 0)}
+                    <strong>Cantidad total de pagos:</strong> ${formatearContador(totalPagos)}
                 </div>
                 <div>
-                    <strong>Promedio por pago:</strong> $${totalIngresos > 0 ? (totalIngresos / conceptosAMostrar.reduce((sum, [_, datos]) => sum + datos.cantidad, 0)).toFixed(2) : '0.00'}
+                    <strong>Promedio por pago:</strong> ${formatearNumero(promedioPorPago)}
                 </div>
                 <div>
                     <strong>Concepto más rentable:</strong> ${conceptosAMostrar.length > 0 ? conceptosAMostrar[0][1].nombre : 'N/A'}
@@ -10817,7 +10924,7 @@ function getEstatusBadge(estatus) {
     }
 }
 
-       function actualizarDashboard() {
+function actualizarDashboard() {
     console.log("Actualizando Dashboard...");
     
     // Verificar que sistemaADAMS esté disponible
@@ -10864,24 +10971,26 @@ function getEstatusBadge(estatus) {
     const elementoIngresosMes = document.getElementById('ingresos-mes');
     const elementoEstudiantesPendientes = document.getElementById('estudiantes-pendientes');
     
-    // Actualizar primera tarjeta (solo activos)
+    // ✨ CAMBIOS PRINCIPALES - APLICAR FORMATO:
+    
+    // Actualizar primera tarjeta (solo activos) - SIN decimales para contadores
     if (elementoTotalEstudiantes) {
-        elementoTotalEstudiantes.textContent = totalActivos;
+        elementoTotalEstudiantes.textContent = formatearContador(totalActivos);
     }
     
-    // Actualizar segunda tarjeta (entrenadores)
+    // Actualizar segunda tarjeta (entrenadores) - SIN decimales para contadores  
     if (elementoTotalEntrenadores) {
-        elementoTotalEntrenadores.textContent = entrenadoresActivos;
+        elementoTotalEntrenadores.textContent = formatearContador(entrenadoresActivos);
     }
     
-    // Actualizar tercera tarjeta (ingresos)
+    // Actualizar tercera tarjeta (ingresos) - CON formato de dinero completo
     if (elementoIngresosMes) {
-        elementoIngresosMes.textContent = `$${ingresosMes.toLocaleString()}`;
+        elementoIngresosMes.textContent = formatearNumero(ingresosMes);
     }
     
-    // Actualizar cuarta tarjeta (pendientes)
+    // Actualizar cuarta tarjeta (pendientes) - SIN decimales para contadores
     if (elementoEstudiantesPendientes) {
-        elementoEstudiantesPendientes.textContent = totalPendientes;
+        elementoEstudiantesPendientes.textContent = formatearContador(totalPendientes);
     }
     
     // Actualizar etiquetas
@@ -12924,13 +13033,14 @@ function actualizarTodosLosReportes() {
 }
 
 // Función para actualizar estadísticas generales
+// Función para actualizar estadísticas generales
 function actualizarEstadisticasGenerales() {
     const totalEstudiantes = sistemaADAMS.estudiantes.length;
     const estudiantesActivos = sistemaADAMS.estudiantes.filter(e => (e.estatus || 'activo') === 'activo').length;
     
     // Calcular nivel de ocupación
     const capacidadTotal = sistemaADAMS.entrenadores.reduce((total, entrenador) => {
-        const horasSemanales = entrenador.horarios.length;
+        const horasSemanales = entrenador.horarios ? entrenador.horarios.length : 0;
         return total + (horasSemanales * 10); // 10 estudiantes por hora promedio
     }, 0);
     
@@ -12938,13 +13048,38 @@ function actualizarEstadisticasGenerales() {
     
     // Calcular ingresos totales históricos
     const ingresosTotales = sistemaADAMS.pagos ? 
-        sistemaADAMS.pagos.reduce((total, pago) => total + pago.montoTotal, 0) : 0;
+        sistemaADAMS.pagos.reduce((total, pago) => total + (pago.montoTotal || 0), 0) : 0;
     
-    // Actualizar elementos
-    document.getElementById('reporte-total-estudiantes').textContent = totalEstudiantes;
-    document.getElementById('reporte-estudiantes-activos').textContent = estudiantesActivos;
-    document.getElementById('reporte-ocupacion').textContent = nivelOcupacion + '%';
-    document.getElementById('reporte-ingresos-totales').textContent = '$' + ingresosTotales.toLocaleString();
+    // ✨ CAMBIOS PRINCIPALES - APLICAR FORMATO A TODOS LOS ELEMENTOS:
+    
+    // Actualizar elementos con formato apropiado
+    const elementoTotalEstudiantes = document.getElementById('reporte-total-estudiantes');
+    const elementoEstudiantesActivos = document.getElementById('reporte-estudiantes-activos');
+    const elementoOcupacion = document.getElementById('reporte-ocupacion');
+    const elementoIngresosTotales = document.getElementById('reporte-ingresos-totales');
+    
+    if (elementoTotalEstudiantes) {
+        elementoTotalEstudiantes.textContent = formatearContador(totalEstudiantes);
+    }
+    
+    if (elementoEstudiantesActivos) {
+        elementoEstudiantesActivos.textContent = formatearContador(estudiantesActivos);
+    }
+    
+    if (elementoOcupacion) {
+        elementoOcupacion.textContent = formatearPorcentaje(nivelOcupacion, 0);
+    }
+    
+    if (elementoIngresosTotales) {
+        elementoIngresosTotales.textContent = formatearNumero(ingresosTotales);
+    }
+    
+    console.log('📊 Estadísticas actualizadas:', {
+        total: totalEstudiantes,
+        activos: estudiantesActivos, 
+        ocupacion: nivelOcupacion + '%',
+        ingresos: formatearNumero(ingresosTotales)
+    });
 }
 
 // Función para generar gráfico de disciplinas
@@ -15344,20 +15479,21 @@ function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, t
         day: 'numeric' 
     });
     
+    // ✨ CAMBIO PRINCIPAL - APLICAR FORMATO AL TOTAL PRINCIPAL:
     let html = `
         <div style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
             <h4 style="margin-bottom: 15px;">📊 Reporte Período Personalizado</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
                 <div>
-                    <div style="font-size: 24px; font-weight: bold;">${dias}</div>
+                    <div style="font-size: 24px; font-weight: bold;">${formatearContador(dias)}</div>
                     <div style="opacity: 0.9; font-size: 14px;">Días</div>
                 </div>
                 <div>
-                    <div style="font-size: 24px; font-weight: bold;">${totalPagos}</div>
+                    <div style="font-size: 24px; font-weight: bold;">${formatearContador(totalPagos)}</div>
                     <div style="opacity: 0.9; font-size: 14px;">Pagos</div>
                 </div>
                 <div>
-                    <div style="font-size: 24px; font-weight: bold;">$${resumen.totalIngresos.toLocaleString()}</div>
+                    <div style="font-size: 24px; font-weight: bold;">${formatearNumero(resumen.totalIngresos)}</div>
                     <div style="opacity: 0.9; font-size: 14px;">Total</div>
                 </div>
             </div>
@@ -15375,17 +15511,18 @@ function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, t
                 <div style="display: grid; gap: 10px;">
         `;
         
+        // ✨ CAMBIO IMPORTANTE - FORMATEAR CADA MONTO EN EL DESGLOSE:
         Object.entries(resumen.ingresosPorConcepto).forEach(([concepto, datos]) => {
             if (datos.total > 0) {
                 const porcentaje = ((datos.total / resumen.totalIngresos) * 100).toFixed(1);
                 html += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
                         <div>
-                            <strong>${concepto}</strong> <small style="color: #666;">(${datos.cantidad} pagos)</small>
+                            <strong>${concepto}</strong> <small style="color: #666;">(${formatearContador(datos.cantidad)} pagos)</small>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-weight: bold; color: #9c27b0;">$${datos.total.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #666;">${porcentaje}%</div>
+                            <div style="font-weight: bold; color: #9c27b0;">${formatearNumero(datos.total)}</div>
+                            <div style="font-size: 12px; color: #666;">${formatearPorcentaje(porcentaje)}</div>
                         </div>
                     </div>
                 `;
@@ -15397,16 +15534,18 @@ function mostrarResumenFinancieroPersonalizado(resumen, fechaInicio, fechaFin, t
             </div>
         `;
         
+        // ✨ CAMBIO IMPORTANTE - FORMATEAR PROMEDIOS Y ESTADÍSTICAS:
         // Promedio diario si es más de 1 día
         if (dias > 1) {
             const promedioDiario = resumen.totalIngresos / dias;
+            const pagosPorDia = totalPagos / dias;
             html += `
                 <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 10px; padding: 15px;">
                     <h5 style="color: #2e7d32; margin-bottom: 10px;">📈 Estadísticas del Período</h5>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <strong>Promedio diario:</strong> $${promedioDiario.toLocaleString()}<br>
-                            <strong>Pagos por día:</strong> ${(totalPagos / dias).toFixed(1)}
+                            <strong>Promedio diario:</strong> ${formatearNumero(promedioDiario)}<br>
+                            <strong>Pagos por día:</strong> ${pagosPorDia.toFixed(1)}
                         </div>
                         <div>
                             <strong>Mayor ingreso día:</strong> Calculando...<br>
