@@ -3677,7 +3677,7 @@ function debugFormularioEstudiante() {
     } else {
         // CREAR NUEVO ESTUDIANTE
         const nuevoEstudiante = {
-            id: Date.now(),
+            id: Date.now() + Math.random(),
             nombre: formatearNombrePropio(nombre),
             edad: edad,
             fechaNacimiento: fechaNacimiento,
@@ -4518,7 +4518,8 @@ function procesarPago(event) {
     
     const estudianteId = document.getElementById('pago-estudiante').value;
     const metodoPago = document.querySelector('input[name="metodo-pago"]:checked');
-    const montoRecibido = parseFloat(document.getElementById('monto-recibido').value) || montoTotal;
+    const montoTotal = carritoConceptos.reduce((sum, concepto) => sum + concepto.total, 0);
+const montoRecibido = parseFloat(document.getElementById('monto-recibido').value) || montoTotal;
     const esEdicion = document.getElementById('form-pago').dataset.editando;
     const fechaPagoManual = document.getElementById('fecha-pago-manual').value;
     
@@ -4556,7 +4557,7 @@ function procesarPago(event) {
     function continuarProcesoPago() {
         const montoTotal = carritoConceptos.reduce((sum, concepto) => sum + concepto.total, 0);
         
-        if (montoRecibido < montoTotal) {
+        if (montoRecibido < montoTotal && montoTotal > 0) {
             mostrarNotificacion('El monto recibido es insuficiente', 'error');
             return;
         }
@@ -4636,7 +4637,7 @@ function crearObjetoPago(estudianteId, metodoPago, montoRecibido, montoTotal, pa
     const nombreEstudiante = estudiante ? estudiante.nombre : 'Estudiante no encontrado';
     const tutorEstudiante = estudiante ? estudiante.tutor : '';
     // Validar que los montos sean coherentes
-if (!montoRecibido || montoRecibido < 0) {
+if (montoRecibido === null || montoRecibido === undefined || montoRecibido < 0) {
     console.warn('Monto recibido inválido, usando total como monto recibido');
     montoRecibido = montoTotal;
 }
@@ -4655,6 +4656,7 @@ if (montoRecibido < montoTotal) {
         conceptos: carritoConceptos.map(c => ({...c})), // Copia profunda
         montoTotal: montoTotal,
         montoRecibido: montoRecibido,
+        monto: montoTotal,  // ← AGREGAR ESTA LÍNEA PARA COMPATIBILIDAD
         cambio: Math.max(0, montoRecibido - montoTotal),
         metodoPago: metodoPago,
         estado: 'completado'
@@ -4706,12 +4708,13 @@ if (montoRecibido < montoTotal) {
     return pago;
 }
 
-        function obtenerUltimoPago(estudianteId) {
-    if (!sistemaADAMS.pagos || sistemaADAMS.pagos.length === 0) return null;
+function obtenerUltimoPago(estudianteId) {
+    const pagos = JSON.parse(localStorage.getItem('pagos') || '[]');
     
-    const pagosEstudiante = sistemaADAMS.pagos
-        .filter(p => p.estudianteId == estudianteId && 
-                    (p.concepto === 'colegiatura' || p.concepto === 'ajuste-colegiatura'))
+    if (!pagos || pagos.length === 0) return null;
+    
+    const pagosEstudiante = pagos
+        .filter(p => p.estudianteId == estudianteId)
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     
     return pagosEstudiante.length > 0 ? pagosEstudiante[0] : null;
@@ -7163,8 +7166,8 @@ else if (conceptoTemporal.tipo === 'colegiatura') {
         return false;
     }
     
-    if (montoTotal <= 0) {
-        mostrarNotificacion('El monto debe ser mayor a 0', 'error');
+    if (montoTotal < 0) {
+        mostrarNotificacion('El monto no puede ser negativo', 'error');
         return false;
     }
     
@@ -7219,10 +7222,10 @@ else if (conceptoTemporal.tipo === 'colegiatura') {
         
         // Validar monto del ajuste
         const monto = parseFloat(document.getElementById('monto-ajuste-concepto').value) || 0;
-        if (monto <= 0) {
-            mostrarNotificacion('Ingresa un monto válido para el ajuste', 'error');
-            return false;
-        }
+        if (monto < 0) {
+    mostrarNotificacion('El monto no puede ser negativo', 'error');
+    return false;
+}
         
         // Agregar información del mes y monto al concepto temporal
         conceptoTemporal.mesAplicacion = mes;
@@ -7266,10 +7269,10 @@ else if (conceptoTemporal.tipo === 'colegiatura') {
     }
 
     // VALIDACIÓN FINAL: Verificar que el total sea mayor a 0
-    if (!conceptoTemporal.total || conceptoTemporal.total <= 0) {
-        mostrarNotificacion('El total del concepto debe ser mayor a 0', 'error');
-        return false;
-    }
+   if (conceptoTemporal.total === null || conceptoTemporal.total === undefined || conceptoTemporal.total < 0) {
+    mostrarNotificacion('El total del concepto no puede ser negativo', 'error');
+    return false;
+}
 
     return true;
 }
@@ -7589,69 +7592,79 @@ function actualizarControlMorosidad() {
     let inactivosPorPago = 0;
 
     sistemaADAMS.estudiantes.forEach(estudiante => {
-        const ultimoPago = obtenerUltimoPago(estudiante.id);
-        const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
-        
-        // Estudiante es moroso si tiene más de 5 días sin pagar
-        if (diasSinPagar > 5) {
-            let recargo = 0;
-            let montoAdeudado = estudiante.colegiatura;
-            
-            // Calcular recargos
-            if (diasSinPagar > 15) {
-                recargo = montoAdeudado * 0.15;
-                inactivosPorPago++;
-            } else if (diasSinPagar > 10) {
-                recargo = montoAdeudado * 0.15;
-            } else if (diasSinPagar > 5) {
-                recargo = montoAdeudado * 0.10;
-            }
-            
-            montoAdeudado += recargo;
-            totalAdeudo += montoAdeudado;
-            
-            estudiantesMorosos.push({
-                estudiante: estudiante,
-                ultimoPago: ultimoPago,
-                diasAtraso: diasSinPagar,
-                montoAdeudado: montoAdeudado,
-                recargo: recargo,
-                estado: diasSinPagar > 15 ? 'Inactivo' : 'Moroso'
-            });
-        }
-    });
-
-    // APLICAR FILTROS
-    const estudiantesFiltrados = aplicarFiltrosMorosidad(estudiantesMorosos);
-
-    // ✨ CAMBIOS PRINCIPALES - APLICAR FORMATO A ESTADÍSTICAS:
-    
-    // Actualizar estadísticas generales (sin filtros)
-    document.getElementById('total-morosos').textContent = formatearContador(estudiantesMorosos.length);
-    document.getElementById('total-adeudo').textContent = formatearNumero(totalAdeudo);
-    document.getElementById('inactivos-por-pago').textContent = formatearContador(inactivosPorPago);
-
-    // Actualizar contador
-    actualizarContadorMorosidad(estudiantesFiltrados.length, estudiantesMorosos.length);
-
-    // Actualizar tabla con datos filtrados
-    const tbody = document.getElementById('tabla-morosidad');
-    
-    if (estudiantesFiltrados.length === 0) {
-        const mensaje = estudiantesMorosos.length === 0 ? 
-            'No hay estudiantes morosos' : 
-            'No se encontraron estudiantes con los filtros aplicados';
-        
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
-                    ${mensaje}
-                </td>
-            </tr>
-        `;
+        // ✅ NUEVA VERIFICACIÓN: Excluir estudiantes dados de baja
+    if (estudiante.estatus === 'baja') {
+        console.log(`ℹ️ ${estudiante.nombre} excluido de morosos - dado de baja`);
         return;
     }
+    const ultimoPago = obtenerUltimoPago(estudiante.id);
+    const diasSinPagar = calcularDiasSinPagar(ultimoPago, estudiante);
+    
+    // ✅ NUEVA VERIFICACIÓN: Si el último pago fue de $0, no incluir en morosos
+    if (ultimoPago && (ultimoPago.monto === 0 || ultimoPago.monto === '0' || ultimoPago.total === 0 || ultimoPago.total === '0' || ultimoPago.montoTotal === 0 || ultimoPago.montoTotal === '0')) {
+        console.log(`ℹ️ ${estudiante.nombre} excluido de morosos - último pago $0`);
+        return; // Saltar este estudiante, no es moroso
+    }
+    
+    // Estudiante es moroso si tiene más de 5 días sin pagar
+    if (diasSinPagar > 5) {
+        let recargo = 0;
+        let montoAdeudado = estudiante.colegiatura;
+        
+        // Calcular recargos
+        if (diasSinPagar > 15) {
+            recargo = montoAdeudado * 0.15;
+            inactivosPorPago++;
+        } else if (diasSinPagar > 10) {
+            recargo = montoAdeudado * 0.15;
+        } else if (diasSinPagar > 5) {
+            recargo = montoAdeudado * 0.10;
+        }
+        
+        montoAdeudado += recargo;
+        totalAdeudo += montoAdeudado;
+        
+        estudiantesMorosos.push({
+            estudiante: estudiante,
+            ultimoPago: ultimoPago,
+            diasAtraso: diasSinPagar,
+            montoAdeudado: montoAdeudado,
+            recargo: recargo,
+            estado: diasSinPagar > 15 ? 'Inactivo' : 'Moroso'
+        });
+    }
+});
 
+// APLICAR FILTROS
+const estudiantesFiltrados = aplicarFiltrosMorosidad(estudiantesMorosos);
+
+// ✨ CAMBIOS PRINCIPALES - APLICAR FORMATO A ESTADÍSTICAS:
+
+// Actualizar estadísticas generales (sin filtros)
+document.getElementById('total-morosos').textContent = formatearContador(estudiantesMorosos.length);
+document.getElementById('total-adeudo').textContent = formatearNumero(totalAdeudo);
+document.getElementById('inactivos-por-pago').textContent = formatearContador(inactivosPorPago);
+
+// Actualizar contador
+actualizarContadorMorosidad(estudiantesFiltrados.length, estudiantesMorosos.length);
+
+// Actualizar tabla con datos filtrados
+const tbody = document.getElementById('tabla-morosidad');
+
+if (estudiantesFiltrados.length === 0) {
+    const mensaje = estudiantesMorosos.length === 0 ? 
+        'No hay estudiantes morosos' : 
+        'No se encontraron estudiantes con los filtros aplicados';
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                ${mensaje}
+            </td>
+        </tr>
+    `;
+    return;
+}
     // Ordenar por días de atraso (mayor a menor)
     const estudiantesOrdenados = estudiantesFiltrados.sort((a, b) => {
     // Primer criterio: Mayor días de atraso primero
