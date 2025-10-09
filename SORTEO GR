@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Sorteos GR - FMG</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(to right, #db2777, #9333ea);
+            color: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        nav {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        nav .container {
+            display: flex;
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        nav button {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        nav button:hover {
+            color: #db2777;
+        }
+
+        nav button.active {
+            color: #db2777;
+            border-bottom-color: #db2777;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: #db2777; color: white; }
+        .btn-primary:hover { background: #be185d; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-success { background: #059669; color: white; }
+        .btn-success:hover { background: #047857; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-purple { background: #7c3aed; color: white; }
+        .btn-purple:hover { background: #6d28d9; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f3f4f6;
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        th:hover {
+            background: #e5e7eb;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-gray {
+            color: #6b7280;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .alert-warning {
+            background: #fef3c7 !important;
+        }
+
+        footer {
+            background: #1f2937;
+            color: white;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .breadcrumb {
+            color: #db2777;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb:hover {
+            text-decoration: underline;
+        }
+
+        .funcion-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .funcion-numero {
+            width: 60px;
+        }
+
+        /* Ocultar flechitas del input number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .funcion-nombre {
+            width: 80px;
+            font-weight: 600;
+        }
+
+        .funcion-juez {
+            flex: 1;
+        }
+
+        .implemento-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .implemento-btn.selected {
+            background: #db2777;
+            color: white;
+            border-color: #db2777;
+        }
+
+        @media print {
+            header, nav, .btn, footer, .breadcrumb {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            /* Ocultar listado de jueces en impresión */
+            #listado-jueces-sorteo {
+                display: none !important;
+            }
+            /* Mantener paneles lado a lado */
+            .grid-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 1.5rem;
+            }
+            /* Solo mostrar implementos seleccionados */
+            .implemento-btn:not(.selected) {
+                display: none;
+            }
+            .implemento-btn.selected {
+                pointer-events: none;
+                border: 2px solid #000;
+            }
+            /* Divisiones entre funciones */
+            .funcion-row {
+                border-bottom: 1px solid #d1d5db;
+                padding: 0.5rem 0;
+            }
+            /* Hacer más visible el contenido */
+            .funcion-nombre {
+                font-weight: 700;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scroll-x {
+            overflow-x: auto;
+        }
+
+        .categoria-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .categoria-checkbox:hover {
+            background: #f9fafb;
+        }
+
+        .juez-numero {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #db2777;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Plataforma de Sorteos GR - FMG</h1>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <button id="navJueces" class="active" onclick="cambiarSeccion('jueces')">Base de Datos de Jueces</button>
+            <button id="navEventos" onclick="cambiarSeccion('eventos')">Eventos</button>
+            <button id="navBackup" onclick="cambiarSeccion('backup')">Backup</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Sección Jueces -->
+        <div id="seccion-jueces">
+            <div class="flex-between mb-4">
+                <h2>Base de Datos General de Jueces</h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-success" onclick="exportarPlantilla()">📥 Plantilla</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importExcel').click()">📤 Importar</button>
+                    <input type="file" id="importExcel" accept=".xlsx,.xls" style="display:none" onchange="importarJueces(event)">
+                    <button class="btn btn-secondary" onclick="exportarBD()">💾 Exportar BD</button>
+                    <button class="btn btn-primary" onclick="mostrarFormJuez()">+ Nuevo Juez</button>
+                </div>
+            </div>
+
+            <div class="card scroll-x">
+                <table id="tablaJueces">
+                    <thead>
+                        <tr>
+                            <th onclick="ordenarTabla('idFmg')">ID-FMG</th>
+                            <th onclick="ordenarTabla('nombre')">Nombre Completo</th>
+                            <th onclick="ordenarTabla('asoc')">ASOC</th>
+                            <th onclick="ordenarTabla('ind')">IND</th>
+                            <th onclick="ordenarTabla('conj')">CONJ</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sección Eventos -->
+        <div id="seccion-eventos" class="hidden">
+            <div class="flex-between mb-4">
+                <h2>Gestión de Eventos</h2>
+                <button class="btn btn-primary" onclick="mostrarFormEvento()">+ Nuevo Evento</button>
+            </div>
+            <div id="listaEventos"></div>
+        </div>
+
+        <!-- Detalle Evento -->
+        <div id="detalle-evento" class="hidden">
+            <div class="breadcrumb" onclick="volverEventos()">← Volver a Eventos</div>
+            <div id="contenidoEvento"></div>
+        </div>
+
+        <!-- Detalle Sorteo -->
+        <div id="detalle-sorteo" class="hidden">
+            <div class="breadcrumb" onclick="volverEvento()">← Volver al Evento</div>
+            <div id="contenidoSorteo"></div>
+        </div>
+
+        <!-- Sección Backup -->
+        <div id="seccion-backup" class="hidden">
+            <h2 class="mb-4">Gestión de Backups</h2>
+            <div class="card">
+                <h3>Exportar Backup</h3>
+                <p class="text-gray mb-4">Descarga un backup completo del sistema.</p>
+                <button class="btn btn-success" onclick="exportarBackup()">📥 Descargar Backup</button>
+            </div>
+            <div class="card">
+                <h3>Importar Backup</h3>
+                <p class="text-gray mb-4">Restaura un backup guardado previamente.</p>
+                <button class="btn btn-secondary" onclick="document.getElementById('importBackup').click()">📤 Cargar Backup</button>
+                <input type="file" id="importBackup" accept=".json" style="display:none" onchange="importarBackup(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALES -->
+
+    <!-- Modal Formulario Juez -->
+    <div id="modalJuez" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 id="modalJuezTitulo">Nuevo Juez</h3>
+            <div class="form-group">
+                <label>ID-FMG</label>
+                <input type="text" id="juezIdFmg">
+            </div>
+            <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" id="juezNombre" required>
+            </div>
+            <div class="form-group">
+                <label>Asociación *</label>
+                <input type="text" id="juezAsoc" required>
+            </div>
+            <div class="form-group">
+                <label>IND (Nivel)</label>
+                <input type="text" id="juezInd" placeholder="1, 2, 3, 4, AUX, CTN">
+            </div>
+            <div class="form-group">
+                <label>CONJ (Nivel)</label>
+                <input type="text" id="juezConj" placeholder="1, 2, 3, 4, AUX, CTN">
+            </div>
+            <div class="flex gap-2" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalJuez')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarJuez()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Evento -->
+    <div id="modalEvento" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 id="modalEventoTitulo">Nuevo Evento</h3>
+            <div class="form-group">
+                <label>Nombre del Evento *</label>
+                <input type="text" id="eventoNombre" required>
+            </div>
+            <div class="form-group">
+                <label>Sede *</label>
+                <input type="text" id="eventoSede" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha *</label>
+                <input type="text" id="eventoFecha" placeholder="Ej: 8 al 12 de octubre de 2025" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha de Inicio (para ordenar)</label>
+                <input type="date" id="eventoFechaInicio">
+            </div>
+            <div class="flex gap-2" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalEvento')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarEvento()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Selector de Jueces -->
+    <div id="modalSelectorJueces" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <h3>Seleccionar Jueces para el Evento</h3>
+            <div class="form-group">
+                <input type="text" id="filtroJueces" placeholder="Filtrar por nombre, asociación, nivel..." onkeyup="filtrarJuecesSelector()">
+            </div>
+            <div class="scroll-x" style="max-height: 400px; overflow-y: auto;">
+                <table id="tablaSelectorJueces">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Nombre</th>
+                            <th>ASOC</th>
+                            <th>IND</th>
+                            <th>CONJ</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="flex-between" style="margin-top: 1rem;">
+                <p class="text-gray" id="contadorSeleccionados">0 jueces seleccionados</p>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary" onclick="cerrarModal('modalSelectorJueces')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardarJuecesEvento()">Guardar Selección</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Juez Evento -->
+    <div id="modalEditarJuezEvento" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>Editar Juez en Evento</h3>
+            <p class="text-gray mb-4" id="infoJuezEvento"></p>
+            <div class="form-group">
+                <label>IND (Nivel)</label>
+                <input type="text" id="juezEventoInd" placeholder="1, 2, 3, 4, AUX, CTN">
+            </div>
+            <div class="form-group">
+                <label>CONJ (Nivel)</label>
+                <input type="text" id="juezEventoConj" placeholder="1, 2, 3, 4, AUX, CTN">
+            </div>
+            <div class="flex gap-2" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalEditarJuezEvento')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarJuezEvento()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Sorteo -->
+    <div id="modalCrearSorteo" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h3>Crear Nuevo Sorteo</h3>
+            <div class="form-group">
+                <label>Tipo de Competencia</label>
+                <div class="flex gap-2">
+                    <label style="display: flex; align-items: center;">
+                        <input type="radio" name="tipoSorteo" value="IND" checked onchange="cambiarTipoSorteo()"> Individual (IND)
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="radio" name="tipoSorteo" value="CONJ" onchange="cambiarTipoSorteo()"> Conjuntos (CONJ)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Categorías *</label>
+                <div id="listaCategoriasSorteo" class="grid-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.375rem;"></div>
+            </div>
+            <div class="form-group">
+                <label>Número de Paneles</label>
+                <div class="flex gap-2">
+                    <label style="display: flex; align-items: center;">
+                        <input type="radio" name="numPaneles" value="1" checked> 1 Panel
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="radio" name="numPaneles" value="2"> 2 Paneles
+                    </label>
+                </div>
+            </div>
+            <div class="flex gap-2" style="justify-content: flex-end; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalCrearSorteo')">Cancelar</button>
+                <button class="btn btn-primary" onclick="crearSorteo()">Crear Sorteo</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container flex-between">
+            <p>Comité Técnico Nacional GR 2025 - 2028</p>
+            <p>Powered by: E-MOOD Systems</p>
+        </div>
+    </footer>
+
+    <script>
+        // Constantes
+        const NIVELES_ORDEN = ['1', '2', '3', '4', 'AUX', 'CTN'];
+        const CATEGORIAS_IND = ['PRE - I', 'I - A', 'I - B', 'II - A', 'II - B', 'III - A', 'III - B', 'III - C', 'PRE - III', 'IV - A', 'IV - B', 'IV - C', 'V - A', 'V - B', 'V - C', 'V - D', 'VIII - A', 'VIII - B', 'VIII - C', 'VIII - D', 'VIII - E', 'VIII - F'];
+        const CATEGORIAS_CONJ = ['Conjunto JUV', 'Conjunto MAY', 'Conjunto INF A', 'Conjunto INF B', 'Conjunto INF C', 'Formativo V - A', 'Formativo V - B', 'Formativo V - C', 'VI - A', 'VI - B', 'VI - C', 'VII - A', 'VII - B', 'VII - C'];
+        const IMPLEMENTOS = ['ML', 'CUE', 'ARO', 'PEL', 'CLA', 'CIN', 'OPCIONAL', 'MIXTO'];
+        const FUNCIONES = ['DB1', 'DB2', 'DA1', 'DA2', 'A1', 'A2', 'A3', 'A4', 'E1', 'E2', 'E3', 'E4', 'MUSICA', 'Res', 'L1', 'L2', 'T', 'JC1', 'JC2', 'JC3', 'JC4', 'J. SUP'];
+
+        // Variables globales
+        let jueces = [];
+        let eventos = [];
+        let editandoJuezId = null;
+        let editandoEventoId = null;
+        let eventoActual = null;
+        let sorteoActual = null;
+        let editandoJuezEventoId = null;
+        let juecesSeleccionados = [];
+
+        // Inicialización
+        cargarDatos();
+        renderizarJueces();
+
+        function cargarDatos() {
+            const datosGuardados = localStorage.getItem('grSorteos');
+            if (datosGuardados) {
+                const datos = JSON.parse(datosGuardados);
+                jueces = datos.jueces || [];
+                eventos = datos.eventos || [];
+            }
+        }
+
+        function guardarDatos() {
+            localStorage.setItem('grSorteos', JSON.stringify({ jueces, eventos }));
+        }
+
+        function cambiarSeccion(seccion) {
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.add('active');
+            
+            document.getElementById('seccion-jueces').classList.add('hidden');
+            document.getElementById('seccion-eventos').classList.add('hidden');
+            document.getElementById('seccion-backup').classList.add('hidden');
+            document.getElementById('detalle-evento').classList.add('hidden');
+            document.getElementById('detalle-sorteo').classList.add('hidden');
+            
+            if (seccion === 'jueces') {
+                document.getElementById('seccion-jueces').classList.remove('hidden');
+                renderizarJueces();
+            } else if (seccion === 'eventos') {
+                document.getElementById('seccion-eventos').classList.remove('hidden');
+                renderizarEventos();
+                eventoActual = null;
+                sorteoActual = null;
+            } else if (seccion === 'backup') {
+                document.getElementById('seccion-backup').classList.remove('hidden');
+            }
+        }
+
+        // ===== GESTIÓN DE JUECES =====
+
+        function mostrarFormJuez(id = null) {
+            editandoJuezId = id;
+            const modal = document.getElementById('modalJuez');
+            const titulo = document.getElementById('modalJuezTitulo');
+            
+            if (id) {
+                const juez = jueces.find(j => j.id === id);
+                titulo.textContent = 'Editar Juez';
+                document.getElementById('juezIdFmg').value = juez.idFmg;
+                document.getElementById('juezNombre').value = juez.nombre;
+                document.getElementById('juezAsoc').value = juez.asoc;
+                document.getElementById('juezInd').value = juez.ind;
+                document.getElementById('juezConj').value = juez.conj;
+            } else {
+                titulo.textContent = 'Nuevo Juez';
+                document.getElementById('juezIdFmg').value = '';
+                document.getElementById('juezNombre').value = '';
+                document.getElementById('juezAsoc').value = '';
+                document.getElementById('juezInd').value = '';
+                document.getElementById('juezConj').value = '';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function guardarJuez() {
+            const nombre = document.getElementById('juezNombre').value.trim();
+            const asoc = document.getElementById('juezAsoc').value.trim();
+            
+            if (!nombre || !asoc) {
+                alert('Nombre y Asociación son obligatorios');
+                return;
+            }
+            
+            const juezData = {
+                idFmg: document.getElementById('juezIdFmg').value.trim(),
+                nombre,
+                asoc,
+                ind: document.getElementById('juezInd').value.trim(),
+                conj: document.getElementById('juezConj').value.trim()
+            };
+            
+            if (editandoJuezId) {
+                const index = jueces.findIndex(j => j.id === editandoJuezId);
+                jueces[index] = { ...juezData, id: editandoJuezId };
+            } else {
+                jueces.push({ ...juezData, id: Date.now() });
+            }
+            
+            jueces.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            guardarDatos();
+            renderizarJueces();
+            cerrarModal('modalJuez');
+        }
+
+        function eliminarJuez(id) {
+            if (confirm('¿Está seguro de eliminar este juez?')) {
+                jueces = jueces.filter(j => j.id !== id);
+                guardarDatos();
+                renderizarJueces();
+            }
+        }
+
+        function renderizarJueces() {
+            const tbody = document.querySelector('#tablaJueces tbody');
+            tbody.innerHTML = '';
+            
+            if (jueces.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray">No hay jueces registrados</td></tr>';
+                return;
+            }
+            
+            jueces.forEach(juez => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${juez.idFmg}</td>
+                    <td>${juez.nombre}</td>
+                    <td>${juez.asoc}</td>
+                    <td>${juez.ind}</td>
+                    <td>${juez.conj}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" onclick="mostrarFormJuez(${juez.id})">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarJuez(${juez.id})">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function ordenarTabla(campo) {
+            jueces.sort((a, b) => {
+                if (a[campo] < b[campo]) return -1;
+                if (a[campo] > b[campo]) return 1;
+                return 0;
+            });
+            renderizarJueces();
+        }
+
+        // ===== GESTIÓN DE EVENTOS =====
+
+        function mostrarFormEvento(id = null) {
+            editandoEventoId = id;
+            const modal = document.getElementById('modalEvento');
+            const titulo = document.getElementById('modalEventoTitulo');
+            
+            if (id) {
+                const evento = eventos.find(e => e.id === id);
+                titulo.textContent = 'Editar Evento';
+                document.getElementById('eventoNombre').value = evento.nombre;
+                document.getElementById('eventoSede').value = evento.sede;
+                document.getElementById('eventoFecha').value = evento.fecha;
+                document.getElementById('eventoFechaInicio').value = evento.fechaInicio;
+            } else {
+                titulo.textContent = 'Nuevo Evento';
+                document.getElementById('eventoNombre').value = '';
+                document.getElementById('eventoSede').value = '';
+                document.getElementById('eventoFecha').value = '';
+                document.getElementById('eventoFechaInicio').value = new Date().toISOString().split('T')[0];
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function guardarEvento() {
+            const nombre = document.getElementById('eventoNombre').value.trim();
+            const sede = document.getElementById('eventoSede').value.trim();
+            const fecha = document.getElementById('eventoFecha').value.trim();
+            
+            if (!nombre || !sede || !fecha) {
+                alert('Todos los campos son obligatorios');
+                return;
+            }
+            
+            const eventoData = {
+                nombre,
+                sede,
+                fecha,
+                fechaInicio: document.getElementById('eventoFechaInicio').value
+            };
+            
+            if (editandoEventoId) {
+                const index = eventos.findIndex(e => e.id === editandoEventoId);
+                eventos[index] = { ...eventos[index], ...eventoData };
+            } else {
+                eventos.push({ 
+                    ...eventoData, 
+                    id: Date.now(), 
+                    jueces: [], 
+                    sorteos: [] 
+                });
+            }
+            
+            guardarDatos();
+            renderizarEventos();
+            cerrarModal('modalEvento');
+        }
+
+        function eliminarEvento(id) {
+            if (confirm('¿Eliminar este evento y todos sus sorteos?')) {
+                eventos = eventos.filter(e => e.id !== id);
+                guardarDatos();
+                renderizarEventos();
+            }
+        }
+
+        function renderizarEventos() {
+            const lista = document.getElementById('listaEventos');
+            lista.innerHTML = '';
+            
+            if (eventos.length === 0) {
+                lista.innerHTML = '<div class="card text-center text-gray">No hay eventos creados</div>';
+                return;
+            }
+            
+            const eventosOrdenados = [...eventos].sort((a, b) => new Date(b.fechaInicio) - new Date(a.fechaInicio));
+            
+            eventosOrdenados.forEach(evento => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <div class="flex-between">
+                        <div onclick="verEvento(${evento.id})" style="cursor: pointer; flex: 1;">
+                            <h3>${evento.nombre}</h3>
+                            <p class="text-gray">Sede: ${evento.sede}</p>
+                            <p class="text-gray">Fecha: ${evento.fecha}</p>
+                            <p class="text-gray" style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                ${(evento.jueces || []).length} jueces | ${(evento.sorteos || []).length} sorteos
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); mostrarFormEvento(${evento.id})">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarEvento(${evento.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        function verEvento(id) {
+            eventoActual = eventos.find(e => e.id === id);
+            document.getElementById('seccion-eventos').classList.add('hidden');
+            document.getElementById('detalle-evento').classList.remove('hidden');
+            renderizarDetalleEvento();
+        }
+
+        function volverEventos() {
+            eventoActual = null;
+            sorteoActual = null;
+            document.getElementById('detalle-evento').classList.add('hidden');
+            document.getElementById('detalle-sorteo').classList.add('hidden');
+            document.getElementById('seccion-eventos').classList.remove('hidden');
+        }
+
+        function renderizarDetalleEvento() {
+            const contenido = document.getElementById('contenidoEvento');
+            
+            const juecesEvento = eventoActual.jueces || [];
+            const juecesIND = ordenarJueces(juecesEvento.filter(j => j.ind), 'ind');
+            const jucesCONJ = ordenarJueces(juecesEvento.filter(j => j.conj), 'conj');
+            
+            contenido.innerHTML = `
+                <div class="card">
+                    <h2>${eventoActual.nombre}</h2>
+                    <p class="text-gray">Sede: ${eventoActual.sede}</p>
+                    <p class="text-gray">Fecha: ${eventoActual.fecha}</p>
+                </div>
+
+                <div class="card">
+                    <div class="flex-between mb-4">
+                        <h3>Jueces Participantes</h3>
+                        <div class="flex gap-2">
+                            <button class="btn btn-success btn-sm" onclick="mostrarFormJuez()">Agregar a BD General</button>
+                            <button class="btn btn-primary" onclick="mostrarSelectorJueces()">Seleccionar Jueces</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 style="margin-bottom: 0.5rem;">Jueces Individual (IND)</h4>
+                        <div class="scroll-x">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>N°</th>
+                                        <th>Nombre</th>
+                                        <th>ASOC</th>
+                                        <th>IND</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${juecesIND.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces IND</td></tr>' : 
+                                        juecesIND.map((j, idx) => `
+                                            <tr>
+                                                <td><span class="juez-numero">${idx + 1}</span></td>
+                                                <td>${j.nombre}</td>
+                                                <td>${j.asoc}</td>
+                                                <td>${j.ind}</td>
+                                                <td>
+                                                    <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
+                                                    <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem;">Jueces Conjuntos (CONJ)</h4>
+                        <div class="scroll-x">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>N°</th>
+                                        <th>Nombre</th>
+                                        <th>ASOC</th>
+                                        <th>CONJ</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${jucesCONJ.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces CONJ</td></tr>' : 
+                                        jucesCONJ.map((j, idx) => `
+                                            <tr>
+                                                <td><span class="juez-numero">${idx + 1}</span></td>
+                                                <td>${j.nombre}</td>
+                                                <td>${j.asoc}</td>
+                                                <td>${j.conj}</td>
+                                                <td>
+                                                    <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
+                                                    <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex-between mb-4">
+                        <h3>Sorteos</h3>
+                        <button class="btn btn-primary" onclick="abrirModalCrearSorteo()">+ Nuevo Sorteo</button>
+                    </div>
+                    ${renderizarListaSorteos()}
+                </div>
+            `;
+        }
+
+        function ordenarJueces(juecesArray, campo) {
+            return juecesArray.sort((a, b) => {
+                const indexA = NIVELES_ORDEN.indexOf(a[campo]);
+                const indexB = NIVELES_ORDEN.indexOf(b[campo]);
+                return indexA - indexB;
+            });
+        }
+
+        function mostrarSelectorJueces() {
+            juecesSeleccionados = (eventoActual.jueces || []).map(j => j.id);
+            const tbody = document.querySelector('#tablaSelectorJueces tbody');
+            tbody.innerHTML = '';
+            
+            jueces.forEach(juez => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" ${juecesSeleccionados.includes(juez.id) ? 'checked' : ''} onchange="toggleJuezSelector(${juez.id})"></td>
+                    <td>${juez.nombre}</td>
+                    <td>${juez.asoc}</td>
+                    <td>${juez.ind}</td>
+                    <td>${juez.conj}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            actualizarContadorSeleccionados();
+            document.getElementById('modalSelectorJueces').classList.add('active');
+        }
+
+        function toggleJuezSelector(id) {
+            if (juecesSeleccionados.includes(id)) {
+                juecesSeleccionados = juecesSeleccionados.filter(jid => jid !== id);
+            } else {
+                juecesSeleccionados.push(id);
+            }
+            actualizarContadorSeleccionados();
+        }
+
+        function actualizarContadorSeleccionados() {
+            document.getElementById('contadorSeleccionados').textContent = `${juecesSeleccionados.length} jueces seleccionados`;
+        }
+
+        function filtrarJuecesSelector() {
+            const filtro = document.getElementById('filtroJueces').value.toLowerCase();
+            const tbody = document.querySelector('#tablaSelectorJueces tbody');
+            tbody.innerHTML = '';
+            
+            const jucesFiltrados = jueces.filter(j => 
+                j.nombre.toLowerCase().includes(filtro) ||
+                j.asoc.toLowerCase().includes(filtro) ||
+                (j.ind && j.ind.toLowerCase().includes(filtro)) ||
+                (j.conj && j.conj.toLowerCase().includes(filtro))
+            );
+            
+            jucesFiltrados.forEach(juez => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" ${juecesSeleccionados.includes(juez.id) ? 'checked' : ''} onchange="toggleJuezSelector(${juez.id})"></td>
+                    <td>${juez.nombre}</td>
+                    <td>${juez.asoc}</td>
+                    <td>${juez.ind}</td>
+                    <td>${juez.conj}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function guardarJuecesEvento() {
+            const juecesToAdd = jueces.filter(j => juecesSeleccionados.includes(j.id));
+            eventoActual.jueces = juecesToAdd.map(j => ({ ...j }));
+            
+            const index = eventos.findIndex(e => e.id === eventoActual.id);
+            eventos[index] = eventoActual;
+            guardarDatos();
+            
+            cerrarModal('modalSelectorJueces');
+            renderizarDetalleEvento();
+        }
+
+        function editarJuezEvento(juezId) {
+            editandoJuezEventoId = juezId;
+            const juez = eventoActual.jueces.find(j => j.id === juezId);
+            
+            document.getElementById('infoJuezEvento').textContent = `${juez.nombre} - ${juez.asoc}`;
+            document.getElementById('juezEventoInd').value = juez.ind || '';
+            document.getElementById('juezEventoConj').value = juez.conj || '';
+            
+            document.getElementById('modalEditarJuezEvento').classList.add('active');
+        }
+
+        function guardarJuezEvento() {
+            const index = eventoActual.jueces.findIndex(j => j.id === editandoJuezEventoId);
+            eventoActual.jueces[index].ind = document.getElementById('juezEventoInd').value.trim();
+            eventoActual.jueces[index].conj = document.getElementById('juezEventoConj').value.trim();
+            
+            const eventoIndex = eventos.findIndex(e => e.id === eventoActual.id);
+            eventos[eventoIndex] = eventoActual;
+            guardarDatos();
+            
+            cerrarModal('modalEditarJuezEvento');
+            renderizarDetalleEvento();
+        }
+
+        function eliminarJuezEvento(juezId) {
+            if (confirm('¿Eliminar este juez del evento?')) {
+                eventoActual.jueces = eventoActual.jueces.filter(j => j.id !== juezId);
+                
+                const index = eventos.findIndex(e => e.id === eventoActual.id);
+                eventos[index] = eventoActual;
+                guardarDatos();
+                
+                renderizarDetalleEvento();
+            }
+        }
+
+        // ===== GESTIÓN DE SORTEOS =====
+
+        function abrirModalCrearSorteo() {
+            cambiarTipoSorteo();
+            document.getElementById('modalCrearSorteo').classList.add('active');
+        }
+
+        function cambiarTipoSorteo() {
+            const tipo = document.querySelector('input[name="tipoSorteo"]:checked').value;
+            const categorias = tipo === 'IND' ? CATEGORIAS_IND : CATEGORIAS_CONJ;
+            const lista = document.getElementById('listaCategoriasSorteo');
+            
+            lista.innerHTML = categorias.map(cat => `
+                <label class="categoria-checkbox">
+                    <input type="checkbox" value="${cat}"> ${cat}
+                </label>
+            `).join('');
+        }
+
+        function crearSorteo() {
+            const tipo = document.querySelector('input[name="tipoSorteo"]:checked').value;
+            const categorias = Array.from(document.querySelectorAll('#listaCategoriasSorteo input:checked')).map(cb => cb.value);
+            const numPaneles = parseInt(document.querySelector('input[name="numPaneles"]:checked').value);
+            
+            if (categorias.length === 0) {
+                alert('Debe seleccionar al menos una categoría');
+                return;
+            }
+            
+            const juecesEvento = eventoActual.jueces || [];
+            const juecesIND = ordenarJueces(juecesEvento.filter(j => j.ind), 'ind').map((j, idx) => ({ ...j, numero: idx + 1 }));
+            const jucesCONJ = ordenarJueces(juecesEvento.filter(j => j.conj), 'conj').map((j, idx) => ({ ...j, numero: idx + 1 }));
+            
+            const paneles = [];
+            for (let i = 1; i <= numPaneles; i++) {
+                paneles.push({
+                    num: i,
+                    implementos: [],
+                    omitirAlertas: false,
+                    funciones: {}
+                });
+            }
+            
+            const sorteo = {
+                id: Date.now(),
+                tipo,
+                categorias,
+                numPaneles,
+                juecesIND,
+                jucesCONJ,
+                paneles
+            };
+            
+            if (!eventoActual.sorteos) eventoActual.sorteos = [];
+            eventoActual.sorteos.push(sorteo);
+            
+            const index = eventos.findIndex(e => e.id === eventoActual.id);
+            eventos[index] = eventoActual;
+            guardarDatos();
+            
+            cerrarModal('modalCrearSorteo');
+            renderizarDetalleEvento();
+        }
+
+        function renderizarListaSorteos() {
+            const sorteos = eventoActual.sorteos || [];
+            
+            if (sorteos.length === 0) {
+                return '<p class="text-center text-gray">No hay sorteos creados</p>';
+            }
+            
+            return sorteos.map(sorteo => `
+                <div style="border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem; margin-bottom: 0.5rem;">
+                    <div class="flex-between">
+                        <div onclick="verSorteo(${sorteo.id})" style="cursor: pointer; flex: 1;">
+                            <h4>${sorteo.tipo} - ${sorteo.categorias.join(', ')}</h4>
+                            <p class="text-gray" style="font-size: 0.875rem;">${sorteo.numPaneles} Panel(es)</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); verSorteo(${sorteo.id})">Ver/Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarSorteo(${sorteo.id})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function eliminarSorteo(sorteoId) {
+            if (confirm('¿Eliminar este sorteo?')) {
+                eventoActual.sorteos = eventoActual.sorteos.filter(s => s.id !== sorteoId);
+                
+                const index = eventos.findIndex(e => e.id === eventoActual.id);
+                eventos[index] = eventoActual;
+                guardarDatos();
+                
+                renderizarDetalleEvento();
+            }
+        }
+
+        function verSorteo(sorteoId) {
+            sorteoActual = eventoActual.sorteos.find(s => s.id === sorteoId);
+            document.getElementById('detalle-evento').classList.add('hidden');
+            document.getElementById('detalle-sorteo').classList.remove('hidden');
+            renderizarDetalleSorteo();
+        }
+
+        function volverEvento() {
+            sorteoActual = null;
+            document.getElementById('detalle-sorteo').classList.add('hidden');
+            document.getElementById('detalle-evento').classList.remove('hidden');
+        }
+
+        function renderizarDetalleSorteo() {
+            const contenido = document.getElementById('contenidoSorteo');
+            const juecesRef = sorteoActual.tipo === 'IND' ? sorteoActual.juecesIND : sorteoActual.jucesCONJ;
+            
+            contenido.innerHTML = `
+                <div class="card">
+                    <div class="flex-between">
+                        <div>
+                            <h2>Sorteo ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}</h2>
+                            <p class="text-gray">${eventoActual.nombre}</p>
+                        </div>
+                        <button class="btn btn-purple" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+
+                <div class="card" id="listado-jueces-sorteo">
+                    <h3 style="margin-bottom: 0.5rem;">Jueces ${sorteoActual.tipo}</h3>
+                    <div class="grid-3" style="max-height: 200px; overflow-y: auto;">
+                        ${juecesRef.map(j => `
+                            <div style="font-size: 0.875rem;">
+                                <span class="juez-numero" style="width: 25px; height: 25px; line-height: 25px; font-size: 0.75rem;">${j.numero}</span>
+                                ${j.nombre} (${j.asoc}) - ${sorteoActual.tipo === 'IND' ? j.ind : j.conj}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="${sorteoActual.paneles.length === 2 ? 'grid-2' : ''}">
+                    ${sorteoActual.paneles.map(panel => renderizarPanel(panel, juecesRef)).join('')}
+                </div>
+            `;
+        }
+
+        function renderizarPanel(panel, juecesRef) {
+            return `
+                <div class="card">
+                    <div class="flex-between mb-4">
+                        <h3>Panel ${panel.num}</h3>
+                        <label style="display: flex; align-items: center; font-size: 0.875rem;">
+                            <input type="checkbox" ${panel.omitirAlertas ? 'checked' : ''} onchange="toggleOmitirAlertas(${panel.num})"> Omitir alertas
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Implementos</label>
+                        <div class="flex gap-2" style="flex-wrap: wrap;">
+                            ${IMPLEMENTOS.map(impl => `
+                                <button class="implemento-btn ${panel.implementos.includes(impl) ? 'selected' : ''}" 
+                                    onclick="toggleImplemento(${panel.num}, '${impl}')">
+                                    ${impl}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        ${FUNCIONES.map(funcion => {
+                            const numero = panel.funciones[funcion] || '';
+                            const juez = numero ? juecesRef.find(j => j.numero === parseInt(numero)) : null;
+                            const bgClass = verificarConflicto(panel, funcion);
+                            
+                            return `
+                                <div class="funcion-row ${bgClass}">
+                                    <input type="number" 
+                                        class="funcion-numero" 
+                                        value="${numero}" 
+                                        placeholder="#"
+                                        min="1" 
+                                        max="${juecesRef.length}"
+                                        onchange="actualizarFuncion(${panel.num}, '${funcion}', this.value)">
+                                    <div class="funcion-nombre">${funcion}</div>
+                                    <div class="funcion-juez">
+                                        ${juez ? `<strong>${juez.nombre}</strong> <span class="text-gray">(${juez.asoc})</span>` : '<span class="text-gray">-</span>'}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleImplemento(panelNum, impl) {
+            const panel = sorteoActual.paneles.find(p => p.num === panelNum);
+            if (panel.implementos.includes(impl)) {
+                panel.implementos = panel.implementos.filter(i => i !== impl);
+            } else {
+                panel.implementos.push(impl);
+            }
+            
+            actualizarSorteo();
+            renderizarDetalleSorteo();
+        }
+
+        function toggleOmitirAlertas(panelNum) {
+            const panel = sorteoActual.paneles.find(p => p.num === panelNum);
+            panel.omitirAlertas = !panel.omitirAlertas;
+            
+            actualizarSorteo();
+            renderizarDetalleSorteo();
+        }
+
+        function actualizarFuncion(panelNum, funcion, numero) {
+            const panel = sorteoActual.paneles.find(p => p.num === panelNum);
+            if (numero) {
+                panel.funciones[funcion] = numero;
+            } else {
+                delete panel.funciones[funcion];
+            }
+            
+            actualizarSorteo();
+            renderizarDetalleSorteo();
+        }
+
+        function verificarConflicto(panel, funcion) {
+            if (panel.omitirAlertas) return '';
+            
+            const rubros = {
+                'DB1': ['DB1', 'DB2'],
+                'DB2': ['DB1', 'DB2'],
+                'DA1': ['DA1', 'DA2'],
+                'DA2': ['DA1', 'DA2'],
+                'A1': ['A1', 'A2', 'A3', 'A4'],
+                'A2': ['A1', 'A2', 'A3', 'A4'],
+                'A3': ['A1', 'A2', 'A3', 'A4'],
+                'A4': ['A1', 'A2', 'A3', 'A4'],
+                'E1': ['E1', 'E2', 'E3', 'E4'],
+                'E2': ['E1', 'E2', 'E3', 'E4'],
+                'E3': ['E1', 'E2', 'E3', 'E4'],
+                'E4': ['E1', 'E2', 'E3', 'E4']
+            };
+            
+            if (!rubros[funcion]) return '';
+            
+            const juecesRef = sorteoActual.tipo === 'IND' ? sorteoActual.juecesIND : sorteoActual.jucesCONJ;
+            const funcionesRubro = rubros[funcion];
+            const asocs = [];
+            
+            funcionesRubro.forEach(f => {
+                const numero = panel.funciones[f];
+                if (numero) {
+                    const juez = juecesRef.find(j => j.numero === parseInt(numero));
+                    if (juez) asocs.push(juez.asoc);
+                }
+            });
+            
+            const numeroActual = panel.funciones[funcion];
+            if (numeroActual) {
+                const juezActual = juecesRef.find(j => j.numero === parseInt(numeroActual));
+                if (juezActual) {
+                    const duplicados = asocs.filter(a => a === juezActual.asoc);
+                    if (duplicados.length > 1) {
+                        return 'alert-warning';
+                    }
+                }
+            }
+            
+            return '';
+        }
+
+        function actualizarSorteo() {
+            const sorteoIndex = eventoActual.sorteos.findIndex(s => s.id === sorteoActual.id);
+            eventoActual.sorteos[sorteoIndex] = sorteoActual;
+            
+            const eventoIndex = eventos.findIndex(e => e.id === eventoActual.id);
+            eventos[eventoIndex] = eventoActual;
+            guardarDatos();
+        }
+
+        // ===== EXPORTACIONES E IMPORTACIONES =====
+
+        function exportarPlantilla() {
+            const ws = XLSX.utils.json_to_sheet([
+                { 'ID-FMG': '', 'Nombre Completo': '', 'ASOC': '', 'IND': '', 'CONJ': '' }
+            ]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Jueces');
+            XLSX.writeFile(wb, 'Plantilla_Jueces_GR.xlsx');
+        }
+
+        function importarJueces(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(sheet);
+                
+                jsonData.forEach(row => {
+                    jueces.push({
+                        id: Date.now() + Math.random(),
+                        idFmg: (row['ID-FMG'] || '').toString().trim(),
+                        nombre: (row['Nombre Completo'] || '').toString().trim(),
+                        asoc: (row['ASOC'] || '').toString().trim(),
+                        ind: (row['IND'] || '').toString().trim(),
+                        conj: (row['CONJ'] || '').toString().trim()
+                    });
+                });
+                
+                jueces.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                guardarDatos();
+                renderizarJueces();
+                alert('Jueces importados exitosamente');
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function exportarBD() {
+            const data = jueces.map(j => ({
+                'ID-FMG': j.idFmg,
+                'Nombre Completo': j.nombre,
+                'ASOC': j.asoc,
+                'IND': j.ind,
+                'CONJ': j.conj
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Base_Datos_Jueces');
+            XLSX.writeFile(wb, 'BD_Jueces_GR_Completa.xlsx');
+        }
+
+        function exportarBackup() {
+            const backup = {
+                jueces,
+                eventos,
+                version: '1.0',
+                fecha: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Backup_GR_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function importarBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    jueces = backup.jueces || [];
+                    eventos = backup.eventos || [];
+                    guardarDatos();
+                    renderizarJueces();
+                    renderizarEventos();
+                    alert('Backup restaurado exitosamente');
+                    cambiarSeccion('jueces');
+                } catch (error) {
+                    alert('Error al leer el backup');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ===== UTILIDADES =====
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
