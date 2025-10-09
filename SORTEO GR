@@ -129,28 +129,31 @@
             background: #f9fafb;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 50;
-            align-items: center;
-            justify-content: center;
-        }
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+    overflow-y: auto;
+}
 
         .modal.active {
             display: flex;
         }
 
-        .modal-content {
-            background: white;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+.modal-content {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    max-width: 90%;
+    max-height: 95vh;
+    overflow-y: auto;
+    margin: auto;
+}
 
         input, select, textarea {
             width: 100%;
@@ -213,10 +216,13 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
         }
+        .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
 
-        .alert-warning {
-            background: #fef3c7 !important;
-        }
+
 
         footer {
             background: #1f2937;
@@ -239,18 +245,59 @@
             text-decoration: underline;
         }
 
-        .funcion-row {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            margin-bottom: 0.25rem;
-        }
+.funcion-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.15rem;
+}
 
-        .funcion-numero {
-            width: 60px;
-        }
+/* Colores para cada sección */
+/* Colores para cada sección - SUAVES */
+.funcion-row.seccion-db {
+    background-color: #f0f9ff;
+    border-left: 3px solid #bae6fd;
+}
+
+.funcion-row.seccion-da {
+    background-color: #fdf2f8;
+    border-left: 3px solid #fbcfe8;
+}
+
+.funcion-row.seccion-a {
+    background-color: #f0fdf4;
+    border-left: 3px solid #bbf7d0;
+}
+
+.funcion-row.seccion-e {
+    background-color: #fffbeb;
+    border-left: 3px solid #fde68a;
+}
+
+.funcion-row.seccion-otros {
+    background-color: #fafafa;
+    border-left: 3px solid #e5e7eb;
+}
+
+/* ALERTA ROJA MUY FUERTE para conflictos */
+.funcion-row.alert-warning {
+    background-color: #fca5a5 !important;
+    border-left: 4px solid #b91c1c !important;
+    border-right: 4px solid #b91c1c !important;
+    box-shadow: 0 0 0 2px #fca5a5 !important;
+}
+.funcion-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+.funcion-numero {
+    width: 50px;
+    font-size: 0.875rem;
+}
 
         /* Ocultar flechitas del input number */
         input[type="number"]::-webkit-outer-spin-button,
@@ -263,10 +310,11 @@
             -moz-appearance: textfield;
         }
 
-        .funcion-nombre {
-            width: 80px;
-            font-weight: 600;
-        }
+.funcion-nombre {
+    width: 70px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
 
         .funcion-juez {
             flex: 1;
@@ -287,42 +335,270 @@
             border-color: #db2777;
         }
 
-        @media print {
-            header, nav, .btn, footer, .breadcrumb {
-                display: none !important;
-            }
-            .card {
-                box-shadow: none;
-                page-break-inside: avoid;
-            }
-            /* Ocultar listado de jueces en impresión */
-            #listado-jueces-sorteo {
-                display: none !important;
-            }
-            /* Mantener paneles lado a lado */
-            .grid-2 {
-                display: grid !important;
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 1.5rem;
-            }
-            /* Solo mostrar implementos seleccionados */
-            .implemento-btn:not(.selected) {
-                display: none;
-            }
-            .implemento-btn.selected {
-                pointer-events: none;
-                border: 2px solid #000;
-            }
-            /* Divisiones entre funciones */
-            .funcion-row {
-                border-bottom: 1px solid #d1d5db;
-                padding: 0.5rem 0;
-            }
-            /* Hacer más visible el contenido */
-            .funcion-nombre {
-                font-weight: 700;
-            }
-        }
+
+
+/* Estilos optimizados para modal de crear sorteo */
+#modalCrearSorteo .modal-content {
+    padding: 1rem !important;
+    max-height: 85vh !important;
+    max-width: 1100px !important;
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+}
+
+#modalCrearSorteo h3 {
+    margin-bottom: 0.6rem;
+    font-size: 1.25rem;
+}
+
+#modalCrearSorteo .form-group {
+    margin-bottom: 0.6rem;
+}
+
+#modalCrearSorteo .form-group:last-of-type {
+    margin-bottom: 0.6rem;
+}
+
+#modalCrearSorteo label {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+#listaCategoriasSorteo {
+    max-height: 280px !important;
+    min-height: 200px !important;
+    padding: 0.6rem !important;
+    gap: 0.5rem !important;
+    overflow-y: auto;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+}
+
+#listaCategoriasSorteo .categoria-checkbox {
+    padding: 0.35rem 0.45rem;
+    margin-bottom: 0;
+    font-size: 0.8rem;
+}
+
+#modalCrearSorteo .flex.gap-2 {
+    margin-top: 1rem;
+}
+
+/* Hacer checkboxes de categorías más visibles */
+.categoria-checkbox {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+}
+
+.categoria-checkbox:hover {
+    background: #f3f4f6;
+}
+
+.categoria-checkbox input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: 16px;
+    height: 16px;
+}
+
+@media print {
+    @page {
+        size: letter;
+        margin: 0.5cm;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        font-size: 10px;
+    }
+    
+    header, nav, .btn, footer, .breadcrumb {
+        display: none !important;
+    }
+    
+    /* Ocultar checkbox de Omitir alertas */
+    label:has(input[type="checkbox"]) {
+        display: none !important;
+    }
+    /* Ocultar funciones no visibles en impresión */
+.funcion-row[data-visible="false"] {
+    display: none !important;
+}
+
+/* Ocultar checkbox de funciones en impresión */
+.funcion-checkbox {
+    display: none !important;
+}
+    
+    /* Mostrar encabezado de impresión */
+    .print-header {
+        display: block !important;
+        page-break-after: avoid;
+    }
+    /* Mostrar pie de página en impresión */
+.print-footer {
+    display: block !important;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #d1d5db;
+    font-size: 0.65rem;
+    color: #1f2937;
+    text-align: center;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+    /* Ocultar encabezado normal del sorteo en impresión */
+    #contenidoSorteo > .card:first-child {
+        display: none !important;
+    }
+
+    /* Ocultar el toggle del colapsable */
+    .colapsable-toggle {
+        display: none !important;
+    }
+
+    /* Forzar expansión del listado de jueces */
+    .colapsable-content {
+        max-height: none !important;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        page-break-inside: avoid;
+        padding: 0.15rem;
+        margin-bottom: 0.2rem;
+        break-inside: avoid;
+    }
+    
+    /* Ocultar listado de jueces en impresión */
+    #listado-jueces-sorteo {
+        display: none !important;
+    }
+    
+    /* Paneles lado a lado en una sola hoja */
+    .grid-2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.3rem !important;
+        page-break-inside: avoid;
+    }
+    
+    /* Si hay 2 paneles, forzar que estén en la misma página */
+    .grid-2 .card {
+        width: 100%;
+        padding: 0.2rem;
+        margin: 0;
+    }
+    
+    /* Título del panel más pequeño */
+    .card h3 {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    /* Sección de implementos más compacta */
+    .card .mb-4 {
+        margin-bottom: 0.2rem !important;
+    }
+    
+    .card label {
+        font-size: 0.65rem;
+        margin-bottom: 0.1rem;
+    }
+    
+    /* Solo mostrar implementos seleccionados */
+    .implemento-btn:not(.selected) {
+        display: none;
+    }
+    .implemento-btn.selected {
+        pointer-events: none;
+        border: 1px solid #000;
+        padding: 0.15rem 0.3rem;
+        font-size: 0.6rem;
+    }
+    
+    /* Reducir espacio en funciones para impresión */
+    .funcion-row {
+        padding: 0.15rem 0.2rem;
+        margin-bottom: 0.05rem;
+        border-bottom: 1px solid #d1d5db;
+        page-break-inside: avoid;
+    }
+    
+    .funcion-numero {
+        width: 30px;
+        font-size: 0.65rem;
+        padding: 0.1rem;
+    }
+    
+    .funcion-nombre {
+        width: 45px;
+        font-weight: 700;
+        font-size: 0.65rem;
+    }
+    
+    .funcion-juez {
+        font-size: 0.6rem;
+    }
+    
+    .funcion-juez strong {
+        font-weight: 600;
+    }
+    
+    .text-gray {
+        font-size: 0.55rem;
+    }
+    
+    /* Mantener colores suaves en impresión */
+    .funcion-row.seccion-db {
+        background-color: #f0f9ff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .funcion-row.seccion-da {
+        background-color: #fdf2f8 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .funcion-row.seccion-a {
+        background-color: #f0fdf4 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .funcion-row.seccion-e {
+        background-color: #fffbeb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .funcion-row.seccion-otros {
+        background-color: #fafafa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* ALERTA ROJA MUY FUERTE en impresión */
+    .funcion-row.alert-warning {
+        background-color: #fca5a5 !important;
+        border: 2px solid #b91c1c !important;
+        box-shadow: 0 0 0 1px #fca5a5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 
         @media (max-width: 768px) {
             .grid-2, .grid-3 {
@@ -359,6 +635,75 @@
             font-weight: bold;
             margin-right: 0.5rem;
         }
+        /* Estilos para colapsable de jueces */
+.colapsable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.75rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.colapsable-header:hover {
+    background: #e5e7eb;
+}
+
+.colapsable-header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.colapsable-toggle {
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: transform 0.3s;
+}
+
+.colapsable-toggle.collapsed {
+    transform: rotate(-180deg);
+}
+
+.colapsable-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.colapsable-content.collapsed {
+    max-height: 0;
+}
+
+/* Encabezado para impresión */
+.print-header {
+    display: none;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+/* Pie de página para impresión */
+.print-footer {
+    display: none;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.print-header h1 {
+    font-size: 1.1rem;
+    margin-bottom: 0.2rem;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.print-header h2 {
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
     </style>
 </head>
 <body>
@@ -557,39 +902,39 @@
     </div>
 
     <!-- Modal Crear Sorteo -->
-    <div id="modalCrearSorteo" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
-            <h3>Crear Nuevo Sorteo</h3>
-            <div class="form-group">
-                <label>Tipo de Competencia</label>
-                <div class="flex gap-2">
-                    <label style="display: flex; align-items: center;">
-                        <input type="radio" name="tipoSorteo" value="IND" checked onchange="cambiarTipoSorteo()"> Individual (IND)
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="radio" name="tipoSorteo" value="CONJ" onchange="cambiarTipoSorteo()"> Conjuntos (CONJ)
-                    </label>
-                </div>
-            </div>
+<div id="modalCrearSorteo" class="modal">
+    <div class="modal-content" style="max-width: 900px; width: 90%; padding: 1rem;">
+            <h3 style="margin-bottom: 0.6rem;">Crear Nuevo Sorteo</h3>
+<div class="form-group">
+    <label>Tipo de Competencia</label>
+    <div style="display: flex; gap: 1.5rem; margin-top: 0.25rem; flex-wrap: nowrap;">
+        <label style="display: flex; align-items: center; white-space: nowrap;">
+            <input type="radio" name="tipoSorteo" value="IND" checked onchange="cambiarTipoSorteo()" style="margin-right: 0.4rem;"> Individual (IND)
+        </label>
+        <label style="display: flex; align-items: center; white-space: nowrap;">
+            <input type="radio" name="tipoSorteo" value="CONJ" onchange="cambiarTipoSorteo()" style="margin-right: 0.4rem;"> Conjuntos (CONJ)
+        </label>
+    </div>
+</div>
             <div class="form-group">
                 <label>Categorías *</label>
-                <div id="listaCategoriasSorteo" class="grid-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.375rem;"></div>
+                <div id="listaCategoriasSorteo" class="grid-4"></div>
             </div>
-            <div class="form-group">
-                <label>Número de Paneles</label>
-                <div class="flex gap-2">
-                    <label style="display: flex; align-items: center;">
-                        <input type="radio" name="numPaneles" value="1" checked> 1 Panel
-                    </label>
-                    <label style="display: flex; align-items: center;">
-                        <input type="radio" name="numPaneles" value="2"> 2 Paneles
-                    </label>
-                </div>
-            </div>
-            <div class="flex gap-2" style="justify-content: flex-end; margin-top: 1.5rem;">
-                <button class="btn btn-secondary" onclick="cerrarModal('modalCrearSorteo')">Cancelar</button>
-                <button class="btn btn-primary" onclick="crearSorteo()">Crear Sorteo</button>
-            </div>
+<div class="form-group">
+    <label>Número de Paneles</label>
+    <div style="display: flex; gap: 1.5rem; margin-top: 0.25rem; flex-wrap: nowrap;">
+        <label style="display: flex; align-items: center; white-space: nowrap;">
+            <input type="radio" name="numPaneles" value="1" checked style="margin-right: 0.4rem;"> 1 Panel
+        </label>
+        <label style="display: flex; align-items: center; white-space: nowrap;">
+            <input type="radio" name="numPaneles" value="2" style="margin-right: 0.4rem;"> 2 Paneles
+        </label>
+    </div>
+</div>
+<div class="flex gap-2" style="justify-content: flex-end; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+    <button class="btn btn-secondary" onclick="cerrarModal('modalCrearSorteo')">Cancelar</button>
+    <button class="btn btn-primary" onclick="crearSorteo()">Crear Sorteo</button>
+</div>
         </div>
     </div>
 
@@ -1016,30 +1361,35 @@
             document.getElementById('contadorSeleccionados').textContent = `${juecesSeleccionados.length} jueces seleccionados`;
         }
 
-        function filtrarJuecesSelector() {
-            const filtro = document.getElementById('filtroJueces').value.toLowerCase();
-            const tbody = document.querySelector('#tablaSelectorJueces tbody');
-            tbody.innerHTML = '';
-            
-            const jucesFiltrados = jueces.filter(j => 
-                j.nombre.toLowerCase().includes(filtro) ||
-                j.asoc.toLowerCase().includes(filtro) ||
-                (j.ind && j.ind.toLowerCase().includes(filtro)) ||
-                (j.conj && j.conj.toLowerCase().includes(filtro))
-            );
-            
-            jucesFiltrados.forEach(juez => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="checkbox" ${juecesSeleccionados.includes(juez.id) ? 'checked' : ''} onchange="toggleJuezSelector(${juez.id})"></td>
-                    <td>${juez.nombre}</td>
-                    <td>${juez.asoc}</td>
-                    <td>${juez.ind}</td>
-                    <td>${juez.conj}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+function filtrarJuecesSelector() {
+    const filtro = document.getElementById('filtroJueces').value.toLowerCase();
+    const tbody = document.querySelector('#tablaSelectorJueces tbody');
+    tbody.innerHTML = '';
+    
+    const jucesFiltrados = jueces.filter(j => {
+const nombre = String(j.nombre || '').toLowerCase();
+const asoc = String(j.asoc || '').toLowerCase();
+const ind = String(j.ind || '').toLowerCase();
+const conj = String(j.conj || '').toLowerCase();
+        
+        return nombre.includes(filtro) ||
+               asoc.includes(filtro) ||
+               ind.includes(filtro) ||
+               conj.includes(filtro);
+    });
+    
+    jucesFiltrados.forEach(juez => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" ${juecesSeleccionados.includes(juez.id) ? 'checked' : ''} onchange="toggleJuezSelector(${juez.id})"></td>
+            <td>${juez.nombre || ''}</td>
+            <td>${juez.asoc || ''}</td>
+            <td>${juez.ind || ''}</td>
+            <td>${juez.conj || ''}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
         function guardarJuecesEvento() {
             const juecesToAdd = jueces.filter(j => juecesSeleccionados.includes(j.id));
@@ -1096,17 +1446,17 @@
             document.getElementById('modalCrearSorteo').classList.add('active');
         }
 
-        function cambiarTipoSorteo() {
-            const tipo = document.querySelector('input[name="tipoSorteo"]:checked').value;
-            const categorias = tipo === 'IND' ? CATEGORIAS_IND : CATEGORIAS_CONJ;
-            const lista = document.getElementById('listaCategoriasSorteo');
-            
-            lista.innerHTML = categorias.map(cat => `
-                <label class="categoria-checkbox">
-                    <input type="checkbox" value="${cat}"> ${cat}
-                </label>
-            `).join('');
-        }
+function cambiarTipoSorteo() {
+    const tipo = document.querySelector('input[name="tipoSorteo"]:checked').value;
+    const categorias = tipo === 'IND' ? CATEGORIAS_IND : CATEGORIAS_CONJ;
+    const lista = document.getElementById('listaCategoriasSorteo');
+    
+    lista.innerHTML = categorias.map(cat => `
+        <label class="categoria-checkbox">
+            <input type="checkbox" value="${cat}"> ${cat}
+        </label>
+    `).join('');
+}
 
         function crearSorteo() {
             const tipo = document.querySelector('input[name="tipoSorteo"]:checked').value;
@@ -1201,38 +1551,57 @@
             document.getElementById('detalle-evento').classList.remove('hidden');
         }
 
-        function renderizarDetalleSorteo() {
-            const contenido = document.getElementById('contenidoSorteo');
-            const juecesRef = sorteoActual.tipo === 'IND' ? sorteoActual.juecesIND : sorteoActual.jucesCONJ;
-            
-            contenido.innerHTML = `
-                <div class="card">
-                    <div class="flex-between">
-                        <div>
-                            <h2>Sorteo ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}</h2>
-                            <p class="text-gray">${eventoActual.nombre}</p>
+function renderizarDetalleSorteo() {
+    const contenido = document.getElementById('contenidoSorteo');
+    const juecesRef = sorteoActual.tipo === 'IND' ? sorteoActual.juecesIND : sorteoActual.jucesCONJ;
+    
+    // Obtener nombre de las clases sin el tipo IND/CONJ
+    const nombreClases = sorteoActual.categorias.join(', ');
+    
+    contenido.innerHTML = `
+        <!-- Encabezado para impresión -->
+        <div class="print-header">
+            <h1>${eventoActual.nombre}</h1>
+            <h2>Sorteo de jueces Clase: ${nombreClases}</h2>
+        </div>
+
+        <div class="card">
+            <div class="flex-between">
+                <div>
+                    <h2>Sorteo ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}</h2>
+                    <p class="text-gray">${eventoActual.nombre}</p>
+                </div>
+                <button class="btn btn-purple" onclick="window.print()">🖨️ Imprimir</button>
+            </div>
+        </div>
+
+        <div class="card" id="listado-jueces-sorteo">
+            <div class="colapsable-header" onclick="toggleListadoJueces()">
+                <h3>Jueces ${sorteoActual.tipo} (${juecesRef.length})</h3>
+                <span class="colapsable-toggle" id="toggle-jueces">▼</span>
+            </div>
+            <div class="colapsable-content" id="content-jueces">
+                <div class="grid-3" style="max-height: 200px; overflow-y: auto;">
+                    ${juecesRef.map(j => `
+                        <div style="font-size: 0.875rem;">
+                            <span class="juez-numero" style="width: 25px; height: 25px; line-height: 25px; font-size: 0.75rem;">${j.numero}</span>
+                            ${j.nombre} (${j.asoc}) - ${sorteoActual.tipo === 'IND' ? j.ind : j.conj}
                         </div>
-                        <button class="btn btn-purple" onclick="window.print()">🖨️ Imprimir</button>
-                    </div>
+                    `).join('')}
                 </div>
+            </div>
+        </div>
 
-                <div class="card" id="listado-jueces-sorteo">
-                    <h3 style="margin-bottom: 0.5rem;">Jueces ${sorteoActual.tipo}</h3>
-                    <div class="grid-3" style="max-height: 200px; overflow-y: auto;">
-                        ${juecesRef.map(j => `
-                            <div style="font-size: 0.875rem;">
-                                <span class="juez-numero" style="width: 25px; height: 25px; line-height: 25px; font-size: 0.75rem;">${j.numero}</span>
-                                ${j.nombre} (${j.asoc}) - ${sorteoActual.tipo === 'IND' ? j.ind : j.conj}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
+<div class="${sorteoActual.paneles.length === 2 ? 'grid-2' : ''}">
+            ${sorteoActual.paneles.map(panel => renderizarPanel(panel, juecesRef)).join('')}
+        </div>
 
-                <div class="${sorteoActual.paneles.length === 2 ? 'grid-2' : ''}">
-                    ${sorteoActual.paneles.map(panel => renderizarPanel(panel, juecesRef)).join('')}
-                </div>
-            `;
-        }
+        <!-- Pie de página para impresión -->
+        <div class="print-footer">
+            <p><strong>Comité Técnico Nacional GR 2025 - 2028</strong> | Powered by: E-MOOD Systems</p>
+        </div>
+    `;
+}
 
         function renderizarPanel(panel, juecesRef) {
             return `
@@ -1257,27 +1626,52 @@
                     </div>
 
                     <div>
-                        ${FUNCIONES.map(funcion => {
-                            const numero = panel.funciones[funcion] || '';
-                            const juez = numero ? juecesRef.find(j => j.numero === parseInt(numero)) : null;
-                            const bgClass = verificarConflicto(panel, funcion);
-                            
-                            return `
-                                <div class="funcion-row ${bgClass}">
-                                    <input type="number" 
-                                        class="funcion-numero" 
-                                        value="${numero}" 
-                                        placeholder="#"
-                                        min="1" 
-                                        max="${juecesRef.length}"
-                                        onchange="actualizarFuncion(${panel.num}, '${funcion}', this.value)">
-                                    <div class="funcion-nombre">${funcion}</div>
-                                    <div class="funcion-juez">
-                                        ${juez ? `<strong>${juez.nombre}</strong> <span class="text-gray">(${juez.asoc})</span>` : '<span class="text-gray">-</span>'}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
+${FUNCIONES.map(funcion => {
+    // Verificar si funciones es un objeto con propiedades numero/visible o solo un string
+    let numero = '';
+    let visible = true;
+    
+    if (panel.funciones[funcion]) {
+        if (typeof panel.funciones[funcion] === 'object') {
+            numero = panel.funciones[funcion].numero || '';
+            visible = panel.funciones[funcion].visible !== false;
+        } else {
+            numero = panel.funciones[funcion];
+            visible = true;
+        }
+    }
+    
+    const juez = numero ? juecesRef.find(j => j.numero === parseInt(numero)) : null;
+    const bgClass = verificarConflicto(panel, funcion);
+    
+    // Determinar sección por color
+    let seccionClass = 'seccion-otros';
+    if (['DB1', 'DB2'].includes(funcion)) seccionClass = 'seccion-db';
+    else if (['DA1', 'DA2'].includes(funcion)) seccionClass = 'seccion-da';
+    else if (['A1', 'A2', 'A3', 'A4'].includes(funcion)) seccionClass = 'seccion-a';
+    else if (['E1', 'E2', 'E3', 'E4'].includes(funcion)) seccionClass = 'seccion-e';
+    
+    return `
+        <div class="funcion-row ${seccionClass} ${bgClass}" data-visible="${visible}">
+            <input type="checkbox" 
+                class="funcion-checkbox"
+                ${visible ? 'checked' : ''}
+                onchange="toggleFuncionVisible(${panel.num}, '${funcion}', this.checked)"
+                title="Mostrar/Ocultar en impresión">
+            <input type="number" 
+                class="funcion-numero" 
+                value="${numero}" 
+                placeholder="#"
+                min="1" 
+                max="${juecesRef.length}"
+                onchange="actualizarFuncion(${panel.num}, '${funcion}', this.value)">
+            <div class="funcion-nombre">${funcion}</div>
+            <div class="funcion-juez">
+                ${juez ? `<strong>${juez.nombre}</strong> <span class="text-gray">(${juez.asoc})</span>` : '<span class="text-gray">-</span>'}
+            </div>
+        </div>
+    `;
+}).join('')}
                     </div>
                 </div>
             `;
@@ -1303,18 +1697,43 @@
             renderizarDetalleSorteo();
         }
 
-        function actualizarFuncion(panelNum, funcion, numero) {
-            const panel = sorteoActual.paneles.find(p => p.num === panelNum);
-            if (numero) {
-                panel.funciones[funcion] = numero;
-            } else {
-                delete panel.funciones[funcion];
-            }
-            
-            actualizarSorteo();
-            renderizarDetalleSorteo();
-        }
+function actualizarFuncion(panelNum, funcion, numero) {
+    const panel = sorteoActual.paneles.find(p => p.num === panelNum);
+    
+    // Inicializar si no existe o es string
+    if (!panel.funciones[funcion] || typeof panel.funciones[funcion] !== 'object') {
+        panel.funciones[funcion] = { 
+            numero: panel.funciones[funcion] || '', 
+            visible: true 
+        };
+    }
+    
+    if (numero) {
+        panel.funciones[funcion].numero = numero;
+    } else {
+        panel.funciones[funcion].numero = '';
+    }
+    
+    actualizarSorteo();
+    renderizarDetalleSorteo();
+}
 
+function toggleFuncionVisible(panelNum, funcion, visible) {
+    const panel = sorteoActual.paneles.find(p => p.num === panelNum);
+    
+    // Inicializar si no existe o es string
+    if (!panel.funciones[funcion] || typeof panel.funciones[funcion] !== 'object') {
+        panel.funciones[funcion] = { 
+            numero: panel.funciones[funcion] || '', 
+            visible: true 
+        };
+    }
+    
+    panel.funciones[funcion].visible = visible;
+    
+    actualizarSorteo();
+    renderizarDetalleSorteo();
+}
         function verificarConflicto(panel, funcion) {
             if (panel.omitirAlertas) return '';
             
@@ -1340,14 +1759,14 @@
             const asocs = [];
             
             funcionesRubro.forEach(f => {
-                const numero = panel.funciones[f];
+                const numero = (typeof panel.funciones[f] === 'object') ? panel.funciones[f].numero : panel.funciones[f];
                 if (numero) {
                     const juez = juecesRef.find(j => j.numero === parseInt(numero));
                     if (juez) asocs.push(juez.asoc);
                 }
             });
             
-            const numeroActual = panel.funciones[funcion];
+            const numeroActual = (typeof panel.funciones[funcion] === 'object') ? panel.funciones[funcion].numero : panel.funciones[funcion];
             if (numeroActual) {
                 const juezActual = juecesRef.find(j => j.numero === parseInt(numeroActual));
                 if (juezActual) {
@@ -1381,36 +1800,112 @@
             XLSX.writeFile(wb, 'Plantilla_Jueces_GR.xlsx');
         }
 
-        function importarJueces(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+function importarJueces(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        
+        let importados = 0;
+        let duplicados = 0;
+        const listaDuplicados = []; // Guardar info de duplicados
+        
+        jsonData.forEach(row => {
+            const idFmg = (row['ID-FMG'] || '').toString().trim();
+            const nombre = (row['Nombre Completo'] || '').toString().trim();
+            const asoc = (row['ASOC'] || '').toString().trim();
+            const ind = (row['IND'] || '').toString().trim();
+            const conj = (row['CONJ'] || '').toString().trim();
             
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(sheet);
-                
-                jsonData.forEach(row => {
-                    jueces.push({
-                        id: Date.now() + Math.random(),
-                        idFmg: (row['ID-FMG'] || '').toString().trim(),
-                        nombre: (row['Nombre Completo'] || '').toString().trim(),
-                        asoc: (row['ASOC'] || '').toString().trim(),
-                        ind: (row['IND'] || '').toString().trim(),
-                        conj: (row['CONJ'] || '').toString().trim()
-                    });
+            // Verificar si ya existe
+            let existente = null;
+            let motivoDuplicado = '';
+            
+            // 1. Verificar por ID-FMG (si tiene ID-FMG y no está vacío)
+            if (idFmg) {
+                existente = jueces.find(j => j.idFmg && j.idFmg.toLowerCase() === idFmg.toLowerCase());
+                if (existente) {
+                    motivoDuplicado = `ID-FMG: ${idFmg}`;
+                }
+            }
+            
+            // 2. Si no existe por ID-FMG, verificar por nombre exacto
+            if (!existente && nombre) {
+                existente = jueces.find(j => j.nombre.toLowerCase() === nombre.toLowerCase());
+                if (existente) {
+                    motivoDuplicado = `Nombre: ${nombre}`;
+                }
+            }
+            
+            if (existente) {
+                // YA EXISTE - No importar, solo contar
+                duplicados++;
+                listaDuplicados.push({
+                    motivo: motivoDuplicado,
+                    nombre: nombre,
+                    idFmg: idFmg,
+                    asoc: asoc
                 });
-                
-                jueces.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                guardarDatos();
-                renderizarJueces();
-                alert('Jueces importados exitosamente');
-            };
-            reader.readAsArrayBuffer(file);
-            event.target.value = '';
+            } else {
+                // NO EXISTE - Importar
+                jueces.push({
+                    id: Date.now() + Math.random(),
+                    idFmg: idFmg,
+                    nombre: nombre,
+                    asoc: asoc,
+                    ind: ind,
+                    conj: conj
+                });
+                importados++;
+            }
+        });
+        
+        // Ordenar y guardar
+        jueces.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        guardarDatos();
+        renderizarJueces();
+        
+        // Mostrar resumen detallado
+        let mensaje = '═══════════════════════════════════\n';
+        mensaje += '📊 RESUMEN DE IMPORTACIÓN\n';
+        mensaje += '═══════════════════════════════════\n\n';
+        
+        mensaje += `✅ Jueces nuevos importados: ${importados}\n`;
+        mensaje += `⚠️ Duplicados detectados (NO importados): ${duplicados}\n`;
+        mensaje += `📋 Total procesados: ${importados + duplicados}\n`;
+        
+        if (duplicados > 0) {
+            mensaje += '\n───────────────────────────────────\n';
+            mensaje += '⚠️ DUPLICADOS ENCONTRADOS:\n';
+            mensaje += '(No se importaron porque ya existen)\n';
+            mensaje += '───────────────────────────────────\n\n';
+            
+            // Mostrar hasta 15 duplicados
+            const maxMostrar = 15;
+            listaDuplicados.slice(0, maxMostrar).forEach((dup, index) => {
+                mensaje += `${index + 1}. ${dup.nombre}\n`;
+                mensaje += `   • ${dup.motivo}\n`;
+                if (dup.asoc) mensaje += `   • Asociación: ${dup.asoc}\n`;
+                mensaje += '\n';
+            });
+            
+            if (listaDuplicados.length > maxMostrar) {
+                mensaje += `... y ${listaDuplicados.length - maxMostrar} duplicados más\n`;
+            }
         }
+        
+        mensaje += '\n═══════════════════════════════════';
+        
+        alert(mensaje);
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = '';
+}
 
         function exportarBD() {
             const data = jueces.map(j => ({
@@ -1472,6 +1967,17 @@
             document.getElementById(id).classList.remove('active');
         }
 
+// Función para colapsar/expandir listado de jueces
+function toggleListadoJueces() {
+    const content = document.getElementById('content-jueces');
+    const toggle = document.getElementById('toggle-jueces');
+    
+    if (content && toggle) {
+        content.classList.toggle('collapsed');
+        toggle.classList.toggle('collapsed');
+    }
+}
+
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -1479,6 +1985,7 @@
                 }
             });
         });
+        
     </script>
 </body>
 </html>
