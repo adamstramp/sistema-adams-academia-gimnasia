@@ -417,16 +417,18 @@ tbody tr:hover {
 }
 
 @media print {
-    @page {
+@page {
         size: letter;
-        margin: 0.3cm;
+        margin: 0.6cm 0.7cm 0.4cm 0.7cm;
     }
     
-    body {
-        margin: 0;
-        padding: 0;
-        font-size: 7px;
-    }
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 6.5px;
+    background: white !important;
+    background-image: none !important;
+}
     
     header, nav, .btn, footer, .breadcrumb {
         display: none !important;
@@ -446,30 +448,90 @@ tbody tr:hover {
     .funcion-checkbox {
         display: none !important;
     }
+    
     /* Ocultar número de juez en impresión */
-.funcion-numero {
-    display: none !important;
-}
+    .funcion-numero {
+        display: none !important;
+    }
     
     /* Mostrar encabezado de impresión */
     .print-header {
         display: block !important;
         page-break-after: avoid;
+        margin-bottom: 0.15cm;
     }
     
-    /* Mostrar pie de página en impresión */
-    .print-footer {
+    /* Información del sorteo para impresión */
+.print-sorteo-info {
         display: block !important;
-        margin-top: 1rem;
-        padding-top: 0.5rem;
-        border-top: 1px solid #d1d5db;
-        font-size: 0.65rem;
+        background: linear-gradient(to right, #fdf2f8, #fce7f3) !important;
         color: #1f2937;
-        text-align: center;
-        page-break-inside: avoid;
+        padding: 0.2cm 0.25cm;
+        margin: 0.5cm 0 0.3cm 0;
+        border: 2px solid #db2777;
+        border-radius: 4px;
+        font-size: 8.5px;
+        line-height: 1.5;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        box-shadow: 0 0 0 1px rgba(219, 39, 119, 0.2) !important;
     }
+
+.print-sorteo-info div {
+        margin-bottom: 0.08cm;
+        line-height: 1.6;
+    }
+
+    .print-sorteo-info div:last-child {
+        margin-bottom: 0;
+    }
+
+.print-sorteo-info strong {
+        color: #db2777;
+        font-weight: 700;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Última línea (SORTEO) más grande */
+.print-sorteo-info div:last-child {
+    font-size: 9.5px !important;
+    font-weight: 600;
+    margin-top: 0.05cm;
+    padding-top: 0.05cm;
+    border-top: 1px solid rgba(219, 39, 119, 0.3);
+}
+
+.print-sorteo-info div:last-child strong {
+    font-size: 10px !important;
+}
+    
+/* Mostrar pie de página en impresión */
+.print-footer {
+    display: block !important;
+    margin-top: 0.35cm;
+    padding: 0.15cm 0.2cm;
+    background: #1f2937 !important;
+    color: white !important;
+    font-size: 7px;
+    border-radius: 3px;
+    page-break-before: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.print-footer > div {
+    padding: 0 0.2cm;
+}
+
+.print-footer span {
+    color: white !important;
+}
 
     /* Ocultar encabezado normal del sorteo en impresión */
     #contenidoSorteo > .card:first-child {
@@ -486,18 +548,24 @@ tbody tr:hover {
         max-height: none !important;
     }
     
-    .container {
-        max-width: 100%;
-        padding: 0;
-    }
+.container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
     
-    .card {
+.card {
         box-shadow: none;
-        page-break-inside: avoid;
-        padding: 0.1rem;
-        margin-bottom: 0.1rem;
-        break-inside: avoid;
-    }
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        padding: 0.12cm;
+        margin-bottom: 0.08cm;
+    break-inside: avoid;
+    background: white !important;
+    border: none !important;
+}
     
     /* Ocultar listado de jueces en impresión */
     #listado-jueces-sorteo {
@@ -505,34 +573,40 @@ tbody tr:hover {
     }
     
     /* Paneles lado a lado en una sola hoja */
-    .grid-2 {
+.grid-2 {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.15rem !important;
-        page-break-inside: avoid;
+        gap: 0.15cm !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
     }
     
     /* Si hay 2 paneles, forzar que estén en la misma página */
     .grid-2 .card {
         width: 100%;
-        padding: 0.2rem;
+        padding: 0.15cm;
         margin: 0;
     }
     
-    /* Título del panel más pequeño */
-    .card h3 {
-        font-size: 0.7rem;
-        margin-bottom: 0.1rem;
+    /* Título del panel */
+.card h3 {
+        font-size: 8px;
+        font-weight: 700;
+        margin-bottom: 0.08cm;
+        padding-bottom: 0.04cm;
+        border-bottom: 1.5px solid #db2777;
+        color: #1f2937;
     }
     
-    /* Sección de implementos más compacta */
+    /* Sección de implementos */
     .card .mb-4 {
-        margin-bottom: 0.05rem !important;
+        margin-bottom: 0.08cm !important;
     }
     
     .card label {
-        font-size: 0.55rem;
-        margin-bottom: 0.05rem;
+        font-size: 7.5px;
+        font-weight: 600;
+        margin-bottom: 0.08cm;
     }
     
     /* Solo mostrar implementos seleccionados */
@@ -542,65 +616,76 @@ tbody tr:hover {
     
     .implemento-btn.selected {
         pointer-events: none;
-        border: 1px solid #000;
-        padding: 0.1rem 0.2rem;
-        font-size: 0.5rem;
+        border: 1.5px solid #000;
+        padding: 0.1cm 0.2cm;
+        font-size: 7px;
+        margin-right: 0.08cm;
+        font-weight: 600;
     }
     
-    /* Reducir espacio en funciones para impresión */
-    .funcion-row {
-        padding: 0.05rem 0.1rem;
-        margin-bottom: 0.01rem;
-        border-bottom: 1px solid #d1d5db;
-        page-break-inside: avoid;
-        min-height: 16px;
+    /* Espaciado en funciones - OPTIMIZADO */
+.funcion-row {
+        padding: 0.06cm 0.08cm;
+        margin-bottom: 0.02cm;
+        border-bottom: 0.5px solid #d1d5db;
+        page-break-inside: avoid !important;
+        min-height: 0.32cm;
+        display: flex;
+        align-items: center;
     }
     
     .funcion-numero {
-        width: 22px;
-        font-size: 0.55rem;
-        padding: 0.05rem;
+        width: 26px;
+        font-size: 7.5px;
+        padding: 0.08cm;
     }
     
-    .funcion-nombre {
-        width: 38px;
+.funcion-nombre {
+        width: 42px;
         font-weight: 700;
-        font-size: 0.6rem;
+        font-size: 8px;
+        flex-shrink: 0;
+        margin-right: 0.06cm;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    .funcion-juez {
-        font-size: 0.5rem;
-        line-height: 1.1;
+.funcion-juez {
+        font-size: 7px;
+        line-height: 1.2;
         padding: 0 !important;
+        flex: 1;
     }
     
     .funcion-juez > div {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
+        margin-top: 0.03cm !important;
     }
     
     .funcion-juez strong {
         font-weight: 600;
+        font-size: 7.5px;
     }
     
-.text-gray {
-        font-size: 0.4rem;
-        line-height: 0.9;
-        margin-top: 0 !important;
+    .text-gray {
+        font-size: 6px;
+        line-height: 1.1;
+        margin-top: 0.02cm !important;
     }
 
-.input-nombre-juez {
-        padding: 0.15rem 0.25rem !important;
-        font-size: 0.52rem !important;
-        line-height: 1 !important;
+    .input-nombre-juez {
+        padding: 0.12cm 0.2cm !important;
+        font-size: 7.5px !important;
+        line-height: 1.15 !important;
         height: auto !important;
-        min-height: 0 !important;
+        min-height: 0.38cm !important;
         font-weight: 500 !important;
     }
     
     /* Mantener colores suaves en impresión */
     .funcion-row.seccion-db {
-        background-color: #f0f9ff !important;
+        background-color: #eff6ff !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
@@ -618,7 +703,7 @@ tbody tr:hover {
     }
 
     .funcion-row.seccion-e {
-        background-color: #fffbeb !important;
+        background-color: #fef3c7 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
@@ -636,6 +721,32 @@ tbody tr:hover {
         box-shadow: 0 0 0 1px #fca5a5 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+    /* Forzar todo en 1 página */
+    #contenidoSorteo {
+        page-break-after: avoid !important;
+    }
+
+    #contenidoSorteo > * {
+        page-break-after: avoid !important;
+    }
+
+    .card {
+        page-break-after: avoid !important;
+    }
+
+.grid-2 {
+        page-break-after: avoid !important;
+    }
+    
+    /* COMPRESIÃ"N TOTAL */
+    * {
+        margin: 0 !important;
+    }
+    
+    #contenidoSorteo {
+        height: auto !important;
+        max-height: none !important;
     }
 }
 
@@ -1405,111 +1516,112 @@ tbody tr:hover {
             document.getElementById('seccion-eventos').classList.remove('hidden');
         }
 
-        function renderizarDetalleEvento() {
-            const contenido = document.getElementById('contenidoEvento');
-            
-            const juecesEvento = eventoActual.jueces || [];
-            const juecesIND = ordenarJueces(juecesEvento.filter(j => j.ind), 'ind');
-            const jucesCONJ = ordenarJueces(juecesEvento.filter(j => j.conj), 'conj');
-            
-            contenido.innerHTML = `
-                <div class="card">
-                    <h2>${eventoActual.nombre}</h2>
-                    <p class="text-gray">Sede: ${eventoActual.sede}</p>
-                    <p class="text-gray">Fecha: ${eventoActual.fecha}</p>
+function renderizarDetalleEvento() {
+    const contenido = document.getElementById('contenidoEvento');
+    
+    const juecesEvento = eventoActual.jueces || [];
+    const juecesIND = ordenarJueces(juecesEvento.filter(j => j.ind), 'ind');
+    const jucesCONJ = ordenarJueces(juecesEvento.filter(j => j.conj), 'conj');
+    
+    contenido.innerHTML = `
+        <div class="card">
+            <h2>${eventoActual.nombre}</h2>
+            <p class="text-gray">Sede: ${eventoActual.sede}</p>
+            <p class="text-gray">Fecha: ${eventoActual.fecha}</p>
+        </div>
+
+        <!-- PRIMERO: SECCIÓN DE SORTEOS -->
+        <div class="card">
+            <div class="flex-between mb-4">
+                <h3>Sorteos</h3>
+                <button class="btn btn-primary" onclick="abrirModalCrearSorteo()">+ Nuevo Sorteo</button>
+            </div>
+            ${renderizarListaSorteos()}
+        </div>
+
+        <!-- SEGUNDO: SECCIÓN DE JUECES -->
+        <div class="card">
+            <div class="flex-between mb-4">
+                <h3>Jueces Participantes</h3>
+                <div class="flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="mostrarFormJuez()">Agregar a BD General</button>
+                    <button class="btn btn-primary" onclick="mostrarSelectorJueces()">Seleccionar Jueces</button>
                 </div>
+            </div>
 
-                <div class="card">
-                    <div class="flex-between mb-4">
-                        <h3>Jueces Participantes</h3>
-                        <div class="flex gap-2">
-                            <button class="btn btn-success btn-sm" onclick="mostrarFormJuez()">Agregar a BD General</button>
-                            <button class="btn btn-primary" onclick="mostrarSelectorJueces()">Seleccionar Jueces</button>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-    <h4 style="margin-bottom: 0.5rem; cursor: pointer; padding: 0.5rem; background: linear-gradient(to right, rgba(219, 39, 119, 0.08), rgba(147, 51, 234, 0.08)); border-radius: 0.375rem; display: flex; justify-content: space-between; align-items: center;" onclick="toggleListadoJueces('IND')">
-        <span>Jueces Individual (IND) - ${juecesIND.length} jueces</span>
-        <span id="iconoIND">▼</span>
-    </h4>
-    <div class="scroll-x" id="listadoIND">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>N°</th>
-                                        <th>Nombre</th>
-                                        <th>ASOC</th>
-                                        <th>IND</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${juecesIND.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces IND</td></tr>' : 
-                                        juecesIND.map((j, idx) => `
-                                            <tr>
-                                                <td><span class="juez-numero">${idx + 1}</span></td>
-                                                <td>${j.nombre}</td>
-                                                <td>${j.asoc}</td>
-                                                <td>${j.ind}</td>
-                                                <td>
-                                                    <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
-                                                    <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
-                                                </td>
-                                            </tr>
-                                        `).join('')
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-<div>
-    <h4 style="margin-bottom: 0.5rem; cursor: pointer; padding: 0.5rem; background: linear-gradient(to right, rgba(219, 39, 119, 0.08), rgba(147, 51, 234, 0.08)); border-radius: 0.375rem; display: flex; justify-content: space-between; align-items: center;" onclick="toggleListadoJueces('CONJ')">
-        <span>Jueces Conjuntos (CONJ) - ${jucesCONJ.length} jueces</span>
-        <span id="iconoCONJ">▼</span>
-    </h4>
-    <div class="scroll-x" id="listadoCONJ">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>N°</th>
-                                        <th>Nombre</th>
-                                        <th>ASOC</th>
-                                        <th>CONJ</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${jucesCONJ.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces CONJ</td></tr>' : 
-                                        jucesCONJ.map((j, idx) => `
-                                            <tr>
-                                                <td><span class="juez-numero">${idx + 1}</span></td>
-                                                <td>${j.nombre}</td>
-                                                <td>${j.asoc}</td>
-                                                <td>${j.conj}</td>
-                                                <td>
-                                                    <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
-                                                    <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
-                                                </td>
-                                            </tr>
-                                        `).join('')
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+            <!-- Jueces en dos columnas: IND izquierda, CONJ derecha -->
+            <div class="grid-2">
+                <!-- Columna IND -->
+                <div>
+                    <h4 style="margin-bottom: 0.5rem;">Jueces Individual (IND)</h4>
+                    <div class="scroll-x">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Nombre</th>
+                                    <th>ASOC</th>
+                                    <th>IND</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${juecesIND.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces IND</td></tr>' : 
+                                    juecesIND.map((j, idx) => `
+                                        <tr>
+                                            <td><span class="juez-numero">${idx + 1}</span></td>
+                                            <td>${j.nombre}</td>
+                                            <td>${j.asoc}</td>
+                                            <td>${j.ind}</td>
+                                            <td>
+                                                <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
+                                                <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="flex-between mb-4">
-                        <h3>Sorteos</h3>
-                        <button class="btn btn-primary" onclick="abrirModalCrearSorteo()">+ Nuevo Sorteo</button>
+                <!-- Columna CONJ -->
+                <div>
+                    <h4 style="margin-bottom: 0.5rem;">Jueces Conjuntos (CONJ)</h4>
+                    <div class="scroll-x">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Nombre</th>
+                                    <th>ASOC</th>
+                                    <th>CONJ</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${jucesCONJ.length === 0 ? '<tr><td colspan="5" class="text-center text-gray">No hay jueces CONJ</td></tr>' : 
+                                    jucesCONJ.map((j, idx) => `
+                                        <tr>
+                                            <td><span class="juez-numero">${idx + 1}</span></td>
+                                            <td>${j.nombre}</td>
+                                            <td>${j.asoc}</td>
+                                            <td>${j.conj}</td>
+                                            <td>
+                                                <button class="btn btn-secondary btn-sm" onclick="editarJuezEvento(${j.id})">✏️</button>
+                                                <button class="btn btn-danger btn-sm" onclick="eliminarJuezEvento(${j.id})">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                    ${renderizarListaSorteos()}
                 </div>
-            `;
-        }
+            </div>
+        </div>
+    `;
+}
 
         function ordenarJueces(juecesArray, campo) {
             return juecesArray.sort((a, b) => {
@@ -1737,60 +1849,164 @@ function cambiarTipoSorteo() {
             renderizarDetalleSorteo();
         }
 
-        function volverEvento() {
-            sorteoActual = null;
-            document.getElementById('detalle-sorteo').classList.add('hidden');
-            document.getElementById('detalle-evento').classList.remove('hidden');
-        }
+function volverEvento() {
+    sorteoActual = null;
+    
+    // Recargar eventoActual con los datos más recientes
+    const eventoId = eventoActual.id;
+    eventoActual = eventos.find(e => e.id === eventoId);
+    
+    document.getElementById('detalle-sorteo').classList.add('hidden');
+    document.getElementById('detalle-evento').classList.remove('hidden');
+    
+    // Renderizar de nuevo para mostrar cambios
+    renderizarDetalleEvento();
+}
 
 function renderizarDetalleSorteo() {
     const contenido = document.getElementById('contenidoSorteo');
     const juecesRef = sorteoActual.tipo === 'IND' ? sorteoActual.juecesIND : sorteoActual.jucesCONJ;
     
-    // Obtener nombre de las clases sin el tipo IND/CONJ
-    const nombreClases = sorteoActual.categorias.join(', ');
-    
-    contenido.innerHTML = `
-        <!-- Encabezado para impresión -->
-        <div class="print-header">
-            <h1>${eventoActual.nombre}</h1>
-            <h2>Sorteo de jueces Clase: ${nombreClases}</h2>
-        </div>
-
-<div class="card">
-            <div class="flex-between">
-                <div>
-                    <h2>Sorteo ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}</h2>
-                    <p class="text-gray">${eventoActual.nombre}</p>
-                </div>
-                <button class="btn btn-purple" onclick="imprimirSorteo()">🖨️ Imprimir</button>
+contenido.innerHTML = `
+    <div class="card">
+        <div class="flex-between">
+            <div>
+                <h2>Sorteo ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}</h2>
+                <p class="text-gray">${eventoActual.nombre}</p>
             </div>
+            <button class="btn btn-purple" onclick="window.print()">🖨️ Imprimir</button>
         </div>
+    </div>
 
-        <div class="card" id="listado-jueces-sorteo">
-            <div class="colapsable-header" onclick="toggleListadoJueces()">
-                <h3>Jueces ${sorteoActual.tipo} (${juecesRef.length})</h3>
-                <span class="colapsable-toggle" id="toggle-jueces">▼</span>
-            </div>
-            <div class="colapsable-content" id="content-jueces">
-                <div class="grid-3" style="max-height: 200px; overflow-y: auto;">
-                    ${juecesRef.map(j => `
-                        <div style="font-size: 0.875rem;">
-                            <span class="juez-numero" style="width: 25px; height: 25px; line-height: 25px; font-size: 0.75rem;">${j.numero}</span>
-                            ${j.nombre} (${j.asoc}) - ${sorteoActual.tipo === 'IND' ? j.ind : j.conj}
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
+    <!-- Información para impresión -->
+    <div class="print-sorteo-info" style="display: none;">
+        <div style="margin-bottom: 0.2rem;">
+            <strong>EVENTO:</strong> ${eventoActual.nombre}
         </div>
+        <div style="margin-bottom: 0.2rem;">
+            <strong>SEDE:</strong> ${eventoActual.sede} | <strong>FECHA:</strong> ${eventoActual.fecha}
+        </div>
+        <div>
+            <strong>SORTEO:</strong> ${sorteoActual.tipo} - ${sorteoActual.categorias.join(', ')}
+        </div>
+    </div>
 
-<div class="${sorteoActual.paneles.length === 2 ? 'grid-2' : ''}">
+        <!-- PANELES PRIMERO -->
+        <div class="${sorteoActual.paneles.length === 2 ? 'grid-2' : ''}">
             ${sorteoActual.paneles.map(panel => renderizarPanel(panel, juecesRef)).join('')}
         </div>
 
-        <!-- Pie de página para impresión -->
-        <div class="print-footer">
-            <p><strong>Comité Técnico Nacional GR 2025 - 2028</strong> | Powered by: E-MOOD Systems</p>
+        <!-- LISTADO DE JUECES HASTA ABAJO -->
+        <div class="card" id="listado-jueces-sorteo">
+            <h3 style="margin-bottom: 1rem;">Jueces ${sorteoActual.tipo}</h3>
+            
+            <!-- Si es IND y existen jueces CONJ, mostrar ambos en columnas -->
+            ${sorteoActual.tipo === 'IND' && sorteoActual.jucesCONJ && sorteoActual.jucesCONJ.length > 0 ? `
+                <div class="grid-2">
+                    <!-- Columna IND -->
+                    <div>
+                        <h4 style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">Individual (IND)</h4>
+                        <div>
+                            ${sorteoActual.juecesIND.map(j => `
+                                <div style="display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f3f4f6;">
+                                    <span class="juez-numero" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.875rem; flex-shrink: 0;">${j.numero}</span>
+                                    <div style="flex: 1; margin-left: 0.75rem;">
+                                        <div style="font-weight: 600; font-size: 0.875rem;">${j.nombre}</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                                            <span style="display: inline-block; margin-right: 1rem;">${j.asoc}</span>
+                                            <span style="font-weight: 500; color: #db2777;">Nivel: ${j.ind}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Columna CONJ -->
+                    <div>
+                        <h4 style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">Conjuntos (CONJ)</h4>
+                        <div>
+                            ${sorteoActual.jucesCONJ.map(j => `
+                                <div style="display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f3f4f6;">
+                                    <span class="juez-numero" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.875rem; flex-shrink: 0;">${j.numero}</span>
+                                    <div style="flex: 1; margin-left: 0.75rem;">
+                                        <div style="font-weight: 600; font-size: 0.875rem;">${j.nombre}</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                                            <span style="display: inline-block; margin-right: 1rem;">${j.asoc}</span>
+                                            <span style="font-weight: 500; color: #db2777;">Nivel: ${j.conj}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            ` : sorteoActual.tipo === 'CONJ' && sorteoActual.juecesIND && sorteoActual.juecesIND.length > 0 ? `
+                <!-- Si es CONJ, mostrar CONJ e IND -->
+                <div class="grid-2">
+                    <!-- Columna IND -->
+                    <div>
+                        <h4 style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">Individual (IND)</h4>
+                        <div>
+                            ${sorteoActual.juecesIND.map(j => `
+                                <div style="display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f3f4f6;">
+                                    <span class="juez-numero" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.875rem; flex-shrink: 0;">${j.numero}</span>
+                                    <div style="flex: 1; margin-left: 0.75rem;">
+                                        <div style="font-weight: 600; font-size: 0.875rem;">${j.nombre}</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                                            <span style="display: inline-block; margin-right: 1rem;">${j.asoc}</span>
+                                            <span style="font-weight: 500; color: #db2777;">Nivel: ${j.ind}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Columna CONJ -->
+                    <div>
+                        <h4 style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">Conjuntos (CONJ)</h4>
+                        <div>
+                            ${sorteoActual.jucesCONJ.map(j => `
+                                <div style="display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f3f4f6;">
+                                    <span class="juez-numero" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.875rem; flex-shrink: 0;">${j.numero}</span>
+                                    <div style="flex: 1; margin-left: 0.75rem;">
+                                        <div style="font-weight: 600; font-size: 0.875rem;">${j.nombre}</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                                            <span style="display: inline-block; margin-right: 1rem;">${j.asoc}</span>
+                                            <span style="font-weight: 500; color: #db2777;">Nivel: ${j.conj}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            ` : `
+                <!-- Solo mostrar el tipo de jueces del sorteo actual -->
+                <div>
+                    ${juecesRef.map(j => `
+                        <div style="display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #f3f4f6;">
+                            <span class="juez-numero" style="width: 30px; height: 30px; line-height: 30px; font-size: 0.875rem; flex-shrink: 0;">${j.numero}</span>
+                            <div style="flex: 1; margin-left: 0.75rem;">
+                                <div style="font-weight: 600; font-size: 0.875rem;">${j.nombre}</div>
+                                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                                    <span style="display: inline-block; margin-right: 1rem;">${j.asoc}</span>
+                                    <span style="font-weight: 500; color: #db2777;">Nivel: ${sorteoActual.tipo === 'IND' ? j.ind : j.conj}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+
+        <!-- PIE DE PÁGINA PARA IMPRESIÓN -->
+        <div class="print-footer" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Comité Técnico Nacional GR 2025 - 2028</span>
+                <span>Powered by: E-MOOD Systems</span>
+            </div>
         </div>
     `;
 }
