@@ -6,6 +6,7 @@
     <title>Sistema ADAMS - Academia de Gimnasia</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -2114,6 +2115,13 @@ function formatearPorcentaje(numero, decimales = 1) {
                         </div>
                         
                     </div>
+                    <div style="text-align: center; margin: 15px 0; padding: 15px; background: #e8f5e9; border-radius: 10px; border: 2px solid #4caf50;">
+    <h4 style="color: #2e7d32; margin-bottom: 10px;">📊 Exportar Asistencias a Excel</h4>
+    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Genera un archivo Excel con todas las asistencias organizadas por día, horario y grupo</p>
+    <button class="btn btn-success" onclick="exportarAsistenciasExcel()" style="font-size: 16px; padding: 15px 30px;">
+        📥 Descargar Excel de Asistencias Semanal
+    </button>
+</div>
                     
                     <!-- NUEVA SECCIÓN: Días Especiales -->
                     <div id="seccion-dia-especial" style="text-align: center; margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 10px; border: 2px solid #ffc107; display: none;">
@@ -9208,6 +9216,224 @@ function inicializarAsistencias() {
         sistemaADAMS.clasesMuestra = [];
     }
 }
+
+// ========== FUNCIONES AUXILIARES PARA EXCEL ==========
+
+function obtenerColorGrupo(grupo) {
+    const colores = {
+        'A': { fondo: 'FFE3F2FD', texto: 'FF1976D2' }, // Azul claro
+        'B': { fondo: 'FFF3E5F5', texto: 'FF7B1FA2' }, // Morado claro
+        'C': { fondo: 'FFE8F5E9', texto: 'FF388E3C' }, // Verde claro
+        'D': { fondo: 'FFFFF3E0', texto: 'FFF57C00' }  // Naranja claro
+    };
+    return colores[grupo] || { fondo: 'FFF5F5F5', texto: 'FF333333' };
+}
+
+function obtenerColorDisciplina(disciplina) {
+    const colores = {
+        'gimnasia': { fondo: 'FFFFE0B2', texto: 'FFE65100' },  // Naranja
+        'parkour': { fondo: 'FFC8E6C9', texto: 'FF2E7D32' },   // Verde
+        'box': { fondo: 'FFB3E5FC', texto: 'FF01579B' }        // Azul
+    };
+    return colores[disciplina.toLowerCase()] || { fondo: 'FFF5F5F5', texto: 'FF333333' };
+}
+
+function aplicarEstilosCelda(worksheet, cell, estilos) {
+    if (!worksheet[cell]) return;
+    
+    worksheet[cell].s = {
+        font: {
+            bold: estilos.negrita || false,
+            color: { rgb: estilos.colorTexto || 'FF000000' },
+            sz: estilos.tamañoFuente || 11
+        },
+        fill: {
+            fgColor: { rgb: estilos.colorFondo || 'FFFFFFFF' }
+        },
+        alignment: {
+            horizontal: estilos.alineacion || 'left',
+            vertical: 'center',
+            wrapText: true
+        },
+        border: {
+            top: { style: 'thin', color: { rgb: 'FF000000' } },
+            bottom: { style: 'thin', color: { rgb: 'FF000000' } },
+            left: { style: 'thin', color: { rgb: 'FF000000' } },
+            right: { style: 'thin', color: { rgb: 'FF000000' } }
+        }
+    };
+}
+// ========== FUNCIÓN PRINCIPAL: EXPORTAR ASISTENCIAS A EXCEL ==========
+
+function exportarAsistenciasExcel() {
+    console.log('Generando archivo Excel...');
+    
+    const workbook = XLSX.utils.book_new();
+    const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    
+    diasSemana.forEach(dia => {
+        const horariosDelDia = organizarEstudiantesPorHorarioYGrupo(dia, '', '');
+        
+        if (Object.keys(horariosDelDia).length === 0) {
+            return;
+        }
+        
+        const datosHoja = [];
+        let filaActual = 0;
+        
+        // ENCABEZADO DE LA HOJA
+        datosHoja[filaActual] = ['ASISTENCIAS - ' + dia.toUpperCase()];
+        filaActual++;
+        datosHoja[filaActual] = ['Academia ADAMS - Sistema de Control'];
+        filaActual++;
+        filaActual++; // Una línea en blanco
+        
+        // Procesar cada horario
+        Object.keys(horariosDelDia).sort().forEach(horario => {
+            const grupos = horariosDelDia[horario];
+            const gruposArray = Object.keys(grupos).sort();
+            
+            // TÍTULO DEL HORARIO
+            datosHoja[filaActual] = [`🕐 HORARIO: ${horario}`];
+            filaActual++;
+            
+            // Procesar grupos de TRES en TRES (lado a lado)
+            for (let i = 0; i < gruposArray.length; i += 3) {
+                const claveGrupo1 = gruposArray[i];
+                const claveGrupo2 = gruposArray[i + 1];
+                const claveGrupo3 = gruposArray[i + 2];
+                
+                // GRUPO 1
+                const estudiantesGrupo1 = grupos[claveGrupo1];
+                const [disciplina1, grupo1] = claveGrupo1.split('-');
+                const disciplinaFormateada1 = disciplina1.charAt(0).toUpperCase() + disciplina1.slice(1);
+                const entrenador1 = obtenerEntrenadorPorHorarioYGrupo(dia, horario, grupo1);
+                const nombreEntrenador1 = entrenador1 ? entrenador1.nombre : 'Sin asignar';
+                
+                // GRUPO 2
+                let estudiantesGrupo2 = [];
+                let disciplinaFormateada2 = '';
+                let grupo2 = '';
+                let nombreEntrenador2 = '';
+                if (claveGrupo2) {
+                    estudiantesGrupo2 = grupos[claveGrupo2];
+                    const [disciplina2, grupo2Temp] = claveGrupo2.split('-');
+                    grupo2 = grupo2Temp;
+                    disciplinaFormateada2 = disciplina2.charAt(0).toUpperCase() + disciplina2.slice(1);
+                    const entrenador2 = obtenerEntrenadorPorHorarioYGrupo(dia, horario, grupo2);
+                    nombreEntrenador2 = entrenador2 ? entrenador2.nombre : 'Sin asignar';
+                }
+                
+                // GRUPO 3
+                let estudiantesGrupo3 = [];
+                let disciplinaFormateada3 = '';
+                let grupo3 = '';
+                let nombreEntrenador3 = '';
+                if (claveGrupo3) {
+                    estudiantesGrupo3 = grupos[claveGrupo3];
+                    const [disciplina3, grupo3Temp] = claveGrupo3.split('-');
+                    grupo3 = grupo3Temp;
+                    disciplinaFormateada3 = disciplina3.charAt(0).toUpperCase() + disciplina3.slice(1);
+                    const entrenador3 = obtenerEntrenadorPorHorarioYGrupo(dia, horario, grupo3);
+                    nombreEntrenador3 = entrenador3 ? entrenador3.nombre : 'Sin asignar';
+                }
+                
+                // ENCABEZADOS DE GRUPOS - SOLO LA LETRA DEL GRUPO
+                datosHoja[filaActual] = [
+                    grupo1,
+                    `${disciplinaFormateada1} - ${nombreEntrenador1}`,
+                    `Total: ${estudiantesGrupo1.length}`,
+                    '', // Separador
+                    claveGrupo2 ? grupo2 : '',
+                    claveGrupo2 ? `${disciplinaFormateada2} - ${nombreEntrenador2}` : '',
+                    claveGrupo2 ? `Total: ${estudiantesGrupo2.length}` : '',
+                    '', // Separador
+                    claveGrupo3 ? grupo3 : '',
+                    claveGrupo3 ? `${disciplinaFormateada3} - ${nombreEntrenador3}` : '',
+                    claveGrupo3 ? `Total: ${estudiantesGrupo3.length}` : ''
+                ];
+                filaActual++;
+                
+                // ENCABEZADOS DE COLUMNAS
+                datosHoja[filaActual] = [
+                    '#', 'NOMBRE ESTUDIANTE', 'ASISTENCIA',
+                    '', // Separador
+                    claveGrupo2 ? '#' : '',
+                    claveGrupo2 ? 'NOMBRE ESTUDIANTE' : '',
+                    claveGrupo2 ? 'ASISTENCIA' : '',
+                    '', // Separador
+                    claveGrupo3 ? '#' : '',
+                    claveGrupo3 ? 'NOMBRE ESTUDIANTE' : '',
+                    claveGrupo3 ? 'ASISTENCIA' : ''
+                ];
+                filaActual++;
+                
+                // DATOS DE ESTUDIANTES
+                const maxEstudiantes = Math.max(
+                    estudiantesGrupo1.length, 
+                    estudiantesGrupo2.length,
+                    estudiantesGrupo3.length
+                );
+                
+                for (let j = 0; j < maxEstudiantes; j++) {
+                    const estudiante1 = estudiantesGrupo1[j];
+                    const estudiante2 = estudiantesGrupo2[j];
+                    const estudiante3 = estudiantesGrupo3[j];
+                    
+                    datosHoja[filaActual] = [
+                        estudiante1 ? (j + 1) : '',
+                        estudiante1 ? estudiante1.nombre : '',
+                        estudiante1 ? '' : '',
+                        '', // Separador
+                        estudiante2 ? (j + 1) : '',
+                        estudiante2 ? estudiante2.nombre : '',
+                        estudiante2 ? '' : '',
+                        '', // Separador
+                        estudiante3 ? (j + 1) : '',
+                        estudiante3 ? estudiante3.nombre : '',
+                        estudiante3 ? '' : ''
+                    ];
+                    filaActual++;
+                }
+                
+                // SOLO 1 FILA EN BLANCO
+                datosHoja[filaActual] = ['', '', '', '', '', '', '', '', '', '', ''];
+                filaActual++;
+            }
+            
+            // SOLO 1 FILA entre horarios
+            filaActual++;
+        });
+        
+        // Crear worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(datosHoja);
+        
+        // Ajustar anchos de columnas
+        worksheet['!cols'] = [
+            { wch: 4 },   // #
+            { wch: 28 },  // NOMBRE
+            { wch: 12 },  // ASISTENCIA
+            { wch: 2 },   // Separador
+            { wch: 4 },   // #
+            { wch: 28 },  // NOMBRE
+            { wch: 12 },  // ASISTENCIA
+            { wch: 2 },   // Separador
+            { wch: 4 },   // #
+            { wch: 28 },  // NOMBRE
+            { wch: 12 }   // ASISTENCIA
+        ];
+        
+        // Agregar worksheet al workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, dia.charAt(0).toUpperCase() + dia.slice(1));
+    });
+    
+    // Generar archivo
+    const nombreArchivo = `Asistencias_ADAMS_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, nombreArchivo);
+    
+    alert('✅ Archivo Excel generado. Ahora ejecuta la macro "FormatearAsistencias" para aplicar colores y formato.');
+}
+
 
 
 // Organizar estudiantes por horario y grupo
